@@ -1,0 +1,766 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          <div class="tag-list">
+            <span class="tag primary">Offline-First</span>
+            <span class="tag accent">Deterministic Triage</span>
+            <span class="tag">Supabase Sync</span>
+            <span class="tag">FHIR R4</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Diagram 2: Clinical Care Guidance -->
+      <section id="wf-care-guidance" class="diagram-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>2. Clinical Care Guidance (Deterministic-First Triage)</h2>
+            <p>Rules-based escalation precedes any AI/LLM retrieval. Emergencies trigger locked, irreversible alerts with sentence-level citations.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="mermaid">
+flowchart TD
+    Start(["Patient Symptoms & Demographics Entered"]) --> LangCheck["i18n & Translation Safety Gate\n(Tier 1 Critical Clinical Terms Locked to English)"]
+    LangCheck --> DeterministicRules{"Deterministic Red-Flag\nEngine (Rules Versioned)"}
+
+    %% Critical Branch
+    DeterministicRules -- "Emergency Criteria Met\n(e.g., SpO2 < 90%, Chest Pain)" --> EmrgAction["🚨 Trigger Emergency Action\n• Prominent Call 112 Banner\n• Lock Status: Emergency\n• Irreversible Verdict"]
+
+    %% Non-critical Branch
+    DeterministicRules -- "No Critical Red Flag" --> LocalRAG["Offline Curated Knowledge Pack\n(Vector / Hybrid Search on Verified MoHFW/ICMR/WHO)"]
+
+    LocalRAG --> EvidenceEval{"Offline Evidence\nSufficient?"}
+
+    EvidenceEval -- "Yes" --> CiteGen["Assemble Guidance with Sentence Citations\n• Source Attribution\n• Versioning\n• Non-diagnostic Disclaimer"]
+    
+    EvidenceEval -- "No (And Network Available)" --> OnlineAdapter["Guarded Online Evidence Adapter\n(Concept-Only Allow-Listed Lookup)"]
+    EvidenceEval -- "No (And Offline)" --> Insufficient["Return 'Insufficient Information'\nRecommend Primary Health Centre Review"]
+    
+    OnlineAdapter --> CiteGen
+    CiteGen --> TriageClassification["Classify Action Level:\n• Same Day Review\n• Clinician Review\n• Self-Care / Monitoring"]
+
+    EmrgAction --> ReferralRouting["Route to Nearby Care with Emergency Priority"]
+    TriageClassification --> ReferralRouting
+          </div>
+        </div>
+        <div class="card-footer">
+          <strong>Clinical Safety Guarantee:</strong> Tier 1 emergency terms remain English-locked to prevent fatal translation hallucinations, and models can never downgrade an emergency verdict.
+          <div class="tag-list">
+            <span class="tag primary">Deterministic Red Flags</span>
+            <span class="tag accent">MoHFW / ICMR Pack</span>
+            <span class="tag">Call 112 Trigger</span>
+            <span class="tag">Sentence Citations</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Diagram 3: Offline-First Sync -->
+      <section id="wf-offline-sync" class="diagram-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>3. Offline-First Synchronization & Data Persistence</h2>
+            <p>Resilient local queuing, optimistic browser updates, and automated batch reconciliation when connectivity returns.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor ASHA as 👩‍⚕️ Health Worker
+    participant UI as 📱 Client Interface
+    participant LocalDB as 💾 Local Store (localStorage/IDB)
+    participant SyncMgr as 🔄 Sync Manager
+    participant API as 🌐 Supabase API / Worker
+    participant RemoteDB as 🗄️ PostgreSQL Database
+
+    ASHA->>UI: Submit Screening Form
+    UI->>LocalDB: Write ScreeningRecord (synced = false, id = SCR-XXX)
+    UI-->>ASHA: Instant UI Confirmation (Optimistic UX)
+
+    SyncMgr->>SyncMgr: Network Health & Ping Check
+    alt When Offline / No Network
+        SyncMgr-->>UI: Badge: "Reports stored securely offline"
+        Note over LocalDB,SyncMgr: Records queued safely; queue count updated
+    else When Connectivity Restored
+        SyncMgr->>LocalDB: Read all unsynced records
+        LocalDB-->>SyncMgr: Return pending batches
+        SyncMgr->>API: POST /api/screenings/sync (Bounded Payload)
+        API->>RemoteDB: Upsert Records with RLS & Role Verification
+        RemoteDB-->>API: 200 OK (Batch Acknowledged)
+        API-->>SyncMgr: Sync Receipt & Server Timestamps
+        SyncMgr->>LocalDB: Mark synced = true or purge synced cache
+        SyncMgr-->>UI: Status Update: "All records synchronized"
+    end
+          </div>
+        </div>
+        <div class="card-footer">
+          <strong>Data Safety:</strong> Records generated in connectivity shadows receive permanent pseudo-random unique keys (`SCR-XXX`) preventing collision during multi-worker merges.
+          <div class="tag-list">
+            <span class="tag primary">Optimistic UI</span>
+            <span class="tag accent">Batch Sync</span>
+            <span class="tag">Idempotent Upsert</span>
+            <span class="tag">RLS Enforcement</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Diagram 4: Capability-First Nearby Referral -->
+      <section id="wf-nearby-referral" class="diagram-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>4. Capability-First Nearby Care & Referral System</h2>
+            <p>Prevents sending critical patients to closer but incapable facilities by prioritizing medical readiness over geographic distance.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="mermaid">
+flowchart TD
+    Req(["Referral Triggered (from Triage / Screening)"]) --> Consent["Request Explicit Geolocation Consent\n(HTTPS navigator.geolocation)"]
+
+    Consent --> GeoCheck{"Consent Granted & Lat/Lng Received?"}
+    GeoCheck -- "No / Denied / Unavailable" --> ManualLoc["Manual Location Selection\n(Select Village / Sub-District Block)"]
+    GeoCheck -- "Yes" --> StatusTag["Tag Position Accuracy:\n• Accurate | Approximate | Stale"]
+
+    ManualLoc --> CapFilter["Capability-First Filter Engine"]
+    StatusTag --> CapFilter
+
+    CapFilter --> MatchCap{"Match Required Care Level\n(Emergency, C-Section, NICU, Oxygen, MMU)"}
+    
+    MatchCap -- "Matches Level" --> GeoSort["Calculate Haversine Distance &\nSort by Distance + Verification Freshness"]
+    MatchCap -- "Does Not Match Level" --> ExcludeFacility["Exclude Facility\n(Prevents sending critical patients to incapable centres)"]
+
+    GeoSort --> OutputView["Present Referral Directory:\n1. Direct Call 112 (if Emergency)\n2. Accessible List View (Primary)\n3. MapLibre GL Tile Map (Attributed OSM)"]
+
+    OutputView --> ShareAction["Generate Referral Brief:\n• Patient Pseudonym / Ref ID\n• Vitals & Triage Tier\n• Target Facility & Handover Summary"]
+          </div>
+        </div>
+        <div class="card-footer">
+          <strong>Privacy By Design:</strong> Exact GPS coordinates are never transmitted to third-party tile servers; OpenStreetMap requests load only anonymous raster tiles.
+          <div class="tag-list">
+            <span class="tag primary">Capability-First</span>
+            <span class="tag accent">MapLibre GL</span>
+            <span class="tag">Explicit Consent</span>
+            <span class="tag">Referral Briefs</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Diagram 5: Doctor Care Plan -->
+      <section id="wf-doctor-plan" class="diagram-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>5. Doctor Care Plan, Medication Orders & Reminders</h2>
+            <p>Clinician-authorized prescriptions, ambiguity blocking, deterministic schedules, and patient adherence tracking.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="mermaid">
+flowchart LR
+    subgraph DoctorAuth["Clinician Order Authorization"]
+        DocLogin["Doctor Authenticated\n(Role = doctor / admin)"] --> DraftOrder["Draft Medication Order\n(RxNorm / Concept / Dose)"]
+        DraftOrder --> AmbiguityCheck{"Ambiguity &\nSafety Checks"}
+    end
+
+    subgraph SafetyRules["Validation Rules Engine"]
+        AmbiguityCheck -- "Free-text or Unclear Schedule" --> Reject["❌ Reject Order\n(Require structured timing & daily max)"]
+        AmbiguityCheck -- "Allergy or Duplicate Order" --> Alert["⚠️ Clinical Warning Alert"]
+        AmbiguityCheck -- "Structured & Clean" --> SignOrder["✍️ Cryptographic / Doctor HMAC Signature"]
+    end
+
+    subgraph Engine["Deterministic Scheduling Engine"]
+        SignOrder --> CalcSchedule["Calculate Scheduled Doses\n• Recurring (e.g. BD, TDS)\n• Tapering dosages\n• Interval / Weekday specific\n• Pause on hospitalization"]
+        CalcSchedule --> FHIRMap["Export FHIR R4 Resource\n(MedicationRequest & CarePlan)"]
+    end
+
+    subgraph Execution["Patient Reminder Delivery"]
+        CalcSchedule --> Dispatch["Reminder Surface:\n• Daily Offline Patient Schedule Card\n• Printable Adherence Chart\n• Privacy-Preserving ICS Calendar\n• Best-effort Web Push"]
+        Dispatch --> LogAction["Patient / Caregiver Logs Action:\n• Taken (Self-reported)\n• Missed (Prompts clinician advice)"]
+    end
+          </div>
+        </div>
+        <div class="card-footer">
+          <strong>Non-Inferential Safety:</strong> The engine refuses to guess doses from unstructured free text. AI chatbots are completely blocked from writing or altering medication orders.
+          <div class="tag-list">
+            <span class="tag primary">HMAC Signature</span>
+            <span class="tag accent">Deterministic Engine</span>
+            <span class="tag">FHIR R4 Aligned</span>
+            <span class="tag">ICS Export</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Diagram 6: RBAC & Governance -->
+      <section id="wf-rbac-security" class="diagram-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>6. Security Boundaries & Role-Based Access Control (RBAC)</h2>
+            <p>Strict least-privilege partitioning between field health workers, registered doctors, and administrative auditors.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="mermaid">
+flowchart TD
+    User([Incoming User Request]) --> AuthBoundary{"Supabase Auth\n& Role Verification"}
+
+    AuthBoundary -- "Health Worker" --> HWPerms["ASHA / Health Worker Scope:\n• Create & Read Assigned Screenings\n• Execute Care Guidance & Nearby Lookups\n• Record Patient Adherence ('Taken')\n❌ Cannot create or sign prescription orders"]
+
+    AuthBoundary -- "Doctor / RMP" --> DocPerms["Registered Doctor Scope:\n• Review Prioritized Triage Queue\n• Submit Diagnoses & Clinical Orders\n• Author, Sign & Pause Care Plans\n• Access Clinical Audit Trail"]
+
+    AuthBoundary -- "Public / Anonymous" --> AnonPerms["Public / Anonymous Scope:\n• Browse Public Facility Directories & Camps\n❌ Zero access to patient or screening data"]
+
+    AuthBoundary -- "Admin" --> AdminPerms["Administrator Scope:\n• Manage Staff Profiles & Credentials\n• Ingest Knowledge Pack Updates\n• Audit Event Log Exports & Compliance"]
+
+    HWPerms --> RLS[PostgreSQL Row-Level Security Policy]
+    DocPerms --> RLS
+    AnonPerms --> RLS
+    AdminPerms --> RLS
+          </div>
+        </div>
+        <div class="card-footer">
+          <strong>Security Compliance:</strong> All database operations validate role identity server-side via PostgreSQL Row-Level Security (RLS), avoiding reliance on client metadata.
+          <div class="tag-list">
+            <span class="tag primary">Row-Level Security</span>
+            <span class="tag accent">HMAC Signed Orders</span>
+            <span class="tag">Audit Logs</span>
+            <span class="tag">Least-Privilege</span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    // Initialize Mermaid with dynamic theme
+    function initMermaid(isDark) {
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: isDark ? 'dark' : 'neutral',
+        fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+        flowchart: { curve: 'basis', htmlLabels: true },
+        securityLevel: 'loose'
+      });
+    }
+
+    const currentTheme = document.body.getAttribute('data-theme') || 'dark';
+    initMermaid(currentTheme === 'dark');
+
+    function toggleTheme() {
+      const isDark = document.body.getAttribute('data-theme') === 'dark';
+      const nextTheme = isDark ? 'light' : 'dark';
+      document.body.setAttribute('data-theme', nextTheme);
+      localStorage.setItem('arogya_theme', nextTheme);
+      location.reload();
+    }
+
+    // Scrollspy navigation highlight
+    window.addEventListener('scroll', () => {
+      const sections = document.querySelectorAll('.diagram-card');
+      const navLinks = document.querySelectorAll('.nav-item');
+      let current = '';
+
+      sections.forEach(sec => {
+        const top = sec.offsetTop - 120;
+        if (pageYOffset >= top) {
+          current = sec.getAttribute('id');
+        }
+      });
+
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + current) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+

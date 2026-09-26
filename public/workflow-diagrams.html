@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arogya Relay — System & Workflow Architecture</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --surface: #111827;
+      --surface-elevated: #1f2937;
+      --border: #374151;
+      --border-subtle: #242f42;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --primary: #38bdf8;
+      --primary-dim: rgba(56, 189, 248, 0.15);
+      --accent: #10b981;
+      --accent-dim: rgba(16, 185, 129, 0.15);
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --radius: 12px;
+      --font: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    [data-theme="light"] {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-elevated: #f1f5f9;
+      --border: #e2e8f0;
+      --border-subtle: #cbd5e1;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --text-dim: #94a3b8;
+      --primary: #0284c7;
+      --primary-dim: rgba(2, 132, 199, 0.12);
+      --accent: #059669;
+      --accent-dim: rgba(5, 150, 105, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font);
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      transition: background-color 0.2s, color 0.2s;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(12px);
+    }
+
+    .header-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, #0284c7, #10b981);
+      color: #fff;
+      padding: 0.35rem 0.65rem;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .brand-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .brand-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--surface-elevated);
+      color: var(--text);
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      border-color: var(--primary);
+      background: var(--primary-dim);
+      color: var(--primary);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #0b0f19;
+      border-color: var(--primary);
+    }
+
+    [data-theme="light"] .btn-primary {
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+      color: #0b0f19;
+    }
+
+    .layout {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 2rem;
+      flex: 1;
+      width: 100%;
+    }
+
+    @media (max-width: 1024px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      position: sticky;
+      top: 5.5rem;
+      align-self: start;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+
+    .sidebar-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      padding: 0.5rem 0.75rem;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 0.75rem;
+      border-radius: 8px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    .nav-item:hover, .nav-item.active {
+      background: var(--primary-dim);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .nav-badge {
+      margin-left: auto;
+      font-size: 0.7rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 999px;
+      background: var(--surface-elevated);
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+    }
+
+    /* Content Area */
+    .content {
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+    }
+
+    .diagram-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25);
+      scroll-margin-top: 6rem;
+    }
+
+    .card-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      background: var(--surface);
+    }
+
+    .card-title-group h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-title-group p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .card-body {
+      padding: 1.5rem;
+      background: var(--surface-elevated);
+      overflow-x: auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 380px;
+    }
+
+    .mermaid {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    .card-footer {
+      padding: 1rem 1.5rem;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .tag {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .tag.primary {
+      background: var(--primary-dim);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .tag.accent {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Print & Fullscreen */
+    @media print {
+      header, .sidebar, .card-actions {
+        display: none !important;
+      }
+      .layout {
+        display: block;
+        padding: 0;
+      }
+      .diagram-card {
+        box-shadow: none;
+        page-break-after: always;
+        border: 1px solid #ccc;
+      }
+      body {
+        background: white;
+        color: black;
+      }
+    }
+  </style>
+</head>
+<body data-theme="dark">
+
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-badge">ARCH</span>
+        <div>
+          <h1 class="brand-title">Arogya Relay — Workflow Architecture</h1>
+          <p class="brand-subtitle">Offline-First Disease Surveillance & Decision-Support System</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn" id="themeToggle" onclick="toggleTheme()">
+          🌓 Toggle Theme
+        </button>
+        <button class="btn" onclick="window.print()">
+          🖨️ Print / PDF
+        </button>
+        <a class="btn btn-primary" href="/" target="_blank">
+          🌐 Open Application
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="sidebar-title">Diagram Navigation</div>
+      <a href="#wf-end-to-end" class="nav-item active">
+        <span>1. End-to-End Workflow</span>
+        <span class="nav-badge">Flowchart</span>
+      </a>
+      <a href="#wf-care-guidance" class="nav-item">
+        <span>2. Clinical Care Guidance</span>
+        <span class="nav-badge">Safety</span>
+      </a>
+      <a href="#wf-offline-sync" class="nav-item">
+        <span>3. Offline-First Sync</span>
+        <span class="nav-badge">Sequence</span>
+      </a>
+      <a href="#wf-nearby-referral" class="nav-item">
+        <span>4. Capability-First Care</span>
+        <span class="nav-badge">Referral</span>
+      </a>
+      <a href="#wf-doctor-plan" class="nav-item">
+        <span>5. Doctor Care Plan</span>
+        <span class="nav-badge">Prescribing</span>
+      </a>
+      <a href="#wf-rbac-security" class="nav-item">
+        <span>6. RBAC & Security</span>
+        <span class="nav-badge">Governance</span>
+      </a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content">
+
+      <!-- Diagram 1: End-to-End Workflow -->
+      <section id="wf-end-to-end" class="diagram-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>1. End-to-End System & User Journey</h2>
+            <p>From community health worker (ASHA) field intake to deterministic triage, facility referral, doctor review, and adherence.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="mermaid">
+flowchart TD
+    %% User Roles
+    CHW["👩‍⚕️ Community Health Worker (ASHA)"]
+    Doc["👨‍⚕️ Registered Medical Practitioner (Doctor)"]
+    Patient["🧑 Patient / Caregiver"]
+
+    %% Step 1: Field Screening
+    subgraph S1["1. Field Intake & Screening"]
+        Intake["Conduct Field Screening\n(Symptoms, Vitals: Temp, SpO2, Age)"]
+        LocalStore[("Local Device Storage\n(localStorage / IndexedDB)")]
+    end
+
+    %% Step 2: Care Guidance
+    subgraph S2["2. Care Guidance & Triage"]
+        RedFlagEngine{"Deterministic Red-Flag\nSafety Engine"}
+        EmergencyAlert["🚨 EMERGENCY ACTION\n(Immediate Call 112 / Urgent Transfer)"]
+        KnowledgePack["Offline Curated Clinical RAG\n(WHO / ICMR / MoHFW Pack)"]
+        TriageDecision["Triage Tier Assigned:\nEmergency | Same Day | Clinician Review | Cleared"]
+    end
+
+    %% Step 3: Referral
+    subgraph S3["3. Referral & Navigation"]
+        NearbyCheck{"Requires Specialist\nReferral?"}
+        NearbyCare["Capability-First Nearby Care\n(Filter Level: PHC / CHC / Hospital)"]
+        ReferralBrief["Generate Structured\nReferral Brief"]
+    end
+
+    %% Step 4: Sync & Review
+    subgraph S4["4. Sync & Remote Doctor Evaluation"]
+        NetDetect{"Connectivity\nAvailable?"}
+        SyncWorker["Background Sync Engine\n(Cloudflare Worker / Supabase API)"]
+        CloudDB[("Supabase Cloud DB\n(RLS, Encrypted Audit Trail)")]
+        DocQueue["Doctor Case Review Queue\n(Prioritized: Urgent > Review > Evaluated)"]
+        DocEval["Doctor Diagnosis, Orders &\nPrescription Advice"]
+    end
+
+    %% Step 5: Care Plan
+    subgraph S5["5. Care Plan & Adherence"]
+        OrderVerify{"Doctor Auth &\nAmbiguity Check"}
+        ScheduleGen["Deterministic Scheduling Engine\n(Recurring / Taper / Interval)"]
+        Reminders["Patient Daily Care Plan\n(Web Push / ICS / Offline Card)"]
+        Adherence["Record Adherence\n(Self-reported 'Taken')"]
+    end
+
+    %% Flow Links
+    CHW --> Intake
+    Intake --> LocalStore
+    LocalStore --> RedFlagEngine
+
+    RedFlagEngine -- "Red Flag Triggered" --> EmergencyAlert
+    RedFlagEngine -- "Standard Path" --> KnowledgePack
+    KnowledgePack --> TriageDecision
+    TriageDecision --> NearbyCheck
+
+    NearbyCheck -- "Yes" --> NearbyCare
+    NearbyCare --> ReferralBrief
+    NearbyCheck -- "No / Routine" --> NetDetect
+    ReferralBrief --> NetDetect
+
+    NetDetect -- "Offline" --> LocalStore
+    NetDetect -- "Online / Signal Acquired" --> SyncWorker
+    SyncWorker --> CloudDB
+    CloudDB --> DocQueue
+
+    Doc --> DocQueue
+    DocQueue --> DocEval
+    DocEval --> OrderVerify
+
+    OrderVerify -- "Doctor Signed & Valid" --> ScheduleGen
+    ScheduleGen --> Reminders
+    Reminders --> Patient
+    Patient --> Adherence
+    Adherence -. "Syncs back to Field Overview" .-> CHW
+          </div>
+        </div>
+        <div class="card-footer">
+          <strong>Key Tenet:</strong> Field screening is immediately available offline. Emergencies jump directly to local call triggers (112), bypassing latency or network bottlenecks.
+          <div class="tag-list">
+            <span class="tag primary">Offline-First</span>
+            <span class="tag accent">Deterministic Triage</span>
+            <span class="tag">Supabase Sync</span>
+            <span class="tag">FHIR R4</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Diagram 2: Clinical Care Guidance -->
+      <section id="wf-care-guidance" class="diagram-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>2. Clinical Care Guidance (Deterministic-First Triage)</h2>
+            <p>Rules-based escalation precedes any AI/LLM retrieval. Emergencies trigger locked, irreversible alerts with sentence-level citations.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="mermaid">
+flowchart TD
+    Start(["Patient Symptoms & Demographics Entered"]) --> LangCheck["i18n & Translation Safety Gate\n(Tier 1 Critical Clinical Terms Locked to English)"]
+    LangCheck --> DeterministicRules{"Deterministic Red-Flag\nEngine (Rules Versioned)"}
+
+    %% Critical Branch
+    DeterministicRules -- "Emergency Criteria Met\n(e.g., SpO2 < 90%, Chest Pain)" --> EmrgAction["🚨 Trigger Emergency Action\n• Prominent Call 112 Banner\n• Lock Status: Emergency\n• Irreversible Verdict"]
+
+    %% Non-critical Branch
+    DeterministicRules -- "No Critical Red Flag" --> LocalRAG["Offline Curated Knowledge Pack\n(Vector / Hybrid Search on Verified MoHFW/ICMR/WHO)"]
+
+    LocalRAG --> EvidenceEval{"Offline Evidence\nSufficient?"}
+
+    EvidenceEval -- "Yes" --> CiteGen["Assemble Guidance with Sentence Citations\n• Source Attribution\n• Versioning\n• Non-diagnostic Disclaimer"]
+    
+    EvidenceEval -- "No (And Network Available)" --> OnlineAdapter["Guarded Online Evidence Adapter\n(Concept-Only Allow-Listed Lookup)"]
+    EvidenceEval -- "No (And Offline)" --> Insufficient["Return 'Insufficient Information'\nRecommend Primary Health Centre Review"]
+    
+    OnlineAdapter --> CiteGen
+    CiteGen --> TriageClassification["Classify Action Level:\n• Same Day Review\n• Clinician Review\n• Self-Care / Monitoring"]
+
+    EmrgAction --> ReferralRouting["Route to Nearby Care with Emergency Priority"]
+    TriageClassification --> ReferralRouting
+          </div>
+        </div>
+        <div class="card-footer">
+          <strong>Clinical Safety Guarantee:</strong> Tier 1 emergency terms remain English-locked to prevent fatal translation hallucinations, and models can never downgrade an emergency verdict.
+          <div class="tag-list">
+            <span class="tag primary">Deterministic Red Flags</span>
+            <span class="tag accent">MoHFW / ICMR Pack</span>
+            <span class="tag">Call 112 Trigger</span>
+            <span class="tag">Sentence Citations</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Diagram 3: Offline-First Sync -->
+      <section id="wf-offline-sync" class="diagram-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>3. Offline-First Synchronization & Data Persistence</h2>
+            <p>Resilient local queuing, optimistic browser updates, and automated batch reconciliation when connectivity returns.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor ASHA as 👩‍⚕️ Health Worker
+    participant UI as 📱 Client Interface
+    participant LocalDB as 💾 Local Store (localStorage/IDB)
+    participant SyncMgr as 🔄 Sync Manager
+    participant API as 🌐 Supabase API / Worker
+    participant RemoteDB as 🗄️ PostgreSQL Database
+
+    ASHA->>UI: Submit Screening Form
+    UI->>LocalDB: Write ScreeningRecord (synced = false, id = SCR-XXX)
+    UI-->>ASHA: Instant UI Confirmation (Optimistic UX)
+
+    SyncMgr->>SyncMgr: Network Health & Ping Check
+    alt When Offline / No Network
+        SyncMgr-->>UI: Badge: "Reports stored securely offline"
+        Note over LocalDB,SyncMgr: Records queued safely; queue count updated
+    else When Connectivity Restored
+        SyncMgr->>LocalDB: Read all unsynced records
+        LocalDB-->>SyncMgr: Return pending batches
+        SyncMgr->>API: POST /api/screenings/sync (Bounded Payload)
+        API->>RemoteDB: Upsert Records with RLS & Role Verification
+        RemoteDB-->>API: 200 OK (Batch Acknowledged)
+        API-->>SyncMgr: Sync Receipt & Server Timestamps
+        SyncMgr->>LocalDB: Mark synced = true or purge synced cache
+        SyncMgr-->>UI: Status Update: "All records synchronized"
+    end
+          </div>
+        </div>
+        <div class="card-footer">
+          <strong>Data Safety:</strong> Records generated in connectivity shadows receive permanent pseudo-random unique keys (`SCR-XXX`) preventing collision during multi-worker merges.
+          <div class="tag-list">
+            <span class="tag primary">Optimistic UI</span>
+            <span class="tag accent">Batch Sync</span>
+            <span class="tag">Idempotent Upsert</span>
+            <span class="tag">RLS Enforcement</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Diagram 4: Capability-First Nearby Referral -->
+      <section id="wf-nearby-referral" class="diagram-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>4. Capability-First Nearby Care & Referral System</h2>
+            <p>Prevents sending critical patients to closer but incapable facilities by prioritizing medical readiness over geographic distance.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="mermaid">
+flowchart TD
+    Req(["Referral Triggered (from Triage / Screening)"]) --> Consent["Request Explicit Geolocation Consent\n(HTTPS navigator.geolocation)"]
+
+    Consent --> GeoCheck{"Consent Granted & Lat/Lng Received?"}
+    GeoCheck -- "No / Denied / Unavailable" --> ManualLoc["Manual Location Selection\n(Select Village / Sub-District Block)"]
+    GeoCheck -- "Yes" --> StatusTag["Tag Position Accuracy:\n• Accurate | Approximate | Stale"]
+
+    ManualLoc --> CapFilter["Capability-First Filter Engine"]
+    StatusTag --> CapFilter
+
+    CapFilter --> MatchCap{"Match Required Care Level\n(Emergency, C-Section, NICU, Oxygen, MMU)"}
+    
+    MatchCap -- "Matches Level" --> GeoSort["Calculate Haversine Distance &\nSort by Distance + Verification Freshness"]
+    MatchCap -- "Does Not Match Level" --> ExcludeFacility["Exclude Facility\n(Prevents sending critical patients to incapable centres)"]
+
+    GeoSort --> OutputView["Present Referral Directory:\n1. Direct Call 112 (if Emergency)\n2. Accessible List View (Primary)\n3. MapLibre GL Tile Map (Attributed OSM)"]
+
+    OutputView --> ShareAction["Generate Referral Brief:\n• Patient Pseudonym / Ref ID\n• Vitals & Triage Tier\n• Target Facility & Handover Summary"]
+          </div>
+        </div>
+        <div class="card-footer">
+          <strong>Privacy By Design:</strong> Exact GPS coordinates are never transmitted to third-party tile servers; OpenStreetMap requests load only anonymous raster tiles.
+          <div class="tag-list">
+            <span class="tag primary">Capability-First</span>
+            <span class="tag accent">MapLibre GL</span>
+            <span class="tag">Explicit Consent</span>
+            <span class="tag">Referral Briefs</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Diagram 5: Doctor Care Plan -->
+      <section id="wf-doctor-plan" class="diagram-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>5. Doctor Care Plan, Medication Orders & Reminders</h2>
+            <p>Clinician-authorized prescriptions, ambiguity blocking, deterministic schedules, and patient adherence tracking.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="mermaid">
+flowchart LR
+    subgraph DoctorAuth["Clinician Order Authorization"]
+        DocLogin["Doctor Authenticated\n(Role = doctor / admin)"] --> DraftOrder["Draft Medication Order\n(RxNorm / Concept / Dose)"]
+        DraftOrder --> AmbiguityCheck{"Ambiguity &\nSafety Checks"}
+    end
+
+    subgraph SafetyRules["Validation Rules Engine"]
+        AmbiguityCheck -- "Free-text or Unclear Schedule" --> Reject["❌ Reject Order\n(Require structured timing & daily max)"]
+        AmbiguityCheck -- "Allergy or Duplicate Order" --> Alert["⚠️ Clinical Warning Alert"]
+        AmbiguityCheck -- "Structured & Clean" --> SignOrder["✍️ Cryptographic / Doctor HMAC Signature"]
+    end
+
+    subgraph Engine["Deterministic Scheduling Engine"]
+        SignOrder --> CalcSchedule["Calculate Scheduled Doses\n• Recurring (e.g. BD, TDS)\n• Tapering dosages\n• Interval / Weekday specific\n• Pause on hospitalization"]
+        CalcSchedule --> FHIRMap["Export FHIR R4 Resource\n(MedicationRequest & CarePlan)"]
+    end
+
+    subgraph Execution["Patient Reminder Delivery"]
+        CalcSchedule --> Dispatch["Reminder Surface:\n• Daily Offline Patient Schedule Card\n• Printable Adherence Chart\n• Privacy-Preserving ICS Calendar\n• Best-effort Web Push"]
+        Dispatch --> LogAction["Patient / Caregiver Logs Action:\n• Taken (Self-reported)\n• Missed (Prompts clinician advice)"]
+    end
+          </div>
+        </div>
+        <div class="card-footer">
+          <strong>Non-Inferential Safety:</strong> The engine refuses to guess doses from unstructured free text. AI chatbots are completely blocked from writing or altering medication orders.
+          <div class="tag-list">
+            <span class="tag primary">HMAC Signature</span>
+            <span class="tag accent">Deterministic Engine</span>
+            <span class="tag">FHIR R4 Aligned</span>
+            <span class="tag">ICS Export</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Diagram 6: RBAC & Governance -->
+      <section id="wf-rbac-security" class="diagram-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>6. Security Boundaries & Role-Based Access Control (RBAC)</h2>
+            <p>Strict least-privilege partitioning between field health workers, registered doctors, and administrative auditors.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="mermaid">
+flowchart TD
+    User([Incoming User Request]) --> AuthBoundary{"Supabase Auth\n& Role Verification"}
+
+    AuthBoundary -- "Health Worker" --> HWPerms["ASHA / Health Worker Scope:\n• Create & Read Assigned Screenings\n• Execute Care Guidance & Nearby Lookups\n• Record Patient Adherence ('Taken')\n❌ Cannot create or sign prescription orders"]
+
+    AuthBoundary -- "Doctor / RMP" --> DocPerms["Registered Doctor Scope:\n• Review Prioritized Triage Queue\n• Submit Diagnoses & Clinical Orders\n• Author, Sign & Pause Care Plans\n• Access Clinical Audit Trail"]
+
+    AuthBoundary -- "Public / Anonymous" --> AnonPerms["Public / Anonymous Scope:\n• Browse Public Facility Directories & Camps\n❌ Zero access to patient or screening data"]
+
+    AuthBoundary -- "Admin" --> AdminPerms["Administrator Scope:\n• Manage Staff Profiles & Credentials\n• Ingest Knowledge Pack Updates\n• Audit Event Log Exports & Compliance"]
+
+    HWPerms --> RLS[PostgreSQL Row-Level Security Policy]
+    DocPerms --> RLS
+    AnonPerms --> RLS
+    AdminPerms --> RLS
+          </div>
+        </div>
+        <div class="card-footer">
+          <strong>Security Compliance:</strong> All database operations validate role identity server-side via PostgreSQL Row-Level Security (RLS), avoiding reliance on client metadata.
+          <div class="tag-list">
+            <span class="tag primary">Row-Level Security</span>
+            <span class="tag accent">HMAC Signed Orders</span>
+            <span class="tag">Audit Logs</span>
+            <span class="tag">Least-Privilege</span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    // Initialize Mermaid with dynamic theme
+    function initMermaid(isDark) {
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: isDark ? 'dark' : 'neutral',
+        fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+        flowchart: { curve: 'basis', htmlLabels: true },
+        securityLevel: 'loose'
+      });
+    }
+
+    const currentTheme = document.body.getAttribute('data-theme') || 'dark';
+    initMermaid(currentTheme === 'dark');
+
+    function toggleTheme() {
+      const isDark = document.body.getAttribute('data-theme') === 'dark';
+      const nextTheme = isDark ? 'light' : 'dark';
+      document.body.setAttribute('data-theme', nextTheme);
+      localStorage.setItem('arogya_theme', nextTheme);
+      location.reload();
+    }
+
+    // Scrollspy navigation highlight
+    window.addEventListener('scroll', () => {
+      const sections = document.querySelectorAll('.diagram-card');
+      const navLinks = document.querySelectorAll('.nav-item');
+      let current = '';
+
+      sections.forEach(sec => {
+        const top = sec.offsetTop - 120;
+        if (pageYOffset >= top) {
+          current = sec.getAttribute('id');
+        }
+      });
+
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + current) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

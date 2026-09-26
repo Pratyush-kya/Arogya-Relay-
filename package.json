@@ -1,0 +1,49 @@
+{
+  "name": "arogya-relay",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "node build/run-vinext.mjs dev",
+    "build": "node build/run-vinext.mjs build",
+    "vercel-build": "next build",
+    "start": "node build/run-vinext.mjs start",
+    "test": "npm run build && node --experimental-strip-types --test tests/rendered-html.test.mjs tests/security.test.mts tests/clinical-engine.test.mts tests/nearby-care.test.mts tests/i18n.test.mts tests/care-plan.test.mts",
+    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "check": "npm run lint && npm test",
+    "audit:prod": "npm audit --omit=dev --audit-level=high",
+    "db:generate": "drizzle-kit generate"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.112.3",
+    "drizzle-orm": "0.45.2",
+    "lucide-react": "^1.33.0",
+    "maplibre-gl": "^4.7.1",
+    "next": "16.3.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "1.52.1",
+    "@cloudflare/workers-types": "5.20260816.1",
+    "@tailwindcss/postcss": "4.2.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "22.19.19",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "@vitejs/plugin-react": "6.0.2",
+    "@vitejs/plugin-rsc": "0.5.26",
+    "drizzle-kit": "0.31.10",
+    "eslint": "9.39.4",
+    "eslint-config-next": "16.3.1",
+    "react-server-dom-webpack": "19.2.8",
+    "tailwindcss": "4.2.1",
+    "typescript": "5.9.3",
+    "vinext": "0.0.50",
+    "vite": "^8.2.1",
+    "wrangler": "4.123.0"
+  },
+  "type": "module"
+}
