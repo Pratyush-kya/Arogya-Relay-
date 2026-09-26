@@ -3915,3 +3915,200 @@ body {
 
 
 
+
+/* ------------------------------------------------------------- */
+/* Universal Rich Icon Tooltips & Full-Screen Consoles          */
+/* ------------------------------------------------------------- */
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.icon-tooltip-container {
+  display: inline-flex;
+  align-items: center;
+}
+
+.rich-icon-tooltip {
+  pointer-events: none;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+/* Dedicated Full-Screen Console Views */
+.fullscreen-console {
+  min-height: 100vh;
+  width: 100%;
+  background: var(--bg, #f4f7f5);
+  color: var(--ink, #1e293b);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 100;
+  animation: fullscreenFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fullscreenFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fullscreen-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(23, 100, 79, 0.15);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.fullscreen-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.fullscreen-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  background: rgba(23, 100, 79, 0.1);
+  color: var(--sc-accent, #17644f);
+  border: 1px solid rgba(23, 100, 79, 0.25);
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.fullscreen-back-btn:hover {
+  background: var(--sc-accent, #17644f);
+  color: #ffffff;
+  transform: translateX(-2px);
+}
+
+.fullscreen-title-area h1 {
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0;
+  color: var(--sc-accent, #17644f);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fullscreen-title-area p {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: var(--muted, #64748b);
+}
+
+.fullscreen-content-container {
+  flex: 1;
+  max-width: 1240px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+/* Screening full-screen workstation grid */
+.screening-workstation-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .screening-workstation-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.workstation-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid rgba(23, 100, 79, 0.14);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.workstation-card-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink, #1e293b);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 12px;
+}
+
+/* Auth full-screen workstation */
+.auth-fullscreen-card {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid rgba(23, 100, 79, 0.16);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  max-width: 760px;
+  margin: 20px auto 40px;
+  overflow: hidden;
+}
+
+.auth-tabs-header {
+  display: flex;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  overflow-x: auto;
+}
+
+.auth-tab-btn {
+  flex: 1;
+  min-width: 140px;
+  padding: 14px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-bottom: 3px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.auth-tab-btn.active {
+  background: #ffffff;
+  color: var(--sc-accent, #17644f);
+  border-bottom-color: var(--sc-accent, #17644f);
+}
+

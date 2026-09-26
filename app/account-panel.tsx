@@ -81,12 +81,19 @@ export function AccountPanel({ open, onToggle }: { open?: boolean; onToggle?: ()
   );
 }
 
+import { IconTooltip } from "./icon-tooltip";
+export { AuthScreen } from "./auth-screen";
+
 /**
  * TopRightUserNav replaces the old user header pill and key icon.
  * Positioned in the top right corner of the application for prominent account
  * access, authentication, doctor verification alerts, and admin console launch.
  */
-export function TopRightUserNav() {
+export function TopRightUserNav({
+  onOpenAuthScreen,
+}: {
+  onOpenAuthScreen?: (mode: "signin" | "signup" | "admin" | "profile") => void;
+} = {}) {
   const supabase = useMemo(() => createClient(), []);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -523,62 +530,80 @@ export function TopRightUserNav() {
     <div style={{ position: "relative" }} ref={popoverRef}>
       {/* Top Right Header Pill */}
       {user ? (
-        <button
-          type="button"
-          onClick={() => setPopoverOpen((p) => !p)}
-          className="glass-button"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "5px 12px",
-            borderRadius: "20px",
-            background: "rgba(255, 255, 255, 0.9)",
-            border: isDoctorPending ? "1.5px solid #f59e0b" : "1.5px solid rgba(23, 100, 79, 0.25)",
-            cursor: "pointer",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-          }}
-          title={user.email || "Account Profile"}
+        <IconTooltip
+          title="User Account & Doctor Status"
+          desc="Manage session, NMC verification badges, and clinic credentials."
+          howToUse="Click to view menu or switch to full-screen account workstation."
+          position="bottom"
         >
-          <span style={{ fontSize: "14px" }}>{currentTheme.icon}</span>
-          <div style={{ textAlign: "left", lineHeight: 1.1 }}>
-            <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--sc-ink, #0f172a)", display: "block" }}>
-              {profile?.display_name || user.email?.split("@")[0]}
-            </span>
-            <span
-              style={{
-                fontSize: "9px",
-                fontWeight: 700,
-                color: isDoctorPending ? "#d97706" : currentTheme.color,
-                textTransform: "uppercase",
-              }}
-            >
-              {isDoctorPending ? "⚠️ NMC Pending" : currentTheme.label}
-            </span>
-          </div>
-          <span style={{ fontSize: "9px", opacity: 0.6 }}>▼</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setPopoverOpen((p) => !p)}
+            className="glass-button"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "5px 12px",
+              borderRadius: "20px",
+              background: "rgba(255, 255, 255, 0.9)",
+              border: isDoctorPending ? "1.5px solid #f59e0b" : "1.5px solid rgba(23, 100, 79, 0.25)",
+              cursor: "pointer",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+            }}
+            title={user.email || "Account Profile"}
+          >
+            <span style={{ fontSize: "14px" }}>{currentTheme.icon}</span>
+            <div style={{ textAlign: "left", lineHeight: 1.1 }}>
+              <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--sc-ink, #0f172a)", display: "block" }}>
+                {profile?.display_name || user.email?.split("@")[0]}
+              </span>
+              <span
+                style={{
+                  fontSize: "9px",
+                  fontWeight: 700,
+                  color: isDoctorPending ? "#d97706" : currentTheme.color,
+                  textTransform: "uppercase",
+                }}
+              >
+                {isDoctorPending ? "⚠️ NMC Pending" : currentTheme.label}
+              </span>
+            </div>
+            <span style={{ fontSize: "9px", opacity: 0.6 }}>▼</span>
+          </button>
+        </IconTooltip>
       ) : (
-        <button
-          type="button"
-          onClick={() => {
-            setAuthMode("signin");
-            setAuthModalOpen(true);
-          }}
-          className="primary-button"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            padding: "6px 14px",
-            borderRadius: "18px",
-            fontSize: "12px",
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
+        <IconTooltip
+          title="Sign In or Register"
+          desc="Access authenticated clinical tools, NMC doctor verification, and system admin portal."
+          howToUse="Click to open the dedicated full-screen authentication screen."
+          position="bottom"
         >
-          <span>👤</span> Sign In / Register
-        </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (onOpenAuthScreen) {
+                onOpenAuthScreen("signin");
+              } else {
+                setAuthMode("signin");
+                setAuthModalOpen(true);
+              }
+            }}
+            className="primary-button"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "6px 14px",
+              borderRadius: "18px",
+              fontSize: "12px",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            <span>👤</span> Sign In / Register
+          </button>
+        </IconTooltip>
       )}
 
       {/* Account Popover */}
@@ -654,6 +679,23 @@ export function TopRightUserNav() {
             </div>
           )}
 
+          {/* Open Dedicated Full-Screen Account Screen */}
+          <button
+            type="button"
+            className="glass-button"
+            style={{ width: "100%", padding: "7px", fontSize: "11px", fontWeight: 700, justifyContent: "center" }}
+            onClick={() => {
+              setPopoverOpen(false);
+              if (onOpenAuthScreen) {
+                onOpenAuthScreen("profile");
+              } else {
+                setAuthModalOpen(true);
+              }
+            }}
+          >
+            <span>🖥️</span> Open Full Account Screen
+          </button>
+
           {/* Admin Doctor Verification Console Launcher */}
           {profile?.role === "admin" && (
             <button
@@ -673,8 +715,12 @@ export function TopRightUserNav() {
               }}
               onClick={() => {
                 setPopoverOpen(false);
-                loadDoctorsForAdmin();
-                setAdminConsoleOpen(true);
+                if (onOpenAuthScreen) {
+                  onOpenAuthScreen("admin");
+                } else {
+                  loadDoctorsForAdmin();
+                  setAdminConsoleOpen(true);
+                }
               }}
             >
               <span>🛡️</span> Doctor Verification Console

@@ -8,6 +8,9 @@ import type { User } from "@supabase/supabase-js";
 
 import { FormEvent, lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "@/lib/i18n/provider";
+import { IconTooltip } from "./icon-tooltip";
+import { AuthScreen } from "./auth-screen";
+import { ScreeningScreen } from "./screening-screen";
 
 // Keep specialist workspaces out of the first dashboard payload.
 const CareGuidance = lazy(() => import("./care-guidance"));
@@ -89,12 +92,36 @@ function WorkspaceLoading() {
 export default function Home() {
   const { t, effectiveLang } = useLanguage();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const [viewMode, setViewMode] = useState<"dashboard" | "auth" | "screening">("dashboard");
+  const [authScreenMode, setAuthScreenMode] = useState<"signin" | "signup" | "admin" | "profile">("signin");
   const [screeningOpen, setScreeningOpen] = useState(false);
   const [syncState, setSyncState] = useState<SyncState>("ready");
   const [noticeKey, setNoticeKey] = useState("shell.reportsStored");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [supabaseSettingsOpen, setSupabaseSettingsOpen] = useState(false);
+
+  // Sync URL hash for direct links and separate screen tabs (#auth, #screening)
+  useEffect(() => {
+    function checkHash() {
+      const hash = window.location.hash;
+      if (hash === "#auth" || hash === "#signin") {
+        setAuthScreenMode("signin");
+        setViewMode("auth");
+      } else if (hash === "#signup" || hash === "#doctor-signup") {
+        setAuthScreenMode("signup");
+        setViewMode("auth");
+      } else if (hash === "#admin") {
+        setAuthScreenMode("admin");
+        setViewMode("auth");
+      } else if (hash === "#screening" || hash === "#new-screening") {
+        setViewMode("screening");
+      }
+    }
+    checkHash();
+    window.addEventListener("hashchange", checkHash);
+    return () => window.removeEventListener("hashchange", checkHash);
+  }, []);
 
   // Real screenings data from Supabase / offline storage
   const [screenings, setScreenings] = useState<ScreeningRecord[]>([]);
@@ -212,7 +239,7 @@ export default function Home() {
 
   const openScreening = useCallback((event?: { currentTarget: HTMLElement }) => {
     openerRef.current = event?.currentTarget ?? null;
-    setScreeningOpen(true);
+    setViewMode("screening");
   }, []);
 
   // Escape closes the dialog, and focus is moved into it
@@ -364,6 +391,45 @@ export default function Home() {
   const today = new Date();
   const urgentCount = screenings.filter((s) => s.urgency_tier === "urgent" || s.urgency_tier === "emergency").length;
 
+  // DEDICATED SEPARATE FULL-SCREEN: Medical Identity, Authentication & Doctor Verification
+  if (viewMode === "auth") {
+    return (
+      <AuthScreen
+        initialMode={authScreenMode}
+        onBackToDashboard={() => {
+          setViewMode("dashboard");
+          if (typeof window !== "undefined" && (window.location.hash.startsWith("#auth") || window.location.hash.startsWith("#sign"))) {
+            window.history.pushState("", document.title, window.location.pathname + window.location.search);
+          }
+        }}
+        onSuccess={() => {
+          setViewMode("dashboard");
+        }}
+      />
+    );
+  }
+
+  // DEDICATED SEPARATE FULL-SCREEN: Clinical Field Screening & Patient Triage Workstation
+  if (viewMode === "screening") {
+    return (
+      <ScreeningScreen
+        onBackToDashboard={() => {
+          setViewMode("dashboard");
+          if (typeof window !== "undefined" && window.location.hash.startsWith("#screen")) {
+            window.history.pushState("", document.title, window.location.pathname + window.location.search);
+          }
+        }}
+        onSaveSuccess={(record) => {
+          setScreenings((prev) => [record, ...prev]);
+          setViewMode("dashboard");
+          setNoticeKey("screening.savedSuccess");
+        }}
+        currentUser={currentUser}
+        currentProfile={currentProfile}
+      />
+    );
+  }
+
   return (
     <main className="app-shell">
       <aside className="sidebar" aria-label={t("shell.primaryNav")}>
@@ -376,88 +442,166 @@ export default function Home() {
         </div>
 
         <nav className="side-nav">
-          <button
-            type="button"
-            className={activeTab === "overview" ? "nav-item active" : "nav-item"}
-            aria-current={activeTab === "overview" ? "page" : undefined}
-            onClick={() => setActiveTab("overview")}
+          <IconTooltip
+            title="Overview Dashboard"
+            desc="Community health metrics, patient triage volume, and field unit operational status."
+            howToUse="Click to return to primary clinic overview."
+            position="right"
           >
-            <span className="nav-glyph">⌂</span> {t("nav.overview")}
-          </button>
-          <button
-            type="button"
-            className={activeTab === "cases" ? "nav-item active" : "nav-item"}
-            aria-current={activeTab === "cases" ? "page" : undefined}
-            onClick={() => setActiveTab("cases")}
+            <button
+              type="button"
+              className={activeTab === "overview" ? "nav-item active" : "nav-item"}
+              aria-current={activeTab === "overview" ? "page" : undefined}
+              onClick={() => setActiveTab("overview")}
+            >
+              <span className="nav-glyph">⌂</span> {t("nav.overview")}
+            </button>
+          </IconTooltip>
+
+          <IconTooltip
+            title="Patient Cases Registry"
+            desc="Track, review, and filter registered patient screenings with vitals and doctor evaluations."
+            howToUse="Click to view all patient records or filter by triage tier."
+            position="right"
           >
-            <span className="nav-glyph">◎</span> {t("nav.cases")} <b>{screenings.length}</b>
-          </button>
-          <button
-            type="button"
-            className={activeTab === "library" ? "nav-item active" : "nav-item"}
-            aria-current={activeTab === "library" ? "page" : undefined}
-            onClick={() => setActiveTab("library")}
+            <button
+              type="button"
+              className={activeTab === "cases" ? "nav-item active" : "nav-item"}
+              aria-current={activeTab === "cases" ? "page" : undefined}
+              onClick={() => setActiveTab("cases")}
+            >
+              <span className="nav-glyph">◎</span> {t("nav.cases")} <b>{screenings.length}</b>
+            </button>
+          </IconTooltip>
+
+          <IconTooltip
+            title="Arogya Gyan (Disease Library)"
+            desc="Offline catalog of common illnesses, self-care remedies, danger signs, and prevention tips."
+            howToUse="Click to search clinical protocols and home remedies."
+            position="right"
           >
-            <span className="nav-glyph">📖</span> Arogya Gyan
-          </button>
-          <button
-            type="button"
-            className={activeTab === "prescriptions" ? "nav-item active" : "nav-item"}
-            aria-current={activeTab === "prescriptions" ? "page" : undefined}
-            onClick={() => setActiveTab("prescriptions")}
+            <button
+              type="button"
+              className={activeTab === "library" ? "nav-item active" : "nav-item"}
+              aria-current={activeTab === "library" ? "page" : undefined}
+              onClick={() => setActiveTab("library")}
+            >
+              <span className="nav-glyph">📖</span> Arogya Gyan
+            </button>
+          </IconTooltip>
+
+          <IconTooltip
+            title="Digital Prescription Tracker"
+            desc="Author, digitally sign, and review prescriptions with dosage schedules and reminder alerts."
+            howToUse="Click to issue or view verified electronic prescriptions."
+            position="right"
           >
-            <span className="nav-glyph">💊</span> Prescriptions
-          </button>
-          <button
-            type="button"
-            className={activeTab === "matcher" ? "nav-item active" : "nav-item"}
-            aria-current={activeTab === "matcher" ? "page" : undefined}
-            onClick={() => setActiveTab("matcher")}
+            <button
+              type="button"
+              className={activeTab === "prescriptions" ? "nav-item active" : "nav-item"}
+              aria-current={activeTab === "prescriptions" ? "page" : undefined}
+              onClick={() => setActiveTab("prescriptions")}
+            >
+              <span className="nav-glyph">💊</span> Prescriptions
+            </button>
+          </IconTooltip>
+
+          <IconTooltip
+            title="Drishti AI Visual Matcher"
+            desc="Upload or capture a photo of a skin condition or rash to view matching clinical reference cases."
+            howToUse="Click to compare clinical skin lesion photos."
+            position="right"
           >
-            <span className="nav-glyph">📷</span> Drishti AI
-          </button>
-          <button
-            type="button"
-            className={activeTab === "care" ? "nav-item active" : "nav-item"}
-            aria-current={activeTab === "care" ? "page" : undefined}
-            onClick={() => setActiveTab("care")}
+            <button
+              type="button"
+              className={activeTab === "matcher" ? "nav-item active" : "nav-item"}
+              aria-current={activeTab === "matcher" ? "page" : undefined}
+              onClick={() => setActiveTab("matcher")}
+            >
+              <span className="nav-glyph">📷</span> Drishti AI
+            </button>
+          </IconTooltip>
+
+          <IconTooltip
+            title="Clinical Decision Support"
+            desc="Evidence-based clinical guidelines and diagnostic triage questions for field health workers."
+            howToUse="Click to launch interactive triage assessment."
+            position="right"
           >
-            <span className="nav-glyph">✚</span> {t("nav.care")}
-          </button>
-          <button
-            type="button"
-            className={activeTab === "nearby" ? "nav-item active" : "nav-item"}
-            aria-current={activeTab === "nearby" ? "page" : undefined}
-            onClick={() => setActiveTab("nearby")}
+            <button
+              type="button"
+              className={activeTab === "care" ? "nav-item active" : "nav-item"}
+              aria-current={activeTab === "care" ? "page" : undefined}
+              onClick={() => setActiveTab("care")}
+            >
+              <span className="nav-glyph">✚</span> {t("nav.care")}
+            </button>
+          </IconTooltip>
+
+          <IconTooltip
+            title="Healthcare Locator & Referral"
+            desc="Find nearest verified hospitals, PHCs, CHCs, pharmacies, and scheduled health camps."
+            howToUse="Click to view closest medical facilities and road travel times."
+            position="right"
           >
-            <span className="nav-glyph">⌖</span> {t("nav.nearby")}
-          </button>
-          <button
-            type="button"
-            className={activeTab === "plan" ? "nav-item active" : "nav-item"}
-            aria-current={activeTab === "plan" ? "page" : undefined}
-            onClick={() => setActiveTab("plan")}
+            <button
+              type="button"
+              className={activeTab === "nearby" ? "nav-item active" : "nav-item"}
+              aria-current={activeTab === "nearby" ? "page" : undefined}
+              onClick={() => setActiveTab("nearby")}
+            >
+              <span className="nav-glyph">⌖</span> {t("nav.nearby")}
+            </button>
+          </IconTooltip>
+
+          <IconTooltip
+            title="Personalized Chronic Care Plans"
+            desc="Manage chronic treatment plans, medication adherence schedules, and lifestyle follow-ups."
+            howToUse="Click to review active care plans and dosage alarms."
+            position="right"
           >
-            <span className="nav-glyph">♥</span> {t("nav.plan")}
-          </button>
-          <button
-            type="button"
-            className={activeTab === "device" ? "nav-item active" : "nav-item"}
-            aria-current={activeTab === "device" ? "page" : undefined}
-            onClick={() => setActiveTab("device")}
+            <button
+              type="button"
+              className={activeTab === "plan" ? "nav-item active" : "nav-item"}
+              aria-current={activeTab === "plan" ? "page" : undefined}
+              onClick={() => setActiveTab("plan")}
+            >
+              <span className="nav-glyph">♥</span> {t("nav.plan")}
+            </button>
+          </IconTooltip>
+
+          <IconTooltip
+            title="Offline Sync & Hotspot Relay"
+            desc="Manage offline database cache, peer-to-peer Wi-Fi hotspot relay, and Supabase cloud sync."
+            howToUse="Click to view sync status and peer mesh relay."
+            position="right"
           >
-            <span className="nav-glyph">▣</span> {t("nav.device")}
-          </button>
+            <button
+              type="button"
+              className={activeTab === "device" ? "nav-item active" : "nav-item"}
+              aria-current={activeTab === "device" ? "page" : undefined}
+              onClick={() => setActiveTab("device")}
+            >
+              <span className="nav-glyph">▣</span> {t("nav.device")}
+            </button>
+          </IconTooltip>
         </nav>
 
         <div className="sidebar-spacer" />
-        <div className="connection-card">
-          <div className="connection-title"><i /> {t("shell.intermittent2g")}</div>
-          <div className="signal-steps" aria-label="Two of four signal bars">
-            <span /><span /><span className="off" /><span className="off" />
+        <IconTooltip
+          title="Offline-First Network Architecture"
+          desc="Arogya Relay works 100% offline. All patient records and photos save locally in browser storage and sync automatically when connected."
+          howToUse="No action needed; background queue will auto-sync."
+          position="right"
+        >
+          <div className="connection-card" style={{ cursor: "help" }}>
+            <div className="connection-title"><i /> {t("shell.intermittent2g")}</div>
+            <div className="signal-steps" aria-label="Two of four signal bars">
+              <span /><span /><span className="off" /><span className="off" />
+            </div>
+            <p>{t("shell.offlineCapture")}</p>
           </div>
-          <p>{t("shell.offlineCapture")}</p>
-        </div>
+        </IconTooltip>
         <AccountPanel
           open={accountOpen}
           onToggle={() => { setAccountOpen((open) => !open); setNotificationsOpen(false); }}
@@ -471,33 +615,53 @@ export default function Home() {
             <h2>{t("shell.cluster")}</h2>
           </div>
           <div className="top-actions">
-            <div className="today" aria-live="polite">
-              <span suppressHydrationWarning>{new Intl.DateTimeFormat(`${effectiveLang}-IN`, { weekday: "long" }).format(today)}</span>
-              <strong suppressHydrationWarning>{new Intl.DateTimeFormat(`${effectiveLang}-IN`, { day: "2-digit", month: "short", year: "numeric" }).format(today)}</strong>
-            </div>
-
-            <button
-              type="button"
-              className="glass-button"
-              style={{ fontSize: "11px", padding: "6px 10px", display: "flex", alignItems: "center", gap: "5px" }}
-              onClick={() => setSupabaseSettingsOpen(true)}
-              title="Configure Supabase Database Credentials"
+            <IconTooltip
+              title="Current Clinic Operational Date"
+              desc="Local health station date and operational day."
+              howToUse="Reference for clinical case timestamps."
+              position="bottom"
             >
-              <span>⚡</span> Supabase
-            </button>
+              <div className="today" aria-live="polite">
+                <span suppressHydrationWarning>{new Intl.DateTimeFormat(`${effectiveLang}-IN`, { weekday: "long" }).format(today)}</span>
+                <strong suppressHydrationWarning>{new Intl.DateTimeFormat(`${effectiveLang}-IN`, { day: "2-digit", month: "short", year: "numeric" }).format(today)}</strong>
+              </div>
+            </IconTooltip>
+
+            <IconTooltip
+              title="Supabase Cloud Database"
+              desc="Live database connection for patient records, storage buckets, and auth."
+              howToUse="Click to configure API credentials and test connection."
+              position="bottom"
+            >
+              <button
+                type="button"
+                className="glass-button"
+                style={{ fontSize: "11px", padding: "6px 10px", display: "flex", alignItems: "center", gap: "5px" }}
+                onClick={() => setSupabaseSettingsOpen(true)}
+              >
+                <span>⚡</span> Supabase
+              </button>
+            </IconTooltip>
 
             <LanguageSwitcher />
 
             <div className="topbar-menu">
-              <button
-                type="button"
-                className="quiet-icon"
-                aria-label={t("shell.notifications")}
-                aria-expanded={notificationsOpen}
-                onClick={() => { setNotificationsOpen((open) => !open); setAccountOpen(false); }}
+              <IconTooltip
+                title="Urgent Clinical Signals"
+                desc="Live triage warnings and emergency patient notifications."
+                howToUse="Click to view urgent case notifications and alerts."
+                position="bottom"
               >
-                ●<span />
-              </button>
+                <button
+                  type="button"
+                  className="quiet-icon"
+                  aria-label={t("shell.notifications")}
+                  aria-expanded={notificationsOpen}
+                  onClick={() => { setNotificationsOpen((open) => !open); setAccountOpen(false); }}
+                >
+                  ●<span />
+                </button>
+              </IconTooltip>
               {notificationsOpen && (
                 <div className="notification-popover" role="region" aria-label={t("shell.notifications")}>
                   <span className="eyebrow">{t("shell.liveNotifications")}</span>
@@ -508,11 +672,23 @@ export default function Home() {
               )}
             </div>
 
-            <button type="button" className="primary-button" onClick={openScreening}>
-              <span aria-hidden="true">＋</span> {t("action.newScreening")}
-            </button>
+            <IconTooltip
+              title="New Clinical Screening Workstation"
+              desc="Open dedicated full-screen console for patient registration, vitals dictation, and lesion camera capture."
+              howToUse="Click to launch the full-screen screening workstation."
+              position="bottom"
+            >
+              <button type="button" className="primary-button" onClick={openScreening}>
+                <span aria-hidden="true">＋</span> {t("action.newScreening")}
+              </button>
+            </IconTooltip>
 
-            <TopRightUserNav />
+            <TopRightUserNav
+              onOpenAuthScreen={(mode) => {
+                setAuthScreenMode(mode);
+                setViewMode("auth");
+              }}
+            />
           </div>
         </header>
 
