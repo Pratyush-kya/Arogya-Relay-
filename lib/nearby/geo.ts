@@ -45,14 +45,18 @@ export function coarseGrid(point: { lat: number; lng: number }): string {
 
 export function buildConsentSnapshot(
   point: GeoPoint,
-  _opts?: { retentionDays?: number }
+  opts?: string | { retentionDays?: number; purpose?: string }
 ) {
+  const retentionDays = typeof opts === "object" && opts?.retentionDays ? opts.retentionDays : 30;
+  const now = new Date();
+  const until = new Date(now.getTime() + retentionDays * 24 * 60 * 60 * 1000);
   return {
     latitude: point.lat,
     longitude: point.lng,
     accuracy: point.accuracyMeters || 10,
-    timestamp: new Date().toISOString(),
-    retentionWindow: "30_days",
+    timestamp: now.toISOString(),
+    retentionWindow: `${retentionDays}_days`,
+    retentionUntil: until.toISOString(),
   };
 }
 
