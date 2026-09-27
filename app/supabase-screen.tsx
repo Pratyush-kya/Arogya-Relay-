@@ -528,9 +528,9 @@ export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreen
                   Configured Supabase project home hosting PostgreSQL tables, S3-compatible binary buckets, row-level security policies, and physician verification logs.
                 </p>
 
-                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "14px" }}>
                   <a
-                    href={SUPABASE_ORG_URL}
+                    href="https://supabase.com/dashboard/new/ufohydwnepbmjoigycfj"
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -547,23 +547,130 @@ export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreen
                       boxShadow: "0 4px 14px rgba(52, 211, 153, 0.3)",
                     }}
                   >
-                    <span>Open Supabase Org Dashboard ↗</span>
+                    <span>➕ 1-Click: Create Project 'arogya-relay' in Org ↗</span>
                   </a>
+
                   <button
                     type="button"
-                    onClick={() => copyToClipboard(SUPABASE_ORG_URL, "org_url")}
+                    onClick={() => copyToClipboard(SUPABASE_SCHEMA_SQL, "sql_quick_copy")}
                     style={{
-                      background: "rgba(255, 255, 255, 0.1)",
-                      border: "1px solid rgba(255, 255, 255, 0.2)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      background: copiedKey === "sql_quick_copy" ? "#10b981" : "rgba(255, 255, 255, 0.15)",
+                      border: "1px solid rgba(255, 255, 255, 0.25)",
                       color: "#ffffff",
                       borderRadius: "10px",
                       padding: "8px 14px",
                       fontSize: "12px",
                       fontWeight: 700,
                       cursor: "pointer",
+                      transition: "all 0.15s ease",
                     }}
                   >
-                    {copiedKey === "org_url" ? "✓ Copied Link" : "📋 Copy Org Link"}
+                    <span>{copiedKey === "sql_quick_copy" ? "✓" : "📋"}</span>
+                    <span>{copiedKey === "sql_quick_copy" ? "SQL Migration Copied!" : "Copy Full SQL Migration"}</span>
+                  </button>
+
+                  <a
+                    href="https://supabase.com/dashboard/project/_/sql/new"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      background: "rgba(255, 255, 255, 0.08)",
+                      border: "1px solid rgba(255, 255, 255, 0.2)",
+                      color: "#e2e8f0",
+                      borderRadius: "10px",
+                      padding: "8px 14px",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      textDecoration: "none",
+                    }}
+                  >
+                    <span>⚡ Open Supabase SQL Editor ↗</span>
+                  </a>
+
+                  <a
+                    href={SUPABASE_ORG_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      background: "transparent",
+                      border: "1px solid rgba(255, 255, 255, 0.2)",
+                      color: "#94a3b8",
+                      borderRadius: "10px",
+                      padding: "8px 12px",
+                      fontSize: "11.5px",
+                      fontWeight: 600,
+                      textDecoration: "none",
+                    }}
+                  >
+                    <span>Org Overview ↗</span>
+                  </a>
+                </div>
+
+                {/* Quick Project Ref Input Bar */}
+                <div
+                  style={{
+                    background: "rgba(0, 0, 0, 0.25)",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    borderRadius: "10px",
+                    padding: "10px 14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <span style={{ fontSize: "11px", color: "#a7f3d0", fontWeight: 700, whiteSpace: "nowrap" }}>
+                    Quick Project Ref:
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Paste 20-char project ref (e.g. ufohydwnepbmjoigycfj or new ref)"
+                    value={projectRefInput}
+                    onChange={(e) => {
+                      const val = e.target.value.trim().replace(/^https?:\/\//, "").replace(/\.supabase\.co.*$/, "");
+                      setProjectRefInput(val);
+                      if (val) {
+                        setUrl(`https://${val}.supabase.co`);
+                      }
+                    }}
+                    style={{
+                      flex: 1,
+                      minWidth: "220px",
+                      padding: "6px 10px",
+                      borderRadius: "6px",
+                      border: "1px solid rgba(255, 255, 255, 0.2)",
+                      background: "rgba(15, 23, 42, 0.6)",
+                      color: "#ffffff",
+                      fontSize: "11.5px",
+                      fontFamily: "monospace",
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={testing}
+                    style={{
+                      background: "#38bdf8",
+                      border: "none",
+                      color: "#0c4a6e",
+                      borderRadius: "6px",
+                      padding: "6px 12px",
+                      fontSize: "11px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {testing ? "Testing..." : "Connect Ref"}
                   </button>
                 </div>
               </div>
