@@ -9,6 +9,8 @@ import { startVitalsListening, isSpeechRecognitionSupported } from "@/lib/voice/
 import { AnatomicalBodyMap } from "./body-map";
 import { LanguageSwitcher } from "./language-switcher";
 import { IconTooltip } from "./icon-tooltip";
+import { DiseaseLibraryModal } from "./disease-library-modal";
+import { scanLesionImage, type VisualScanResult } from "@/lib/clinical/visual-scanner";
 
 export interface ScreeningScreenProps {
   onBackToDashboard: () => void;
@@ -46,6 +48,8 @@ export function ScreeningScreen({
   // Lesion photo
   const [lesionPhotoUrl, setLesionPhotoUrl] = useState("");
   const [photoUploading, setPhotoUploading] = useState(false);
+  const [visualScanResult, setVisualScanResult] = useState<VisualScanResult | null>(null);
+  const [showDiseaseModal, setShowDiseaseModal] = useState(false);
 
   // Triage & Notes
   const [urgencyTier, setUrgencyTier] = useState<"routine" | "moderate" | "urgent" | "emergency">("routine");
@@ -124,6 +128,7 @@ export function ScreeningScreen({
     const file = e.target.files?.[0];
     if (!file) return;
     setPhotoUploading(true);
+    setVisualScanResult(null);
     try {
       const res = await uploadToStorage(
         "screenings",
@@ -131,6 +136,14 @@ export function ScreeningScreen({
         file
       );
       setLesionPhotoUrl(res.url);
+
+      // Run free in-browser AI visual feature analysis
+      try {
+        const scanRes = await scanLesionImage(file);
+        setVisualScanResult(scanRes);
+      } catch (scanErr) {
+        console.warn("Visual lesion scan notice:", scanErr);
+      }
     } catch {
       // Offline fallback
     } finally {
@@ -261,6 +274,26 @@ export function ScreeningScreen({
               </span>
             </div>
           </div>
+
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => setShowDiseaseModal(true)}
+            style={{
+              padding: "6px 12px",
+              fontSize: "11px",
+              fontWeight: 700,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              background: "#ffffff",
+              border: "1px solid #cbd5e1",
+              borderRadius: "8px",
+            }}
+          >
+            <span>📚</span>
+            <span>Common Diseases & Remedies</span>
+          </button>
 
           <LanguageSwitcher />
 
@@ -574,12 +607,64 @@ export function ScreeningScreen({
                       <small style={{ color: "#166534", fontWeight: 700, display: "block" }}>✓ Photo Attached</small>
                       <button
                         type="button"
-                        onClick={() => setLesionPhotoUrl("")}
+                        onClick={() => {
+                          setLesionPhotoUrl("");
+                          setVisualScanResult(null);
+                        }}
                         style={{ background: "none", border: "none", color: "#dc2626", fontSize: "10.5px", cursor: "pointer", padding: 0 }}
                       >
                         Remove photo
                       </button>
                     </div>
+                  </div>
+                )}
+
+                {visualScanResult && visualScanResult.topMatches.length > 0 && (
+                  <div
+                    style={{
+                      marginTop: "12px",
+                      padding: "12px",
+                      borderRadius: "10px",
+                      background: "#f0fdf4",
+                      border: "1.5px solid #86efac",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px", flexWrap: "wrap", gap: "4px" }}>
+                      <strong style={{ fontSize: "12px", color: "#166534" }}>
+                        🔍 In-Browser AI Recognition: {visualScanResult.topMatches[0].disease.name}
+                      </strong>
+                      <span
+                        style={{
+                          fontSize: "10px",
+                          fontWeight: 800,
+                          padding: "2px 6px",
+                          borderRadius: "6px",
+                          background: "#dcfce7",
+                          color: "#15803d",
+                        }}
+                      >
+                        {visualScanResult.topMatches[0].confidence}% Match
+                      </span>
+                    </div>
+                    <div style={{ fontSize: "11px", color: "#15803d", marginBottom: "8px" }}>
+                      <strong>Suggested Home Care:</strong> {visualScanResult.topMatches[0].disease.homeRemedies[0]}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowDiseaseModal(true)}
+                      style={{
+                        padding: "5px 10px",
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        background: "#166534",
+                        color: "#ffffff",
+                        border: "none",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      📖 View Full Home Remedies & OTC Guide ↗
+                    </button>
                   </div>
                 )}
               </div>
@@ -805,6 +890,11 @@ export function ScreeningScreen({
           </div>
         </form>
       </div>
+
+      <DiseaseLibraryModal
+        isOpen={showDiseaseModal}
+        onClose={() => setShowDiseaseModal(false)}
+      />
     </div>
   );
 }

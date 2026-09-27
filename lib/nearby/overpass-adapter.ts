@@ -46,7 +46,8 @@ export async function fetchLiveHealthcareFacilities(
   for (const endpoint of OVERPASS_ENDPOINTS) {
     try {
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 12000);
+      const timeoutMs = process.env.NODE_ENV === "test" ? 1200 : 3500;
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
 
       const res = await fetch(endpoint, {
         method: "POST",

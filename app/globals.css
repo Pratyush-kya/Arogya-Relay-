@@ -3940,6 +3940,49 @@ body {
   pointer-events: none;
   font-family: inherit;
   box-sizing: border-box;
+  z-index: 99999 !important;
+  max-width: min(280px, calc(100vw - 24px));
+  word-break: break-word;
+}
+
+.rich-icon-tooltip::after {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #0f172a;
+  border-left: 1px solid rgba(255, 255, 255, 0.16);
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.rich-icon-tooltip.tooltip-bottom::after {
+  top: -5px;
+  transform: rotate(45deg);
+}
+.rich-icon-tooltip.tooltip-bottom.tooltip-align-center::after {
+  left: 50%;
+  margin-left: -4px;
+}
+.rich-icon-tooltip.tooltip-bottom.tooltip-align-right::after {
+  right: 18px;
+}
+.rich-icon-tooltip.tooltip-bottom.tooltip-align-left::after {
+  left: 18px;
+}
+
+.rich-icon-tooltip.tooltip-top::after {
+  bottom: -5px;
+  transform: rotate(225deg);
+}
+.rich-icon-tooltip.tooltip-top.tooltip-align-center::after {
+  left: 50%;
+  margin-left: -4px;
+}
+.rich-icon-tooltip.tooltip-top.tooltip-align-right::after {
+  right: 18px;
+}
+.rich-icon-tooltip.tooltip-top.tooltip-align-left::after {
+  left: 18px;
 }
 
 /* Dedicated Full-Screen Console Views */

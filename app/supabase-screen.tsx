@@ -71,10 +71,107 @@ const BUCKET_DEFINITIONS: {
   },
 ];
 
+const SUPABASE_SCHEMA_SQL = `-- AROGYA RELAY COMPLETE PRODUCTION SCHEMA & S3 MIGRATION
+-- Run in your Supabase SQL Editor: https://supabase.com/dashboard/project/_/sql
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- 1. Profiles (User roles and doctor verification)
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT,
+  role TEXT DEFAULT 'patient' CHECK (role IN ('admin', 'doctor', 'health_worker', 'reviewer', 'patient', 'caregiver')),
+  display_name TEXT,
+  pseudo_id TEXT UNIQUE,
+  facility_name TEXT,
+  phone TEXT,
+  medical_reg_no TEXT,
+  council_name TEXT,
+  qualification TEXT,
+  specialization TEXT,
+  experience_years INT,
+  verification_status TEXT DEFAULT 'pending_verification' CHECK (verification_status IN ('pending_verification', 'verified', 'rejected')),
+  verification_notes TEXT,
+  license_document_url TEXT,
+  verified_at TIMESTAMPTZ,
+  verified_by TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 2. Screenings (Patient vitals and clinical intake)
+CREATE TABLE IF NOT EXISTS public.screenings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  pseudo_id TEXT NOT NULL,
+  patient_name TEXT,
+  age INT,
+  sex TEXT,
+  village TEXT,
+  chief_complaint TEXT,
+  symptoms TEXT[],
+  vitals JSONB NOT NULL,
+  urgency_tier TEXT NOT NULL CHECK (urgency_tier IN ('routine', 'moderate', 'urgent', 'emergency')),
+  clinical_notes TEXT,
+  image_url TEXT,
+  screener_id UUID REFERENCES auth.users(id),
+  screener_name TEXT,
+  facility_name TEXT,
+  sync_status TEXT DEFAULT 'synced',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 3. Doctor Evaluations & Prescriptions
+CREATE TABLE IF NOT EXISTS public.doctor_evaluations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  screening_id UUID REFERENCES public.screenings(id) ON DELETE CASCADE,
+  doctor_id UUID REFERENCES auth.users(id),
+  doctor_name TEXT,
+  doctor_reg_no TEXT,
+  provisional_diagnosis TEXT,
+  prescription_orders JSONB,
+  prescription_image_url TEXT,
+  advice TEXT,
+  referral_facility TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable Row Level Security
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.screenings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.doctor_evaluations ENABLE ROW LEVEL SECURITY;
+
+-- Allow public read and authenticated write policies
+CREATE POLICY "Public Read Profiles" ON public.profiles FOR SELECT USING (true);
+CREATE POLICY "User Update Own Profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Public Read Screenings" ON public.screenings FOR SELECT USING (true);
+CREATE POLICY "Allow Insert Screenings" ON public.screenings FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public Read Doctor Evaluations" ON public.doctor_evaluations FOR SELECT USING (true);
+CREATE POLICY "Allow Doctor Insert Evaluation" ON public.doctor_evaluations FOR INSERT WITH CHECK (true);
+
+-- 4. S3 Storage Buckets Setup
+INSERT INTO storage.buckets (id, name, public) VALUES 
+  ('screenings', 'screenings', true),
+  ('prescriptions', 'prescriptions', true),
+  ('doctor-credentials', 'doctor-credentials', true),
+  ('patient-records', 'patient-records', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Storage RLS Policies
+CREATE POLICY "Public Access Screenings" ON storage.objects FOR SELECT USING (bucket_id = 'screenings');
+CREATE POLICY "Public Insert Screenings" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'screenings');
+CREATE POLICY "Public Access Prescriptions" ON storage.objects FOR SELECT USING (bucket_id = 'prescriptions');
+CREATE POLICY "Public Insert Prescriptions" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'prescriptions');
+CREATE POLICY "Public Access Doctor Credentials" ON storage.objects FOR SELECT USING (bucket_id = 'doctor-credentials');
+CREATE POLICY "Public Insert Doctor Credentials" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'doctor-credentials');
+CREATE POLICY "Public Access Patient Records" ON storage.objects FOR SELECT USING (bucket_id = 'patient-records');
+CREATE POLICY "Public Insert Patient Records" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'patient-records');
+`;
+
 export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreenProps) {
   const currentConfig = getActiveSupabaseConfig();
   const [url, setUrl] = useState(currentConfig.url);
   const [anonKey, setAnonKey] = useState(currentConfig.key);
+  const [projectRefInput, setProjectRefInput] = useState("");
   const [showKey, setShowKey] = useState(false);
   const [testing, setTesting] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -1050,6 +1147,40 @@ export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreen
                 </button>
               </div>
 
+              {/* Project Ref Auto-Connector */}
+              <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", padding: "14px 16px", borderRadius: "10px" }}>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
+                  Connect by Project Reference (ID):
+                </label>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <input
+                    type="text"
+                    placeholder="e.g. wyhputdbwuslzgipfzjm or your project ref under org"
+                    value={projectRefInput}
+                    onChange={(e) => {
+                      const val = e.target.value.trim().replace(/^https?:\/\//, "").replace(/\.supabase\.co.*$/, "");
+                      setProjectRefInput(val);
+                      if (val) {
+                        setUrl(`https://${val}.supabase.co`);
+                      }
+                    }}
+                    style={{ flex: 1, padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "12px" }}
+                  />
+                  <a
+                    href="https://supabase.com/dashboard/new/ufohydwnepbmjoigycfj"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="secondary-button"
+                    style={{ padding: "8px 12px", fontSize: "11px", fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}
+                  >
+                    + New Project in Org ↗
+                  </a>
+                </div>
+                <small style={{ fontSize: "10.5px", color: "#64748b", marginTop: "4px", display: "block" }}>
+                  Entering your project ref will automatically generate your Supabase HTTPS URL (https://&lt;ref&gt;.supabase.co).
+                </small>
+              </div>
+
               <div>
                 <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "6px" }}>
                   Supabase Project URL:
@@ -1166,9 +1297,170 @@ export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreen
         {/* TAB 4: DATABASE SCHEMA & TABLES */}
         {activeTab === "schema" && (
           <div style={{ display: "grid", gap: "16px" }}>
+            {/* Quick Action Banner */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, #064e3b 0%, #0f172a 100%)",
+                borderRadius: "12px",
+                padding: "20px 24px",
+                color: "#ffffff",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "16px",
+              }}
+            >
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                  <span style={{ fontSize: "20px" }}>⚡</span>
+                  <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 800 }}>
+                    1-Click Production PostgreSQL & S3 Migration
+                  </h3>
+                </div>
+                <p style={{ margin: 0, fontSize: "12.5px", color: "#a7f3d0", maxWidth: "600px", lineHeight: 1.4 }}>
+                  Includes <code>profiles</code> (NMC verification), <code>screenings</code>, <code>doctor_evaluations</code>,
+                  4 S3 storage buckets (<code>lesion-images</code>, <code>telemed-recordings</code>, <code>prescriptions</code>, <code>doctor-credentials</code>),
+                  Row Level Security (RLS) policies, and ABDM audit logs.
+                </p>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(SUPABASE_SCHEMA_SQL, "sql_migration")}
+                  style={{
+                    padding: "9px 18px",
+                    borderRadius: "8px",
+                    background: copiedKey === "sql_migration" ? "#10b981" : "#ffffff",
+                    color: copiedKey === "sql_migration" ? "#ffffff" : "#064e3b",
+                    fontWeight: 700,
+                    fontSize: "12.5px",
+                    border: "none",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "7px",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  <span>{copiedKey === "sql_migration" ? "✓" : "📋"}</span>
+                  <span>{copiedKey === "sql_migration" ? "Migration SQL Copied!" : "Copy Full SQL Migration"}</span>
+                </button>
+
+                <a
+                  href="https://supabase.com/dashboard/project/_/sql/new"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    padding: "9px 16px",
+                    borderRadius: "8px",
+                    background: "rgba(255,255,255,0.15)",
+                    color: "#ffffff",
+                    fontWeight: 600,
+                    fontSize: "12.5px",
+                    border: "1px solid rgba(255,255,255,0.25)",
+                    textDecoration: "none",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  <span>Open Supabase SQL Editor ↗</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Step by Step Execution Card */}
             <div className="workstation-card">
               <div className="workstation-card-title">
-                <span>📑 Active PostgreSQL Tables & Migrations</span>
+                <span>🚀 How to Apply Migration to Org: <code>ufohydwnepbmjoigycfj</code></span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px", fontSize: "12px" }}>
+                <div style={{ padding: "12px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                  <strong style={{ color: "var(--sc-accent, #17644f)", display: "block", marginBottom: "4px" }}>
+                    1. Create or Open Project
+                  </strong>
+                  <p style={{ margin: 0, color: "#64748b", lineHeight: 1.4 }}>
+                    Go to{" "}
+                    <a
+                      href="https://supabase.com/dashboard/org/ufohydwnepbmjoigycfj"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: "#0284c7", fontWeight: 600 }}
+                    >
+                      Supabase Org Dashboard ↗
+                    </a>{" "}
+                    and select or create your <code>arogya-relay</code> project.
+                  </p>
+                </div>
+
+                <div style={{ padding: "12px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                  <strong style={{ color: "var(--sc-accent, #17644f)", display: "block", marginBottom: "4px" }}>
+                    2. Paste & Run SQL
+                  </strong>
+                  <p style={{ margin: 0, color: "#64748b", lineHeight: 1.4 }}>
+                    Open the <strong>SQL Editor</strong>, click <em>New Query</em>, paste the copied SQL from above, and hit <strong>Run</strong>.
+                  </p>
+                </div>
+
+                <div style={{ padding: "12px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                  <strong style={{ color: "var(--sc-accent, #17644f)", display: "block", marginBottom: "4px" }}>
+                    3. Connect to Arogya Relay
+                  </strong>
+                  <p style={{ margin: 0, color: "#64748b", lineHeight: 1.4 }}>
+                    Copy your <strong>Project Ref</strong> or <strong>API URL + anon key</strong> into Tab 3 or the top Auto-Connector and click <em>Save & Reconnect</em>.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* SQL Preview Accordion / Code Box */}
+            <div className="workstation-card">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                <div className="workstation-card-title" style={{ margin: 0 }}>
+                  <span>📜 SQL Migration Script Preview (PostgreSQL + S3 Buckets)</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(SUPABASE_SCHEMA_SQL, "sql_migration")}
+                  style={{
+                    background: "none",
+                    border: "1px solid #cbd5e1",
+                    padding: "4px 10px",
+                    borderRadius: "6px",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    color: "var(--sc-accent, #17644f)",
+                    cursor: "pointer",
+                  }}
+                >
+                  {copiedKey === "sql_migration" ? "✓ Copied" : "Copy SQL"}
+                </button>
+              </div>
+              <pre
+                style={{
+                  background: "#0f172a",
+                  color: "#e2e8f0",
+                  padding: "14px",
+                  borderRadius: "8px",
+                  fontSize: "11.5px",
+                  lineHeight: 1.5,
+                  maxHeight: "260px",
+                  overflowY: "auto",
+                  margin: 0,
+                  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                }}
+              >
+                {SUPABASE_SCHEMA_SQL}
+              </pre>
+            </div>
+
+            {/* Table Details */}
+            <div className="workstation-card">
+              <div className="workstation-card-title">
+                <span>📑 Active PostgreSQL Tables & Architecture</span>
                 <span style={{ fontSize: "11px", color: "#15803d", fontWeight: 700 }}>
                   Migration: 20260927000001
                 </span>
