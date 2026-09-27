@@ -4,8 +4,12 @@ export const ADMIN_EMAIL = "pratyushkiranrath4@gmail.com";
 export const DEFAULT_ADMIN_PASSWORD = "Pratyush@3130";
 
 export const SUPABASE_ORG_ID = "ufohydwnepbmjoigycfj";
+export const SUPABASE_PROJECT_REF = "tekgwowxqwwahaazyhne";
 export const SUPABASE_ORG_URL = "https://supabase.com/dashboard/org/ufohydwnepbmjoigycfj";
-export const S3_STORAGE_ENDPOINT = "https://ufohydwnepbmjoigycfj.supabase.co/storage/v1/s3";
+export const SUPABASE_PROJECT_URL = "https://supabase.com/dashboard/project/tekgwowxqwwahaazyhne";
+export const SUPABASE_SQL_URL = "https://supabase.com/dashboard/project/tekgwowxqwwahaazyhne/sql/new";
+export const SUPABASE_API_SETTINGS_URL = "https://supabase.com/dashboard/project/tekgwowxqwwahaazyhne/settings/api";
+export const S3_STORAGE_ENDPOINT = "https://tekgwowxqwwahaazyhne.supabase.co/storage/v1/s3";
 
 export function isAdminEmail(email: string | null | undefined): boolean {
   return email?.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase();
@@ -48,15 +52,16 @@ export function getActiveSupabaseConfig() {
     const savedUrl = localStorage.getItem(STORAGE_URL_KEY);
     const savedKey = localStorage.getItem(STORAGE_KEY_KEY);
     if (savedUrl && savedKey) {
-      return { url: savedUrl, key: savedKey, source: "user_custom", orgId: SUPABASE_ORG_ID };
+      return { url: savedUrl, key: savedKey, source: "user_custom", orgId: SUPABASE_ORG_ID, projectRef: SUPABASE_PROJECT_REF };
     }
   }
 
   return {
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL || "https://wyhputdbwuslzgipfzjm.supabase.co",
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL || "https://tekgwowxqwwahaazyhne.supabase.co",
     key: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_i4H4gOhMqL_hkCioArUEPQ_owYL8smN",
     source: "default",
     orgId: process.env.NEXT_PUBLIC_SUPABASE_ORG_ID || SUPABASE_ORG_ID,
+    projectRef: SUPABASE_PROJECT_REF,
   };
 }
 

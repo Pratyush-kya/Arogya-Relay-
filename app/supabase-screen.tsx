@@ -9,6 +9,10 @@ import {
   DEFAULT_ADMIN_PASSWORD,
   SUPABASE_ORG_ID,
   SUPABASE_ORG_URL,
+  SUPABASE_PROJECT_REF,
+  SUPABASE_PROJECT_URL,
+  SUPABASE_SQL_URL,
+  SUPABASE_API_SETTINGS_URL,
   S3_STORAGE_ENDPOINT,
   type StorageBucket,
   type StoredFileInfo,
@@ -171,7 +175,7 @@ export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreen
   const currentConfig = getActiveSupabaseConfig();
   const [url, setUrl] = useState(currentConfig.url);
   const [anonKey, setAnonKey] = useState(currentConfig.key);
-  const [projectRefInput, setProjectRefInput] = useState("");
+  const [projectRefInput, setProjectRefInput] = useState((currentConfig as any).projectRef || SUPABASE_PROJECT_REF);
   const [showKey, setShowKey] = useState(false);
   const [testing, setTesting] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -504,7 +508,7 @@ export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreen
               }}
             >
               <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px", flexWrap: "wrap" }}>
                   <span style={{ fontSize: "20px" }}>🏛️</span>
                   <span
                     style={{
@@ -518,19 +522,33 @@ export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreen
                       letterSpacing: "0.05em",
                     }}
                   >
-                    OFFICIAL SUPABASE ORGANIZATION
+                    ORG: {SUPABASE_ORG_ID}
+                  </span>
+                  <span
+                    style={{
+                      background: "rgba(34, 197, 94, 0.2)",
+                      color: "#4ade80",
+                      border: "1px solid rgba(34, 197, 94, 0.4)",
+                      padding: "2px 8px",
+                      borderRadius: "6px",
+                      fontSize: "10.5px",
+                      fontWeight: 800,
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    ACTIVE PROJECT: {SUPABASE_PROJECT_REF}
                   </span>
                 </div>
                 <h2 style={{ margin: "0 0 6px", fontSize: "22px", fontWeight: 800, letterSpacing: "-0.5px" }}>
-                  Org ID: <code style={{ color: "#34d399", fontFamily: "monospace" }}>{SUPABASE_ORG_ID}</code>
+                  Project: <code style={{ color: "#34d399", fontFamily: "monospace" }}>{SUPABASE_PROJECT_REF}</code>
                 </h2>
                 <p style={{ margin: "0 0 16px", fontSize: "12.5px", color: "#94a3b8", lineHeight: 1.5 }}>
-                  Configured Supabase project home hosting PostgreSQL tables, S3-compatible binary buckets, row-level security policies, and physician verification logs.
+                  Configured Supabase project live on Cloudflare/Supabase gateway (<code>https://{SUPABASE_PROJECT_REF}.supabase.co</code>) hosting PostgreSQL tables, S3-compatible binary buckets, and physician verification logs.
                 </p>
 
                 <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "14px" }}>
                   <a
-                    href="https://supabase.com/dashboard/new/ufohydwnepbmjoigycfj"
+                    href={SUPABASE_PROJECT_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -547,7 +565,49 @@ export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreen
                       boxShadow: "0 4px 14px rgba(52, 211, 153, 0.3)",
                     }}
                   >
-                    <span>➕ 1-Click: Create Project 'arogya-relay' in Org ↗</span>
+                    <span>🌐 Open Project Dashboard ↗</span>
+                  </a>
+
+                  <a
+                    href={SUPABASE_SQL_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      background: "rgba(56, 189, 248, 0.15)",
+                      border: "1px solid rgba(56, 189, 248, 0.35)",
+                      color: "#38bdf8",
+                      borderRadius: "10px",
+                      padding: "8px 14px",
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      textDecoration: "none",
+                    }}
+                  >
+                    <span>⚡ Run SQL Migration in Project ↗</span>
+                  </a>
+
+                  <a
+                    href={SUPABASE_API_SETTINGS_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      background: "rgba(255, 255, 255, 0.12)",
+                      border: "1px solid rgba(255, 255, 255, 0.25)",
+                      color: "#ffffff",
+                      borderRadius: "10px",
+                      padding: "8px 14px",
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      textDecoration: "none",
+                    }}
+                  >
+                    <span>🔑 Get API Keys (Settings &gt; API) ↗</span>
                   </a>
 
                   <button
@@ -571,27 +631,6 @@ export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreen
                     <span>{copiedKey === "sql_quick_copy" ? "✓" : "📋"}</span>
                     <span>{copiedKey === "sql_quick_copy" ? "SQL Migration Copied!" : "Copy Full SQL Migration"}</span>
                   </button>
-
-                  <a
-                    href="https://supabase.com/dashboard/project/_/sql/new"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      background: "rgba(255, 255, 255, 0.08)",
-                      border: "1px solid rgba(255, 255, 255, 0.2)",
-                      color: "#e2e8f0",
-                      borderRadius: "10px",
-                      padding: "8px 14px",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      textDecoration: "none",
-                    }}
-                  >
-                    <span>⚡ Open Supabase SQL Editor ↗</span>
-                  </a>
 
                   <a
                     href={SUPABASE_ORG_URL}
@@ -1262,7 +1301,7 @@ export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreen
                 <div style={{ display: "flex", gap: "8px" }}>
                   <input
                     type="text"
-                    placeholder="e.g. wyhputdbwuslzgipfzjm or your project ref under org"
+                    placeholder="e.g. tekgwowxqwwahaazyhne or your project ref under org"
                     value={projectRefInput}
                     onChange={(e) => {
                       const val = e.target.value.trim().replace(/^https?:\/\//, "").replace(/\.supabase\.co.*$/, "");
@@ -1274,13 +1313,13 @@ export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreen
                     style={{ flex: 1, padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "12px" }}
                   />
                   <a
-                    href="https://supabase.com/dashboard/new/ufohydwnepbmjoigycfj"
+                    href={SUPABASE_PROJECT_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="secondary-button"
                     style={{ padding: "8px 12px", fontSize: "11px", fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}
                   >
-                    + New Project in Org ↗
+                    Open Project ↗
                   </a>
                 </div>
                 <small style={{ fontSize: "10.5px", color: "#64748b", marginTop: "4px", display: "block" }}>
@@ -1296,7 +1335,7 @@ export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreen
                   type="url"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  placeholder="https://xyzcompany.supabase.co"
+                  placeholder={`https://${SUPABASE_PROJECT_REF}.supabase.co`}
                   style={{
                     width: "100%",
                     padding: "10px 14px",
@@ -1316,13 +1355,23 @@ export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreen
                   <label style={{ fontSize: "12px", fontWeight: 700 }}>
                     Supabase Anonymous / Publishable API Key:
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowKey((s) => !s)}
-                    style={{ background: "none", border: "none", color: "#0284c7", fontSize: "11px", cursor: "pointer", fontWeight: 600 }}
-                  >
-                    {showKey ? "Hide key" : "Show key"}
-                  </button>
+                  <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                    <a
+                      href={SUPABASE_API_SETTINGS_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: "#0284c7", fontSize: "11px", fontWeight: 600, textDecoration: "none" }}
+                    >
+                      Get Key in Supabase ↗
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => setShowKey((s) => !s)}
+                      style={{ background: "none", border: "none", color: "#64748b", fontSize: "11px", cursor: "pointer", fontWeight: 600 }}
+                    >
+                      {showKey ? "Hide key" : "Show key"}
+                    </button>
+                  </div>
                 </div>
                 <input
                   type={showKey ? "text" : "password"}
@@ -1457,7 +1506,7 @@ export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreen
                 </button>
 
                 <a
-                  href="https://supabase.com/dashboard/project/_/sql/new"
+                  href={SUPABASE_SQL_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
