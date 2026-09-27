@@ -6,7 +6,6 @@ import {
   setCustomSupabaseConfig,
   clearCustomSupabaseConfig,
   ADMIN_EMAIL,
-  DEFAULT_ADMIN_PASSWORD,
   SUPABASE_ORG_ID,
   SUPABASE_ORG_URL,
   SUPABASE_PROJECT_REF,
@@ -543,16 +542,16 @@ export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreen
                   Project: <code style={{ color: "#34d399", fontFamily: "monospace" }}>{SUPABASE_PROJECT_REF}</code>
                 </h2>
                 <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "10px", flexWrap: "wrap" }}>
-                  <span style={{ fontSize: "11px", background: "rgba(255,255,255,0.1)", padding: "2px 8px", borderRadius: "6px", color: "#e2e8f0" }}>
-                    🌏 Provisioned Region: <strong>Northeast Asia (Seoul, Korea)</strong>
+                  <span style={{ fontSize: "11px", background: "rgba(34, 197, 94, 0.2)", border: "1px solid rgba(34, 197, 94, 0.4)", padding: "2px 8px", borderRadius: "6px", color: "#86efac", fontWeight: 700 }}>
+                    🇮🇳 Production Project: <strong>{SUPABASE_PROJECT_REF}</strong>
                   </span>
                   <a
-                    href="https://supabase.com/dashboard/new/ufohydwnepbmjoigycfj"
+                    href={SUPABASE_PROJECT_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ fontSize: "11px", background: "rgba(245, 158, 11, 0.25)", border: "1px solid rgba(245, 158, 11, 0.5)", padding: "2px 8px", borderRadius: "6px", color: "#fef08a", textDecoration: "none", fontWeight: 700 }}
+                    style={{ fontSize: "11px", background: "rgba(255, 255, 255, 0.1)", padding: "2px 8px", borderRadius: "6px", color: "#e2e8f0", textDecoration: "none" }}
                   >
-                    🇮🇳 Want Central India (Mumbai)? Click here ↗
+                    Supabase Console ↗
                   </a>
                 </div>
                 <p style={{ margin: "0 0 16px", fontSize: "12.5px", color: "#94a3b8", lineHeight: 1.5 }}>
@@ -749,29 +748,12 @@ export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreen
                   <strong style={{ fontSize: "13px", color: "#ffffff", wordBreak: "break-all" }}>{ADMIN_EMAIL}</strong>
                 </div>
                 <div style={{ marginBottom: "12px" }}>
-                  <div style={{ fontSize: "11px", color: "#94a3b8" }}>Password:</div>
-                  <code style={{ fontSize: "12px", color: "#34d399", background: "rgba(0,0,0,0.3)", padding: "2px 6px", borderRadius: "4px" }}>
-                    {DEFAULT_ADMIN_PASSWORD}
-                  </code>
+                  <div style={{ fontSize: "11px", color: "#94a3b8" }}>Security Profile:</div>
+                  <span style={{ fontSize: "11.5px", color: "#34d399", fontWeight: 600 }}>
+                    🔒 Protected Admin Passkey &amp; RLS
+                  </span>
                 </div>
                 <div style={{ display: "flex", gap: "8px" }}>
-                  <button
-                    type="button"
-                    onClick={() => copyToClipboard(DEFAULT_ADMIN_PASSWORD, "admin_pass")}
-                    style={{
-                      flex: 1,
-                      background: "rgba(255, 255, 255, 0.15)",
-                      border: "none",
-                      color: "#ffffff",
-                      borderRadius: "8px",
-                      padding: "6px 10px",
-                      fontSize: "11px",
-                      fontWeight: 700,
-                      cursor: "pointer",
-                    }}
-                  >
-                    {copiedKey === "admin_pass" ? "✓ Copied" : "Copy Password"}
-                  </button>
                   {onOpenAuth && (
                     <button
                       type="button"
@@ -782,13 +764,13 @@ export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreen
                         border: "none",
                         color: "#0c4a6e",
                         borderRadius: "8px",
-                        padding: "6px 10px",
+                        padding: "8px 12px",
                         fontSize: "11px",
                         fontWeight: 700,
                         cursor: "pointer",
                       }}
                     >
-                      Login as Admin
+                      Authenticate Admin Session ↗
                     </button>
                   )}
                 </div>
@@ -815,7 +797,7 @@ export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreen
                     </h3>
                   </div>
                   <p style={{ margin: 0, fontSize: "12px", color: "#15803d", lineHeight: 1.4 }}>
-                    Your current project <code>tekgwowxqwwahaazyhne</code> was provisioned in <strong>Northeast Asia (Seoul, Korea)</strong>. While 100% functional, Ayushman Bharat Digital Mission (ABDM) compliance recommends health databases reside inside India.
+                    Connected Project: <code>{SUPABASE_PROJECT_REF}</code>. Ayushman Bharat Digital Mission (ABDM) compliance recommends health databases reside inside India (Mumbai - ap-south-1).
                   </p>
                 </div>
 
@@ -1344,25 +1326,9 @@ export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreen
                     Admin Account: <code>{ADMIN_EMAIL}</code>
                   </div>
                   <div style={{ fontSize: "11px", color: "#2563eb", marginTop: "2px" }}>
-                    Default Password: <code>{DEFAULT_ADMIN_PASSWORD}</code> (Accepts Pratyush@3130)
+                    Security: <code>Protected Super Admin</code> (Access protected via RLS &amp; JWT session)
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => copyToClipboard(DEFAULT_ADMIN_PASSWORD, "admin_pwd_setting")}
-                  style={{
-                    background: "#2563eb",
-                    color: "#ffffff",
-                    border: "none",
-                    borderRadius: "6px",
-                    padding: "6px 12px",
-                    fontSize: "11px",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                  }}
-                >
-                  {copiedKey === "admin_pwd_setting" ? "✓ Copied" : "Copy Password"}
-                </button>
               </div>
 
               {/* Project Ref Auto-Connector */}
@@ -1373,7 +1339,7 @@ export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreen
                 <div style={{ display: "flex", gap: "8px" }}>
                   <input
                     type="text"
-                    placeholder="e.g. tekgwowxqwwahaazyhne or your project ref under org"
+                    placeholder="e.g. tinwzrwomldbbbrwnazn or your project ref under org"
                     value={projectRefInput}
                     onChange={(e) => {
                       const val = e.target.value.trim().replace(/^https?:\/\//, "").replace(/\.supabase\.co.*$/, "");

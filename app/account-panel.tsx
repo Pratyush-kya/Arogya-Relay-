@@ -91,8 +91,10 @@ export { AuthScreen } from "./auth-screen";
  */
 export function TopRightUserNav({
   onOpenAuthScreen,
+  onOpenSupabase,
 }: {
   onOpenAuthScreen?: (mode: "signin" | "signup" | "admin" | "profile") => void;
+  onOpenSupabase?: () => void;
 } = {}) {
   const supabase = useMemo(() => createClient(), []);
   const [user, setUser] = useState<User | null>(null);
@@ -724,6 +726,38 @@ export function TopRightUserNav({
               }}
             >
               <span>🛡️</span> Doctor Verification Console
+            </button>
+          )}
+
+          {profile?.role === "admin" && (
+            <button
+              type="button"
+              className="secondary-button"
+              style={{
+                width: "100%",
+                padding: "8px",
+                fontSize: "11px",
+                fontWeight: 700,
+                background: "#f0fdf4",
+                color: "#166534",
+                border: "1px solid #86efac",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: "6px",
+                borderRadius: "8px",
+                cursor: "pointer",
+              }}
+              onClick={() => {
+                setPopoverOpen(false);
+                if (onOpenSupabase) {
+                  onOpenSupabase();
+                } else if (typeof window !== "undefined") {
+                  window.location.hash = "#supabase";
+                }
+              }}
+            >
+              <span>⚡</span> Cloud Database &amp; Storage Console
             </button>
           )}
 

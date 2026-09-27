@@ -549,45 +549,6 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
           {/* TAB 1: SIGN IN */}
           {tab === "signin" && (
             <div style={{ padding: "28px" }}>
-              {/* Quick Admin Preset Card */}
-              <div
-                style={{
-                  background: "linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%)",
-                  border: "1.5px solid #059669",
-                  borderRadius: "14px",
-                  padding: "16px",
-                  marginBottom: "24px",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  boxShadow: "0 2px 10px rgba(5, 150, 105, 0.08)",
-                }}
-              >
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
-                    <span style={{ fontSize: "16px" }}>⚡</span>
-                    <strong style={{ fontSize: "13px", color: "#065f46" }}>System Administrator Quick Preset</strong>
-                  </div>
-                  <div style={{ fontSize: "11px", color: "#374151" }}>
-                    Email: <strong>{ADMIN_EMAIL}</strong> · Password: <strong>{DEFAULT_ADMIN_PASS}</strong>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  className="primary-button"
-                  style={{
-                    padding: "8px 14px",
-                    fontSize: "11.5px",
-                    fontWeight: 700,
-                    background: "#059669",
-                    whiteSpace: "nowrap",
-                  }}
-                  onClick={fillAdminPreset}
-                >
-                  ⚡ Auto-Fill Admin
-                </button>
-              </div>
-
               <form onSubmit={handleSignIn} style={{ display: "grid", gap: "16px" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "6px", color: "#1e293b" }}>

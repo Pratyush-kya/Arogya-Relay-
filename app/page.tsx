@@ -643,22 +643,6 @@ export default function Home() {
               <ClinicDateWidget />
             </IconTooltip>
 
-            <IconTooltip
-              title="Supabase Cloud Database & Storage Workstation"
-              desc="Open dedicated full-screen console to inspect PostgreSQL tables, S3 storage buckets, and API credentials."
-              howToUse="Click to open the full-screen cloud database console."
-              position="bottom"
-            >
-              <button
-                type="button"
-                className="glass-button"
-                style={{ fontSize: "11px", padding: "6px 10px", display: "flex", alignItems: "center", gap: "5px" }}
-                onClick={() => setViewMode("supabase")}
-              >
-                <span>⚡</span> Supabase
-              </button>
-            </IconTooltip>
-
             <LanguageSwitcher />
 
             <div className="topbar-menu">
@@ -704,6 +688,7 @@ export default function Home() {
                 setAuthScreenMode(mode);
                 setViewMode("auth");
               }}
+              onOpenSupabase={() => setViewMode("supabase")}
             />
           </div>
         </header>
