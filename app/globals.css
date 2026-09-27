@@ -4112,3 +4112,660 @@ body {
   border-bottom-color: var(--sc-accent, #17644f);
 }
 
+
+/* ==========================================================================
+   CLINIC OPERATIONAL DATE, LIVE CLOCK & CAMP CALENDAR WIDGET
+   ========================================================================== */
+
+.clinic-date-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.clinic-date-widget {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(23, 100, 79, 0.22);
+  border-radius: 14px;
+  padding: 6px 14px 6px 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(18, 62, 52, 0.05);
+  font-family: inherit;
+  color: var(--ink);
+}
+
+.clinic-date-widget:hover {
+  background: #ffffff;
+  border-color: var(--forest);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(23, 100, 79, 0.14);
+}
+
+.clinic-date-widget.active {
+  background: #ffffff;
+  border-color: var(--forest);
+  box-shadow: 0 0 0 3px rgba(23, 100, 79, 0.15), 0 6px 20px rgba(18, 62, 52, 0.16);
+}
+
+/* Calendar Leaf Badge */
+.calendar-leaf {
+  width: 44px;
+  height: 48px;
+  border-radius: 9px;
+  background: #ffffff;
+  border: 1px solid #d4dfda;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.leaf-pins {
+  position: absolute;
+  top: 2px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  z-index: 2;
+}
+
+.leaf-pin {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.leaf-header {
+  background: linear-gradient(135deg, #17644f 0%, #0e4435 100%);
+  color: #ffffff;
+  padding: 4px 0 2px;
+  text-align: center;
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.leaf-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafcfb;
+}
+
+.leaf-day {
+  font-size: 19px;
+  font-weight: 850;
+  color: #123e34;
+  line-height: 1;
+  letter-spacing: -0.5px;
+  font-feature-settings: "tnum";
+}
+
+/* Calendar Details (Weekday, Shift, Date, Clock) */
+.calendar-details {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.calendar-top-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.weekday-pill {
+  font-size: 9.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--forest);
+  background: #eaf5ef;
+  padding: 2px 7px;
+  border-radius: 6px;
+  line-height: 1.2;
+}
+
+.shift-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  line-height: 1.2;
+}
+
+.shift-pill.shift-day {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.shift-pill.shift-tele {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.shift-pill.shift-evening {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.shift-pill.shift-night {
+  background: #faf5ff;
+  color: #6b21a8;
+  border: 1px solid #e9d5ff;
+}
+
+.shift-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.calendar-bottom-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.date-text {
+  font-weight: 750;
+  color: #1a2e26;
+  letter-spacing: -0.2px;
+}
+
+.time-divider {
+  color: #a0aec0;
+  font-weight: 700;
+}
+
+.live-clock {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: #3b5249;
+  letter-spacing: 0.02em;
+}
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+  animation: live-pulse 2s infinite ease-in-out;
+}
+
+.date-chevron {
+  color: #718096;
+  margin-left: 2px;
+  transition: transform 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.clinic-date-widget.active .date-chevron {
+  transform: rotate(180deg);
+  color: var(--forest);
+}
+
+/* ==========================================================================
+   CALENDAR & CAMPS POPOVER MODAL
+   ========================================================================== */
+
+.clinic-calendar-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  background: #ffffff;
+  border: 1px solid rgba(23, 100, 79, 0.24);
+  border-radius: 20px;
+  box-shadow: 0 20px 48px rgba(10, 30, 24, 0.22), 0 4px 12px rgba(0, 0, 0, 0.06);
+  padding: 20px;
+  z-index: 50;
+  animation: calFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes calFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.cal-popover-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eef3f0;
+}
+
+.cal-kicker {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--forest);
+}
+
+.cal-popover-title h3 {
+  font-size: 15px;
+  font-weight: 750;
+  color: #123e34;
+  margin: 3px 0 0;
+  letter-spacing: -0.3px;
+}
+
+.cal-close-btn {
+  background: #f1f5f3;
+  border: 1px solid #d4dfda;
+  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #4a5568;
+  font-size: 13px;
+  transition: all 0.15s ease;
+}
+
+.cal-close-btn:hover {
+  background: #e2e8f0;
+  color: #1a202c;
+}
+
+/* Clock & Shift Card inside popover */
+.cal-clock-card {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 12px;
+  background: linear-gradient(135deg, #123e34 0%, #0d2822 100%);
+  color: #ffffff;
+  border-radius: 14px;
+  padding: 14px;
+  margin: 14px 0;
+  box-shadow: 0 4px 12px rgba(18, 62, 52, 0.15);
+}
+
+.cal-clock-main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.clock-label {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 8px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  color: #8edec6;
+}
+
+.clock-digits {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 17px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 4px 0 6px;
+  letter-spacing: 0.02em;
+}
+
+.clock-sync-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 8px;
+  color: #bbf7d0;
+}
+
+.sync-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.3);
+  animation: live-pulse 2s infinite ease-in-out;
+}
+
+.cal-shift-box {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 9px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.shift-box-title {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 7.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #ffd4c9;
+}
+
+.shift-box-name {
+  font-size: 11px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 2px 0;
+}
+
+.shift-box-desc {
+  font-size: 8.5px;
+  color: #c7eadb;
+  line-height: 1.2;
+}
+
+.shift-hours {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 8px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+/* Month Grid */
+.cal-month-section {
+  background: #f8faf9;
+  border: 1px solid #e2ebe6;
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+
+.cal-month-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.cal-month-nav strong {
+  font-size: 13px;
+  font-weight: 800;
+  color: #123e34;
+}
+
+.cal-badge-today {
+  font-size: 8.5px;
+  font-weight: 750;
+  background: #eaf5ef;
+  color: var(--forest);
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.cal-grid-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 9px;
+  font-weight: 750;
+  color: #718096;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #eef3f0;
+}
+
+.cal-grid-body {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  margin-top: 6px;
+}
+
+.cal-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #374151;
+  border-radius: 7px;
+  position: relative;
+  transition: all 0.12s ease;
+}
+
+.cal-cell.empty {
+  visibility: hidden;
+}
+
+.cal-cell.today-cell {
+  background: var(--forest);
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(23, 100, 79, 0.35);
+}
+
+.cal-cell.camp-cell:not(.today-cell) {
+  background: #eff6ff;
+  color: #1e40af;
+  font-weight: 750;
+}
+
+.camp-indicator-dot {
+  position: absolute;
+  bottom: 2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #f59e0b;
+}
+
+.cal-cell.today-cell .camp-indicator-dot {
+  background: #ffffff;
+}
+
+/* Scheduled Camps & Relays Section */
+.cal-camps-section {
+  border-top: 1px solid #eef3f0;
+  padding-top: 12px;
+}
+
+.cal-section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.section-label {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #64748b;
+}
+
+.cal-link-btn {
+  background: transparent;
+  border: 0;
+  color: var(--forest);
+  font-size: 9.5px;
+  font-weight: 750;
+  cursor: pointer;
+  padding: 0;
+}
+
+.cal-link-btn:hover {
+  text-decoration: underline;
+}
+
+.cal-camps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.cal-camp-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: #f9fbfa;
+  border: 1px solid #e2ebe6;
+  border-radius: 10px;
+  transition: transform 0.12s ease;
+}
+
+.cal-camp-item:hover {
+  transform: translateX(2px);
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+
+.camp-date-badge {
+  padding: 4px 8px;
+  border-radius: 7px;
+  font-size: 9px;
+  font-weight: 800;
+  border: 1px solid transparent;
+  text-align: center;
+  min-width: 55px;
+  flex-shrink: 0;
+}
+
+.camp-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.camp-info strong {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 750;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.camp-info p {
+  margin: 1px 0 0;
+  font-size: 9px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.camp-info p span {
+  color: var(--forest);
+  font-weight: 600;
+}
+
+.camp-status-tag {
+  font-size: 8px;
+  font-weight: 700;
+  background: #e2e8f0;
+  color: #475569;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Footer note */
+.cal-popover-footer {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+  font-size: 8.5px;
+  color: #94a3b8;
+  text-align: center;
+}
+
+/* Responsive visibility */
+@media (max-width: 820px) {
+  .clinic-date-widget {
+    padding: 4px 8px;
+    gap: 8px;
+  }
+  .calendar-leaf {
+    width: 38px;
+    height: 42px;
+  }
+  .leaf-day {
+    font-size: 16px;
+  }
+  .calendar-top-row .shift-pill {
+    display: none;
+  }
+  .calendar-bottom-row .live-clock {
+    display: none;
+  }
+  .calendar-bottom-row .time-divider {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .calendar-details {
+    display: none;
+  }
+  .date-chevron {
+    display: none;
+  }
+  .clinic-date-widget {
+    padding: 3px;
+    border-radius: 10px;
+  }
+}
+
+/* Enhanced Case Queue Timestamp Pill */
+.case-time-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f5f3;
+  color: #3b5249;
+  border: 1px solid #d9e4de;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  margin-top: 4px;
+  letter-spacing: -0.01em;
+}
+
+.case-time-clock {
+  font-size: 9px;
+  opacity: 0.8;
+}

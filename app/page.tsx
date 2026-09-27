@@ -11,6 +11,8 @@ import { useLanguage } from "@/lib/i18n/provider";
 import { IconTooltip } from "./icon-tooltip";
 import { AuthScreen } from "./auth-screen";
 import { ScreeningScreen } from "./screening-screen";
+import { SupabaseScreen } from "./supabase-screen";
+import { ClinicDateWidget } from "./clinic-date-widget";
 
 // Keep specialist workspaces out of the first dashboard payload.
 const CareGuidance = lazy(() => import("./care-guidance"));
@@ -92,7 +94,7 @@ function WorkspaceLoading() {
 export default function Home() {
   const { t, effectiveLang } = useLanguage();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
-  const [viewMode, setViewMode] = useState<"dashboard" | "auth" | "screening">("dashboard");
+  const [viewMode, setViewMode] = useState<"dashboard" | "auth" | "screening" | "supabase">("dashboard");
   const [authScreenMode, setAuthScreenMode] = useState<"signin" | "signup" | "admin" | "profile">("signin");
   const [screeningOpen, setScreeningOpen] = useState(false);
   const [syncState, setSyncState] = useState<SyncState>("ready");
@@ -101,7 +103,7 @@ export default function Home() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [supabaseSettingsOpen, setSupabaseSettingsOpen] = useState(false);
 
-  // Sync URL hash for direct links and separate screen tabs (#auth, #screening)
+  // Sync URL hash for direct links and separate screen tabs (#auth, #screening, #supabase)
   useEffect(() => {
     function checkHash() {
       const hash = window.location.hash;
@@ -116,6 +118,8 @@ export default function Home() {
         setViewMode("auth");
       } else if (hash === "#screening" || hash === "#new-screening") {
         setViewMode("screening");
+      } else if (hash === "#supabase" || hash === "#database" || hash === "#cloud") {
+        setViewMode("supabase");
       }
     }
     checkHash();
@@ -430,6 +434,20 @@ export default function Home() {
     );
   }
 
+  // DEDICATED SEPARATE FULL-SCREEN: Supabase Cloud Database & Storage Workstation
+  if (viewMode === "supabase") {
+    return (
+      <SupabaseScreen
+        onBackToDashboard={() => {
+          setViewMode("dashboard");
+          if (typeof window !== "undefined" && (window.location.hash.startsWith("#supa") || window.location.hash.startsWith("#cloud") || window.location.hash.startsWith("#data"))) {
+            window.history.pushState("", document.title, window.location.pathname + window.location.search);
+          }
+        }}
+      />
+    );
+  }
+
   return (
     <main className="app-shell">
       <aside className="sidebar" aria-label={t("shell.primaryNav")}>
@@ -616,28 +634,25 @@ export default function Home() {
           </div>
           <div className="top-actions">
             <IconTooltip
-              title="Current Clinic Operational Date"
-              desc="Local health station date and operational day."
-              howToUse="Reference for clinical case timestamps."
+              title="Clinic Operational Date & Live Clock"
+              desc="NTP-synchronized healthcare calendar, operational shifts, and scheduled outreach camps."
+              howToUse="Click to view full clinic calendar, shift status, and scheduled rural medical camps."
               position="bottom"
             >
-              <div className="today" aria-live="polite">
-                <span suppressHydrationWarning>{new Intl.DateTimeFormat(`${effectiveLang}-IN`, { weekday: "long" }).format(today)}</span>
-                <strong suppressHydrationWarning>{new Intl.DateTimeFormat(`${effectiveLang}-IN`, { day: "2-digit", month: "short", year: "numeric" }).format(today)}</strong>
-              </div>
+              <ClinicDateWidget onOpenCamps={() => setActiveTab("nearby")} />
             </IconTooltip>
 
             <IconTooltip
-              title="Supabase Cloud Database"
-              desc="Live database connection for patient records, storage buckets, and auth."
-              howToUse="Click to configure API credentials and test connection."
+              title="Supabase Cloud Database & Storage Workstation"
+              desc="Open dedicated full-screen console to inspect PostgreSQL tables, S3 storage buckets, and API credentials."
+              howToUse="Click to open the full-screen cloud database console."
               position="bottom"
             >
               <button
                 type="button"
                 className="glass-button"
                 style={{ fontSize: "11px", padding: "6px 10px", display: "flex", alignItems: "center", gap: "5px" }}
-                onClick={() => setSupabaseSettingsOpen(true)}
+                onClick={() => setViewMode("supabase")}
               >
                 <span>⚡</span> Supabase
               </button>
@@ -1351,7 +1366,10 @@ function AlertRow({
       </div>
       <div className="case-time">
         <span className={`priority ${tone}`}>{priority}</span>
-        <small>{new Date(record.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</small>
+        <small suppressHydrationWarning className="case-time-pill" title={new Date(record.created_at).toLocaleString("en-IN")}>
+          <span className="case-time-clock">🕒</span>
+          <span>{new Date(record.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+        </small>
       </div>
       <button type="button" aria-label={`Open case ${record.id}`} aria-expanded={expanded} onClick={onOpen}>
         ›
