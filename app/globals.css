@@ -4769,3 +4769,492 @@ body {
   font-size: 9px;
   opacity: 0.8;
 }
+
+/* ==========================================================================
+   FIELD DEVICE TELEMETRY WORKSTATION (AR-07)
+   ========================================================================== */
+
+.device-hardware-terminal {
+  margin: 20px 0 28px;
+}
+
+.terminal-chassis {
+  background: linear-gradient(180deg, #1b2823 0%, #0e1713 100%);
+  border: 2px solid #2d453b;
+  border-radius: 24px;
+  padding: 16px;
+  box-shadow: 0 20px 50px rgba(8, 20, 16, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+.terminal-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.terminal-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ffffff;
+}
+
+.chassis-logo {
+  font-size: 15px;
+  color: #10b981;
+}
+
+.terminal-brand strong {
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  font-weight: 800;
+}
+
+.chassis-model {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9px;
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.12);
+  padding: 2px 7px;
+  border-radius: 6px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.chassis-indicators {
+  display: flex;
+  gap: 8px;
+}
+
+.chassis-led {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.led-green {
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: live-pulse 2s infinite ease-in-out;
+}
+
+.led-blue {
+  background: #3b82f6;
+  box-shadow: 0 0 8px #3b82f6;
+}
+
+.led-amber {
+  background: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+  animation: live-pulse 3s infinite ease-in-out;
+}
+
+/* OLED Screen Inside Terminal */
+.terminal-oled-screen {
+  background: #060e0a;
+  border: 1px solid #1c3629;
+  border-radius: 16px;
+  padding: 20px;
+  margin-top: 12px;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.8);
+}
+
+.oled-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9.5px;
+  color: #5eead4;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed rgba(94, 234, 212, 0.25);
+  margin-bottom: 16px;
+}
+
+.oled-network {
+  display: flex;
+  gap: 12px;
+}
+
+.oled-content {
+  min-height: 180px;
+}
+
+/* Vitals Mode Readout */
+.oled-vitals-readout {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.oled-metric {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.oled-label {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 8.5px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+}
+
+.oled-val {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 32px;
+  font-weight: 850;
+  line-height: 1.1;
+  margin: 6px 0 2px;
+}
+
+.oled-val small {
+  font-size: 14px;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.text-green { color: #34d399; }
+.text-cyan { color: #38bdf8; }
+.text-amber { color: #fbbf24; }
+
+.oled-sub {
+  font-size: 10px;
+  color: #64748b;
+}
+
+/* ECG Rhythm Waveform Box */
+.oled-waveform-box {
+  background: rgba(16, 185, 129, 0.04);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.waveform-label {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 8px;
+  font-weight: 750;
+  color: #34d399;
+  letter-spacing: 0.1em;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.waveform-grid {
+  height: 60px;
+  background-image: 
+    linear-gradient(rgba(16, 185, 129, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(16, 185, 129, 0.08) 1px, transparent 1px);
+  background-size: 12px 12px;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.waveform-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.waveform-scanline {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 25px;
+  background: linear-gradient(90deg, transparent, rgba(52, 211, 153, 0.35), transparent);
+  animation: scanWave 2.8s linear infinite;
+}
+
+@keyframes scanWave {
+  from { left: -25px; }
+  to { left: 100%; }
+}
+
+/* Power & Mesh Mode Grid */
+.oled-power-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.oled-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.oled-desc {
+  font-size: 10px;
+  color: #94a3b8;
+  margin: 10px 0 0;
+  line-height: 1.4;
+}
+
+/* Diagnostics Mode */
+.oled-diag-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 6px 0;
+}
+
+.oled-diag-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.diag-icon {
+  font-size: 14px;
+  color: #34d399;
+  width: 20px;
+  text-align: center;
+}
+
+.diag-text {
+  flex: 1;
+}
+
+.diag-text strong {
+  display: block;
+  font-size: 11px;
+  color: #f1f5f9;
+}
+
+.diag-text span {
+  font-size: 9.5px;
+  color: #94a3b8;
+}
+
+.diag-badge {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 8.5px;
+  font-weight: 750;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.diag-badge.passed {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.diag-badge.running {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* OLED Control Strip */
+.oled-controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.oled-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.oled-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.oled-btn.active {
+  background: #10b981;
+  border-color: #10b981;
+  color: #064e3b;
+  font-weight: 800;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.4);
+}
+
+/* Subgrid for Sensor Probes & Storage */
+.device-subgrid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 20px;
+}
+
+.device-probes-card,
+.device-storage-card {
+  border-radius: 20px;
+}
+
+.probes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 16px 20px 20px;
+}
+
+.probe-box {
+  background: #f8faf9;
+  border: 1px solid #dbe6e0;
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.probe-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.probe-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.probe-head strong {
+  display: block;
+  font-size: 11.5px;
+  color: #123e34;
+}
+
+.probe-spec {
+  display: block;
+  font-size: 8.5px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.probe-reading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 14px 0 10px;
+}
+
+.reading-val .num {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+  display: block;
+}
+
+.reading-val .unit {
+  font-size: 8.5px;
+  color: #64748b;
+}
+
+.probe-test-btn {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 9.5px;
+  font-weight: 750;
+  color: #1e293b;
+  padding: 5px 9px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.probe-test-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.probe-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 8px;
+  color: #94a3b8;
+  border-top: 1px solid #eef3f0;
+  padding-top: 8px;
+}
+
+.probe-status-tag {
+  color: #166534;
+  background: #dcfce7;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+/* Storage & Synchrony Card */
+.device-storage-stats {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.storage-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.storage-stat-row span {
+  color: #64748b;
+}
+
+.storage-stat-row strong {
+  color: #1e293b;
+  font-size: 11px;
+  text-align: right;
+}
+
+.sync-actions-box {
+  padding: 0 20px 20px;
+}
+
+.sync-feedback {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #dcfce7;
+  color: #166534;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .oled-vitals-readout,
+  .oled-power-grid,
+  .device-subgrid {
+    grid-template-columns: 1fr;
+  }
+  .probes-grid {
+    grid-template-columns: 1fr;
+  }
+}

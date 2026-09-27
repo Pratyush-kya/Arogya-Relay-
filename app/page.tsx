@@ -13,6 +13,7 @@ import { AuthScreen } from "./auth-screen";
 import { ScreeningScreen } from "./screening-screen";
 import { SupabaseScreen } from "./supabase-screen";
 import { ClinicDateWidget } from "./clinic-date-widget";
+import { FieldDeviceStation } from "./field-device";
 
 // Keep specialist workspaces out of the first dashboard payload.
 const CareGuidance = lazy(() => import("./care-guidance"));
@@ -635,11 +636,11 @@ export default function Home() {
           <div className="top-actions">
             <IconTooltip
               title="Clinic Operational Date & Live Clock"
-              desc="NTP-synchronized healthcare calendar, operational shifts, and scheduled outreach camps."
-              howToUse="Click to view full clinic calendar, shift status, and scheduled rural medical camps."
+              desc="NTP-synchronized healthcare calendar, operational shifts, and live station clock."
+              howToUse="Reference for clinical case timestamps."
               position="bottom"
             >
-              <ClinicDateWidget onOpenCamps={() => setActiveTab("nearby")} />
+              <ClinicDateWidget />
             </IconTooltip>
 
             <IconTooltip
@@ -1646,16 +1647,10 @@ function DevicePanel() {
   ];
 
   return (
-    <div className="page-content section-page">
-      <div className="page-heading">
-        <div>
-          <span className="eyebrow">{t("device.kicker")}</span>
-          <h1>Arogya Relay System Integrity</h1>
-          <p>{t("device.subtitle")}</p>
-        </div>
-        <span className="live-badge"><i /> {t("device.ready")}</span>
-      </div>
-      <section className="device-overview">
+    <div>
+      <FieldDeviceStation />
+      <div className="page-content section-page" style={{ paddingTop: "0" }}>
+        <section className="device-overview">
         <article className="hardware-card">
           <div className="large-device">
             <div className="speaker">••••••</div>
@@ -1753,6 +1748,7 @@ function DevicePanel() {
           </article>
         </section>
       </section>
+      </div>
     </div>
   );
 }

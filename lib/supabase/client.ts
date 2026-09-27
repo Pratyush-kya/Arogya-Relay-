@@ -42,7 +42,7 @@ export function getActiveSupabaseConfig() {
 
   return {
     url: process.env.NEXT_PUBLIC_SUPABASE_URL || "https://wyhputdbwuslzgipfzjm.supabase.co",
-    key: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "sb_publishable_i4H4gOhMqL_hkCioArUEPQ_owYL8smN",
+    key: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_i4H4gOhMqL_hkCioArUEPQ_owYL8smN",
     source: "default",
   };
 }
