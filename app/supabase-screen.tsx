@@ -542,6 +542,19 @@ export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreen
                 <h2 style={{ margin: "0 0 6px", fontSize: "22px", fontWeight: 800, letterSpacing: "-0.5px" }}>
                   Project: <code style={{ color: "#34d399", fontFamily: "monospace" }}>{SUPABASE_PROJECT_REF}</code>
                 </h2>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "10px", flexWrap: "wrap" }}>
+                  <span style={{ fontSize: "11px", background: "rgba(255,255,255,0.1)", padding: "2px 8px", borderRadius: "6px", color: "#e2e8f0" }}>
+                    🌏 Provisioned Region: <strong>Northeast Asia (Seoul, Korea)</strong>
+                  </span>
+                  <a
+                    href="https://supabase.com/dashboard/new/ufohydwnepbmjoigycfj"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ fontSize: "11px", background: "rgba(245, 158, 11, 0.25)", border: "1px solid rgba(245, 158, 11, 0.5)", padding: "2px 8px", borderRadius: "6px", color: "#fef08a", textDecoration: "none", fontWeight: 700 }}
+                  >
+                    🇮🇳 Want Central India (Mumbai)? Click here ↗
+                  </a>
+                </div>
                 <p style={{ margin: "0 0 16px", fontSize: "12.5px", color: "#94a3b8", lineHeight: 1.5 }}>
                   Configured Supabase project live on Cloudflare/Supabase gateway (<code>https://{SUPABASE_PROJECT_REF}.supabase.co</code>) hosting PostgreSQL tables, S3-compatible binary buckets, and physician verification logs.
                 </p>
@@ -779,6 +792,65 @@ export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreen
                     </button>
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* Indian Data Sovereignty & Region Selector (ABDM Aligned) */}
+            <div
+              style={{
+                background: "#f0fdf4",
+                border: "1.5px solid #86efac",
+                borderRadius: "14px",
+                padding: "18px 20px",
+                display: "grid",
+                gap: "12px",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "10px" }}>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                    <span style={{ fontSize: "20px" }}>🇮🇳</span>
+                    <h3 style={{ margin: 0, fontSize: "15px", fontWeight: 800, color: "#166534" }}>
+                      Hosting Nation &amp; Region: India vs Korea (ABDM Compliance)
+                    </h3>
+                  </div>
+                  <p style={{ margin: 0, fontSize: "12px", color: "#15803d", lineHeight: 1.4 }}>
+                    Your current project <code>tekgwowxqwwahaazyhne</code> was provisioned in <strong>Northeast Asia (Seoul, Korea)</strong>. While 100% functional, Ayushman Bharat Digital Mission (ABDM) compliance recommends health databases reside inside India.
+                  </p>
+                </div>
+
+                <a
+                  href="https://supabase.com/dashboard/new/ufohydwnepbmjoigycfj"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: "8px",
+                    background: "#166534",
+                    color: "#ffffff",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    textDecoration: "none",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    boxShadow: "0 2px 8px rgba(22, 101, 52, 0.2)",
+                  }}
+                >
+                  <span>🇮🇳 Create Project in Central India (Mumbai) ↗</span>
+                </a>
+              </div>
+
+              <div style={{ background: "#ffffff", border: "1px solid #bbf7d0", borderRadius: "10px", padding: "12px 14px", fontSize: "11.5px", color: "#374151" }}>
+                <strong style={{ color: "#166534", display: "block", marginBottom: "6px" }}>
+                  How to make the hosting nation India (Mumbai) in 30 seconds:
+                </strong>
+                <ol style={{ margin: 0, paddingLeft: "18px", lineHeight: 1.6 }}>
+                  <li>Click the <strong>Create Project in Central India (Mumbai)</strong> button above.</li>
+                  <li>In the Supabase form, enter name (e.g. <code>arogya-relay-mumbai</code>) and a database password.</li>
+                  <li>In the <strong>Region</strong> dropdown, select <strong>Central India (Mumbai) / ap-south-1</strong>.</li>
+                  <li>Click <em>Create new project</em>, copy your new project reference, and paste it into the <em>Quick Project Ref</em> bar above!</li>
+                </ol>
               </div>
             </div>
 
