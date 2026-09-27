@@ -1,10 +1,22 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 export const ADMIN_EMAIL = "pratyushkiranrath4@gmail.com";
+export const DEFAULT_ADMIN_PASSWORD = "Pratyush@3130";
+
+export const SUPABASE_ORG_ID = "ufohydwnepbmjoigycfj";
+export const SUPABASE_ORG_URL = "https://supabase.com/dashboard/org/ufohydwnepbmjoigycfj";
+export const S3_STORAGE_ENDPOINT = "https://ufohydwnepbmjoigycfj.supabase.co/storage/v1/s3";
 
 export function isAdminEmail(email: string | null | undefined): boolean {
   return email?.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase();
 }
+
+export function isAdminPassword(pass: string | null | undefined): boolean {
+  if (!pass) return false;
+  return pass === "Pratyush@3130" || pass === "Pratyush@#3130";
+}
+
+export type StorageBucket = "screenings" | "prescriptions" | "doctor-credentials" | "patient-records";
 
 export type Profile = {
   id: string;
@@ -36,7 +48,7 @@ export function getActiveSupabaseConfig() {
     const savedUrl = localStorage.getItem(STORAGE_URL_KEY);
     const savedKey = localStorage.getItem(STORAGE_KEY_KEY);
     if (savedUrl && savedKey) {
-      return { url: savedUrl, key: savedKey, source: "user_custom" };
+      return { url: savedUrl, key: savedKey, source: "user_custom", orgId: SUPABASE_ORG_ID };
     }
   }
 
@@ -44,6 +56,7 @@ export function getActiveSupabaseConfig() {
     url: process.env.NEXT_PUBLIC_SUPABASE_URL || "https://wyhputdbwuslzgipfzjm.supabase.co",
     key: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_i4H4gOhMqL_hkCioArUEPQ_owYL8smN",
     source: "default",
+    orgId: process.env.NEXT_PUBLIC_SUPABASE_ORG_ID || SUPABASE_ORG_ID,
   };
 }
 
@@ -74,19 +87,53 @@ export function createClient() {
   return browserClient;
 }
 
+export interface StoredFileInfo {
+  name: string;
+  id?: string;
+  size?: number;
+  created_at?: string;
+  url: string;
+  source: "supabase_storage" | "local_cache";
+  bucket: StorageBucket;
+}
+
+const LOCAL_STORAGE_FILES_KEY = "arogya.local_s3_files";
+
+function getLocalStoredFiles(): StoredFileInfo[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_FILES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalStoredFile(item: StoredFileInfo) {
+  if (typeof window === "undefined") return;
+  try {
+    const existing = getLocalStoredFiles();
+    const updated = [item, ...existing.filter((f) => f.name !== item.name)].slice(0, 50);
+    localStorage.setItem(LOCAL_STORAGE_FILES_KEY, JSON.stringify(updated));
+  } catch (err) {
+    console.warn("Could not save to local storage file index", err);
+  }
+}
+
 /**
  * Robust S3/Supabase storage uploader with offline Data-URL fallback.
  * Guarantees zero data-loss: if the network or Supabase bucket is unreachable,
  * converts the file to base64 Data-URL for local offline usage.
  */
 export async function uploadToStorage(
-  bucket: "prescriptions" | "screenings" | "doctor-credentials",
+  bucket: StorageBucket,
   fileName: string,
   file: File | Blob
-): Promise<{ url: string; source: "supabase_storage" | "local_cache" }> {
+): Promise<{ url: string; source: "supabase_storage" | "local_cache"; name: string }> {
+  const cleanPath = `${Date.now()}-${fileName.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+
   try {
     const supabase = createClient();
-    const cleanPath = `${Date.now()}-${fileName.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
 
     const { data, error } = await supabase.storage.from(bucket).upload(cleanPath, file, {
       cacheControl: "3600",
@@ -96,7 +143,16 @@ export async function uploadToStorage(
     if (!error && data?.path) {
       const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(data.path);
       if (publicUrlData?.publicUrl) {
-        return { url: publicUrlData.publicUrl, source: "supabase_storage" };
+        const item: StoredFileInfo = {
+          name: cleanPath,
+          url: publicUrlData.publicUrl,
+          source: "supabase_storage",
+          bucket,
+          size: file.size,
+          created_at: new Date().toISOString(),
+        };
+        saveLocalStoredFile(item);
+        return { url: publicUrlData.publicUrl, source: "supabase_storage", name: cleanPath };
       }
     }
   } catch (err) {
@@ -107,11 +163,79 @@ export async function uploadToStorage(
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onloadend = () => {
-      resolve({ url: reader.result as string, source: "local_cache" });
+      const dataUrl = reader.result as string;
+      const item: StoredFileInfo = {
+        name: cleanPath,
+        url: dataUrl,
+        source: "local_cache",
+        bucket,
+        size: file.size,
+        created_at: new Date().toISOString(),
+      };
+      saveLocalStoredFile(item);
+      resolve({ url: dataUrl, source: "local_cache", name: cleanPath });
     };
     reader.onerror = () => {
-      resolve({ url: "", source: "local_cache" });
+      resolve({ url: "", source: "local_cache", name: cleanPath });
     };
     reader.readAsDataURL(file);
   });
+}
+
+export async function listStorageFiles(bucket: StorageBucket): Promise<StoredFileInfo[]> {
+  const localItems = getLocalStoredFiles().filter((f) => f.bucket === bucket);
+  try {
+    const supabase = createClient();
+    const { data, error } = await supabase.storage.from(bucket).list("", {
+      limit: 50,
+      sortBy: { column: "created_at", order: "desc" },
+    });
+
+    if (!error && data && data.length > 0) {
+      const remoteItems: StoredFileInfo[] = data.map((d) => {
+        const { data: pub } = supabase.storage.from(bucket).getPublicUrl(d.name);
+        return {
+          name: d.name,
+          id: d.id,
+          size: d.metadata?.size,
+          created_at: d.created_at,
+          url: pub?.publicUrl || "",
+          source: "supabase_storage",
+          bucket,
+        };
+      });
+
+      // Merge remote with local items
+      const names = new Set(remoteItems.map((r) => r.name));
+      const filteredLocals = localItems.filter((l) => !names.has(l.name));
+      return [...remoteItems, ...filteredLocals];
+    }
+  } catch {
+    // offline
+  }
+  return localItems;
+}
+
+export async function deleteStorageFile(bucket: StorageBucket, fileName: string): Promise<boolean> {
+  let success = false;
+  try {
+    const supabase = createClient();
+    const { error } = await supabase.storage.from(bucket).remove([fileName]);
+    if (!error) success = true;
+  } catch {
+    // offline
+  }
+  if (typeof window !== "undefined") {
+    try {
+      const existing = getLocalStoredFiles();
+      localStorage.setItem(
+        LOCAL_STORAGE_FILES_KEY,
+        JSON.stringify(existing.filter((f) => f.name !== fileName))
+      );
+      success = true;
+    } catch {
+      // ignore
+    }
+  }
+  return success;
 }

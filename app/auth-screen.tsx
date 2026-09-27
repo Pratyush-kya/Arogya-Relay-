@@ -2,13 +2,13 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
-import { createClient, type Profile, ADMIN_EMAIL, isAdminEmail, uploadToStorage } from "@/lib/supabase/client";
+import { createClient, type Profile, ADMIN_EMAIL, isAdminEmail, isAdminPassword, uploadToStorage } from "@/lib/supabase/client";
 import { LanguageSwitcher } from "./language-switcher";
 import { IconTooltip } from "./icon-tooltip";
 
 type StatusTone = "idle" | "good" | "error" | "warn";
 
-const DEFAULT_ADMIN_PASS = "Pratyush@#3130";
+const DEFAULT_ADMIN_PASS = "Pratyush@3130";
 
 export interface AuthScreenProps {
   initialMode?: "signin" | "signup" | "admin" | "profile";
@@ -202,10 +202,10 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
 
       if (error) {
         // If user doesn't exist yet and it's the admin email with correct password, auto-create
-        if (isAdminEmail(email) && password === DEFAULT_ADMIN_PASS) {
+        if (isAdminEmail(email) && isAdminPassword(password)) {
           const signUpRes = await supabase.auth.signUp({
             email: ADMIN_EMAIL,
-            password: DEFAULT_ADMIN_PASS,
+            password: password.trim(),
             options: {
               data: {
                 display_name: "Pratyush Kiran Rath",

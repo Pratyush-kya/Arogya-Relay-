@@ -2,11 +2,11 @@
 
 import { FormEvent, useEffect, useMemo, useState, useRef } from "react";
 import type { User } from "@supabase/supabase-js";
-import { createClient, type Profile, ADMIN_EMAIL, isAdminEmail, uploadToStorage } from "@/lib/supabase/client";
+import { createClient, type Profile, ADMIN_EMAIL, isAdminEmail, isAdminPassword, uploadToStorage } from "@/lib/supabase/client";
 
 type StatusTone = "idle" | "good" | "error" | "warn";
 
-const DEFAULT_ADMIN_PASS = "Pratyush@#3130";
+const DEFAULT_ADMIN_PASS = "Pratyush@3130";
 
 const ROLES = [
   { id: "health_worker", label: "Health Worker / ASHA", icon: "🩺", desc: "Frontline screening & referrals" },

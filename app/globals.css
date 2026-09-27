@@ -5258,3 +5258,318 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   MULTI-DEVICE RESPONSIVE LAYOUT SYSTEM: PHONE (<640px), TABLET (641px-1024px), LAPTOP (>1024px)
+   ========================================================================== */
+
+/* Universal mobile-friendly safety rules */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Mobile Phones (<640px) */
+@media (max-width: 640px) {
+  .fullscreen-console {
+    min-height: 100vh;
+    width: 100%;
+  }
+
+  .fullscreen-header {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .fullscreen-header-left {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+
+  .fullscreen-title-area h1 {
+    font-size: 14px;
+    line-height: 1.2;
+  }
+
+  .fullscreen-title-area p {
+    font-size: 10px;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .fullscreen-back-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+    border-radius: 12px;
+  }
+
+  .fullscreen-header-actions {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .fullscreen-content-container {
+    padding: 12px 10px;
+    width: 100%;
+  }
+
+  .fullscreen-tabs {
+    gap: 4px;
+    padding-bottom: 6px;
+  }
+
+  .fullscreen-tabs button {
+    padding: 6px 10px;
+    font-size: 11px;
+    border-radius: 8px;
+  }
+
+  .workstation-card {
+    padding: 14px 12px;
+    margin-bottom: 14px;
+    border-radius: 12px;
+  }
+
+  .workstation-card-title {
+    font-size: 13px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  /* Auth workstation mobile styles */
+  .auth-fullscreen-card {
+    margin: 8px 0 18px;
+    border-radius: 14px;
+    max-width: 100%;
+  }
+
+  .auth-tabs-header {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .auth-tab-btn {
+    min-width: 110px;
+    padding: 10px 8px;
+    font-size: 11px;
+  }
+
+  /* Topbar & Header Mobile */
+  .topbar {
+    min-height: 56px;
+    padding: 8px 12px;
+  }
+
+  .topbar h2 {
+    font-size: 13px;
+  }
+
+  .top-actions {
+    gap: 6px;
+  }
+
+  /* Date widget on phone */
+  .clinic-date-widget {
+    padding: 4px 8px 4px 6px;
+    gap: 6px;
+    border-radius: 10px;
+  }
+
+  .calendar-leaf {
+    width: 34px;
+    height: 38px;
+    border-radius: 6px;
+  }
+
+  .leaf-header {
+    font-size: 7.5px;
+    padding: 2px 0 1px;
+  }
+
+  .leaf-day {
+    font-size: 15px;
+  }
+
+  .calendar-details {
+    gap: 1px;
+  }
+
+  .calendar-clock {
+    font-size: 9.5px;
+  }
+
+  .weekday-pill, .shift-pill {
+    font-size: 8px;
+    padding: 1px 4px;
+  }
+
+  /* Field Device mobile */
+  .terminal-chassis {
+    padding: 10px;
+    border-radius: 16px;
+  }
+
+  .terminal-top-bezel {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .oled-screen-inner {
+    padding: 12px 10px;
+  }
+
+  .oled-top-status {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .waveform-monitor {
+    height: 110px;
+  }
+
+  .waveform-canvas {
+    height: 70px;
+  }
+
+  .oled-vitals-readout {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .oled-vital-cell {
+    padding: 8px 10px;
+  }
+
+  .oled-vital-cell .vital-val {
+    font-size: 22px;
+  }
+
+  .device-subgrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .oled-power-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .probes-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .device-actions-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .device-btn-action {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 14px;
+  }
+}
+
+/* Tablets & Small Laptops (641px to 1024px) */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .fullscreen-header {
+    padding: 12px 20px;
+  }
+
+  .fullscreen-content-container {
+    padding: 20px 16px;
+  }
+
+  .workstation-card {
+    padding: 20px 18px;
+    margin-bottom: 20px;
+  }
+
+  .screening-workstation-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .oled-vitals-readout {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .oled-power-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .probes-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .device-subgrid {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .signal-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .trend-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Laptops & Wide Desktops (>1024px) */
+@media (min-width: 1025px) {
+  .fullscreen-header {
+    padding: 14px 34px;
+  }
+
+  .fullscreen-content-container {
+    padding: 28px 34px 48px;
+    max-width: 1320px;
+  }
+
+  .workstation-card {
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .screening-workstation-grid {
+    grid-template-columns: 1.35fr 1fr;
+    gap: 24px;
+  }
+
+  .oled-vitals-readout {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .oled-power-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .probes-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .device-subgrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
