@@ -701,7 +701,10 @@ export default function Home() {
         )}
         {activeTab === "library" && (
           <Suspense fallback={<WorkspaceLoading />}>
-            <DiseaseLibrary onTransferToScreening={handleTransferFromLibrary} />
+            <DiseaseLibrary
+              onTransferToScreening={handleTransferFromLibrary}
+              onClose={() => setActiveTab("overview")}
+            />
           </Suspense>
         )}
         {activeTab === "prescriptions" && (

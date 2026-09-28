@@ -7,9 +7,10 @@ import { ReadAloud } from "./read-aloud";
 
 interface DiseaseLibraryProps {
   onTransferToScreening?: (symptoms: string[], notes: string) => void;
+  onClose?: () => void;
 }
 
-export default function DiseaseLibrary({ onTransferToScreening }: DiseaseLibraryProps) {
+export default function DiseaseLibrary({ onTransferToScreening, onClose }: DiseaseLibraryProps) {
   const { effectiveLang } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -41,39 +42,125 @@ export default function DiseaseLibrary({ onTransferToScreening }: DiseaseLibrary
 
   return (
     <div className="disease-library-container" style={{ padding: "0 4px" }}>
-      <header className="page-heading" style={{ marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
+      {/* Top Header with Close and View Mode Controls */}
+      <header
+        className="page-heading"
+        style={{
+          marginBottom: "20px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          flexWrap: "wrap",
+          gap: "12px",
+        }}
+      >
         <div>
           <span className="eyebrow">AROGYA GYAN · PREDEFINED HEALTH LIBRARY</span>
-          <h1>Common Diseases &amp; Home Remedies Library</h1>
+          <h1 style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+            <span>Common Diseases &amp; Home Remedies Library</span>
+          </h1>
           <p>
             {viewMode === "quick"
-              ? "Simple, easy-to-understand health guides with safe home remedies and warning signs."
+              ? "Simple, easy-to-understand health guides with safe home remedies, medicine dosages, and warning signs."
               : "Offline-accessible clinical guide for primary health workers with OTC protocols and red flags."}
           </p>
         </div>
 
-        {/* View Mode Toggle: Quick Idea (Easy) vs Full Clinical */}
-        <div className="cg-toggle" role="group" aria-label="Arogya Gyan View Mode">
-          <button
-            type="button"
-            className={viewMode === "quick" ? "active" : ""}
-            aria-pressed={viewMode === "quick"}
-            onClick={() => setViewMode("quick")}
-            style={{ fontWeight: 600, fontSize: "12px" }}
-          >
-            💡 Quick Idea (Easy)
-          </button>
-          <button
-            type="button"
-            className={viewMode === "clinical" ? "active" : ""}
-            aria-pressed={viewMode === "clinical"}
-            onClick={() => setViewMode("clinical")}
-            style={{ fontWeight: 600, fontSize: "12px" }}
-          >
-            📋 Clinical Details
-          </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+          {/* View Mode Toggle: Quick Idea (Easy) vs Full Clinical */}
+          <div className="cg-toggle" role="group" aria-label="Arogya Gyan View Mode">
+            <button
+              type="button"
+              className={viewMode === "quick" ? "active" : ""}
+              aria-pressed={viewMode === "quick"}
+              onClick={() => {
+                setViewMode("quick");
+                setExpandedId(null);
+              }}
+              style={{ fontWeight: 600, fontSize: "12px" }}
+            >
+              💡 Quick Idea (Easy)
+            </button>
+            <button
+              type="button"
+              className={viewMode === "clinical" ? "active" : ""}
+              aria-pressed={viewMode === "clinical"}
+              onClick={() => setViewMode("clinical")}
+              style={{ fontWeight: 600, fontSize: "12px" }}
+            >
+              📋 Clinical Details
+            </button>
+          </div>
+
+          {/* Close Library / Back to Dashboard Button */}
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="secondary-button"
+              style={{
+                fontSize: "12px",
+                padding: "8px 14px",
+                fontWeight: 700,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                background: "var(--surface)",
+                border: "1px solid var(--line)",
+              }}
+              title="Return to main dashboard overview"
+            >
+              <span>✕</span>
+              <span>Back to Dashboard</span>
+            </button>
+          )}
         </div>
       </header>
+
+      {/* Active Expansion Notice Bar if an item is expanded */}
+      {expandedId && (
+        <div
+          style={{
+            background: "#ecfdf5",
+            border: "1px solid #6ee7b7",
+            borderRadius: "10px",
+            padding: "10px 16px",
+            marginBottom: "16px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "10px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13px", color: "#065f46" }}>
+            <span style={{ fontSize: "16px" }}>🔍</span>
+            <span>
+              Currently viewing expanded details for:{" "}
+              <strong>{DISEASE_CATALOG.find((d) => d.id === expandedId)?.name}</strong>
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setExpandedId(null)}
+            style={{
+              background: "#047857",
+              color: "#ffffff",
+              border: "none",
+              padding: "5px 12px",
+              borderRadius: "6px",
+              fontSize: "12px",
+              fontWeight: 700,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "4px",
+            }}
+          >
+            ✕ Close Expanded Details
+          </button>
+        </div>
+      )}
 
       {/* Search and Category Filter */}
       <div
@@ -184,21 +271,27 @@ export default function DiseaseLibrary({ onTransferToScreening }: DiseaseLibrary
               ? "#eab308"
               : "#10b981";
 
+          // Full narration text that completely reads the entire disease advice without stopping
+          const fullAudioGuide = `${item.name}. ${item.hindiName}. Overview: ${item.narrationText}. Safe home remedies: ${item.remedies.join(". ")}. Warning signs: ${item.redFlags.join(". ")}. Standard medicine protocol: ${item.otcGuidance.join(". ")}.`;
+
           if (viewMode === "quick") {
-            // 💡 QUICK IDEA MODE: Easy, visual, plain-language guidance for patients and families
+            // 💡 QUICK IDEA MODE
             return (
               <div
                 key={item.id}
                 className="disease-card quick-idea-card"
                 style={{
                   background: "var(--surface)",
-                  border: "2px solid #a7f3d0",
+                  border: isExpanded ? "2px solid #059669" : "2px solid #a7f3d0",
                   borderRadius: "16px",
                   padding: "20px",
                   display: "flex",
                   flexDirection: "column",
                   gap: "14px",
-                  boxShadow: "0 4px 14px rgba(16, 185, 129, 0.08)",
+                  boxShadow: isExpanded
+                    ? "0 6px 20px rgba(5, 150, 105, 0.18)"
+                    : "0 4px 14px rgba(16, 185, 129, 0.08)",
+                  transition: "all 0.2s ease",
                 }}
               >
                 {/* Header */}
@@ -214,25 +307,44 @@ export default function DiseaseLibrary({ onTransferToScreening }: DiseaseLibrary
                       </span>
                     </div>
                   </div>
-                  <span
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: "700",
-                      padding: "4px 10px",
-                      borderRadius: "12px",
-                      background: "#ecfdf5",
-                      color: "#047857",
-                      border: "1px solid #a7f3d0",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "4px",
-                    }}
-                  >
-                    💡 Quick Idea
-                  </span>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: "700",
+                        padding: "4px 8px",
+                        borderRadius: "12px",
+                        background: "#ecfdf5",
+                        color: "#047857",
+                        border: "1px solid #a7f3d0",
+                      }}
+                    >
+                      💡 Quick Idea
+                    </span>
+                    {isExpanded && (
+                      <button
+                        type="button"
+                        onClick={() => setExpandedId(null)}
+                        style={{
+                          background: "#fee2e2",
+                          color: "#dc2626",
+                          border: "1px solid #fca5a5",
+                          borderRadius: "12px",
+                          padding: "4px 8px",
+                          fontSize: "11px",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                        }}
+                        title="Close / Collapse this card"
+                      >
+                        ✕ Close
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                {/* 1 Simple Sentence Summary */}
+                {/* 1 Simple Sentence Summary with Read Aloud */}
                 <div
                   style={{
                     background: "var(--surface-muted)",
@@ -290,6 +402,133 @@ export default function DiseaseLibrary({ onTransferToScreening }: DiseaseLibrary
                   </p>
                 </div>
 
+                {/* EXPANDED SECTION INSIDE QUICK IDEA */}
+                {isExpanded && (
+                  <div
+                    style={{
+                      background: "#f0fdf4",
+                      border: "1px solid #86efac",
+                      borderRadius: "12px",
+                      padding: "16px",
+                      display: "grid",
+                      gap: "14px",
+                    }}
+                  >
+                    {/* Expanded Header with Close Option */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <strong style={{ fontSize: "13px", color: "#166534", display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span>📋 Complete Medical &amp; Care Details</span>
+                      </strong>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <ReadAloud text={fullAudioGuide} />
+                        <button
+                          type="button"
+                          onClick={() => setExpandedId(null)}
+                          style={{
+                            background: "#fee2e2",
+                            color: "#dc2626",
+                            border: "1px solid #f87171",
+                            borderRadius: "6px",
+                            padding: "4px 10px",
+                            fontSize: "11px",
+                            fontWeight: 700,
+                            cursor: "pointer",
+                          }}
+                        >
+                          ✕ Close Details
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* All Recognized Symptoms */}
+                    <div>
+                      <span style={{ fontSize: "11.5px", fontWeight: 700, color: "#374151", display: "block", marginBottom: "4px" }}>
+                        🩺 Recognized Symptoms:
+                      </span>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                        {item.symptoms.map((s, idx) => (
+                          <span
+                            key={idx}
+                            style={{
+                              fontSize: "11px",
+                              padding: "2px 7px",
+                              borderRadius: "4px",
+                              background: "#e2e8f0",
+                              color: "#1e293b",
+                            }}
+                          >
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Standard OTC Medication Protocols & Dosages */}
+                    <div style={{ background: "#ffffff", padding: "10px 12px", borderRadius: "8px", border: "1px solid #bbf7d0" }}>
+                      <strong style={{ fontSize: "12px", color: "#1e40af", display: "block", marginBottom: "4px" }}>
+                        💊 Over-the-Counter (OTC) Medicines &amp; Dosages:
+                      </strong>
+                      <ul style={{ margin: 0, paddingLeft: "16px", fontSize: "12px", lineHeight: "1.45", color: "#1e293b" }}>
+                        {item.otcGuidance.map((otc, idx) => (
+                          <li key={idx} style={{ marginBottom: "3px" }}>
+                            {otc}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Full Hospital Referral Criteria */}
+                    <div style={{ background: "#ffffff", padding: "10px 12px", borderRadius: "8px", border: "1px solid #fecaca" }}>
+                      <strong style={{ fontSize: "12px", color: "#991b1b", display: "block", marginBottom: "4px" }}>
+                        🚨 When to Immediately Visit a Hospital/CHC:
+                      </strong>
+                      <ul style={{ margin: 0, paddingLeft: "16px", fontSize: "12px", lineHeight: "1.4", color: "#991b1b" }}>
+                        {item.redFlags.map((rf, idx) => (
+                          <li key={idx} style={{ marginBottom: "3px" }}>
+                            {rf}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Full Supportive Care Regimen */}
+                    <div style={{ background: "#ffffff", padding: "10px 12px", borderRadius: "8px", border: "1px solid #bbf7d0" }}>
+                      <strong style={{ fontSize: "12px", color: "#166534", display: "block", marginBottom: "4px" }}>
+                        🌿 All Supportive Home Care Tips:
+                      </strong>
+                      <ul style={{ margin: 0, paddingLeft: "16px", fontSize: "12px", lineHeight: "1.4", color: "#1e293b" }}>
+                        {item.remedies.map((rem, idx) => (
+                          <li key={idx} style={{ marginBottom: "3px" }}>
+                            {rem}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Bottom Close Button */}
+                    <button
+                      type="button"
+                      onClick={() => setExpandedId(null)}
+                      style={{
+                        padding: "8px 14px",
+                        background: "#047857",
+                        color: "#ffffff",
+                        border: "none",
+                        borderRadius: "8px",
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "6px",
+                      }}
+                    >
+                      <span>▲ Close / Collapse Details</span>
+                    </button>
+                  </div>
+                )}
+
                 {/* Action Bar */}
                 <div
                   style={{
@@ -304,18 +543,22 @@ export default function DiseaseLibrary({ onTransferToScreening }: DiseaseLibrary
                 >
                   <button
                     type="button"
-                    onClick={() => setViewMode("clinical")}
+                    onClick={() => setExpandedId(isExpanded ? null : item.id)}
                     style={{
-                      background: "none",
-                      border: "none",
-                      color: "var(--primary)",
+                      background: isExpanded ? "#f1f5f9" : "none",
+                      border: isExpanded ? "1px solid #cbd5e1" : "none",
+                      color: isExpanded ? "#475569" : "var(--primary)",
                       fontSize: "12px",
                       fontWeight: "700",
                       cursor: "pointer",
-                      padding: "4px 0",
+                      padding: "5px 8px",
+                      borderRadius: "6px",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
                     }}
                   >
-                    📋 View Medicine Dosages →
+                    <span>{isExpanded ? "▲ Close Details" : "📋 View Medicine Dosages & Details ▼"}</span>
                   </button>
 
                   {onTransferToScreening && (
@@ -338,20 +581,20 @@ export default function DiseaseLibrary({ onTransferToScreening }: DiseaseLibrary
             );
           }
 
-          // 📋 CLINICAL DETAILS MODE: Rigorous clinical guide with OTC dosage protocols and red flags
+          // 📋 CLINICAL DETAILS MODE
           return (
             <div
               key={item.id}
               className="disease-card clinical-card"
               style={{
                 background: "var(--surface)",
-                border: "1px solid var(--line)",
+                border: isExpanded ? "2px solid var(--primary)" : "1px solid var(--line)",
                 borderRadius: "14px",
                 padding: "20px",
                 display: "flex",
                 flexDirection: "column",
                 gap: "12px",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                boxShadow: isExpanded ? "0 4px 16px rgba(0,0,0,0.12)" : "0 2px 8px rgba(0,0,0,0.04)",
               }}
             >
               {/* Clinical Card Header */}
@@ -365,21 +608,43 @@ export default function DiseaseLibrary({ onTransferToScreening }: DiseaseLibrary
                     </span>
                   </div>
                 </div>
-                <span
-                  style={{
-                    fontSize: "11px",
-                    fontWeight: "700",
-                    textTransform: "uppercase",
-                    padding: "3px 8px",
-                    borderRadius: "12px",
-                    background: `${urgencyColor}20`,
-                    color: urgencyColor,
-                    border: `1px solid ${urgencyColor}40`,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Tier: {item.urgency}
-                </span>
+
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: "700",
+                      textTransform: "uppercase",
+                      padding: "3px 8px",
+                      borderRadius: "12px",
+                      background: `${urgencyColor}20`,
+                      color: urgencyColor,
+                      border: `1px solid ${urgencyColor}40`,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Tier: {item.urgency}
+                  </span>
+                  {isExpanded && (
+                    <button
+                      type="button"
+                      onClick={() => setExpandedId(null)}
+                      style={{
+                        background: "#fee2e2",
+                        color: "#dc2626",
+                        border: "1px solid #fca5a5",
+                        borderRadius: "10px",
+                        padding: "2px 8px",
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                      title="Collapse details"
+                    >
+                      ✕ Close
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Clinical Case Audio & Brief */}
@@ -387,7 +652,7 @@ export default function DiseaseLibrary({ onTransferToScreening }: DiseaseLibrary
                 <span style={{ fontSize: "12px", fontWeight: "600", color: "var(--muted)" }}>
                   Clinical Case Narration:
                 </span>
-                <ReadAloud text={`Clinical protocol for ${item.name}. ${item.narrationText}`} />
+                <ReadAloud text={fullAudioGuide} />
               </div>
 
               {/* Symptoms Checklist */}
@@ -443,10 +708,28 @@ export default function DiseaseLibrary({ onTransferToScreening }: DiseaseLibrary
 
               {/* Full Non-Pharmacological Care (Expandable) */}
               {isExpanded && (
-                <div style={{ background: "rgba(16, 185, 129, 0.08)", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(16, 185, 129, 0.2)" }}>
-                  <strong style={{ fontSize: "12px", color: "#065f46", display: "block", marginBottom: "4px" }}>
-                    🌿 Supportive Clinical Regimen:
-                  </strong>
+                <div style={{ background: "rgba(16, 185, 129, 0.08)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(16, 185, 129, 0.2)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                    <strong style={{ fontSize: "12px", color: "#065f46" }}>
+                      🌿 Supportive Clinical Regimen:
+                    </strong>
+                    <button
+                      type="button"
+                      onClick={() => setExpandedId(null)}
+                      style={{
+                        background: "#fee2e2",
+                        color: "#dc2626",
+                        border: "1px solid #f87171",
+                        borderRadius: "4px",
+                        padding: "2px 8px",
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      ✕ Close
+                    </button>
+                  </div>
                   <ul style={{ margin: 0, paddingLeft: "16px", fontSize: "12px", lineHeight: "1.4" }}>
                     {item.remedies.map((rem, idx) => (
                       <li key={idx} style={{ marginBottom: "2px" }}>
@@ -469,21 +752,41 @@ export default function DiseaseLibrary({ onTransferToScreening }: DiseaseLibrary
                   borderTop: "1px solid var(--line)",
                 }}
               >
-                <button
-                  type="button"
-                  onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "var(--primary)",
-                    fontSize: "12px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                    padding: "4px 0",
-                  }}
-                >
-                  {isExpanded ? "▲ Hide Supportive Regimen" : "▼ Supportive Regimen"}
-                </button>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                    style={{
+                      background: isExpanded ? "#f1f5f9" : "none",
+                      border: isExpanded ? "1px solid #cbd5e1" : "none",
+                      color: "var(--primary)",
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      padding: "4px 8px",
+                      borderRadius: "6px",
+                    }}
+                  >
+                    {isExpanded ? "▲ Close Supportive Regimen" : "▼ Supportive Regimen"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setViewMode("quick");
+                      setExpandedId(null);
+                    }}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "var(--muted)",
+                      fontSize: "11.5px",
+                      cursor: "pointer",
+                      textDecoration: "underline",
+                    }}
+                  >
+                    ← Back to Quick Idea
+                  </button>
+                </div>
 
                 {onTransferToScreening && (
                   <button

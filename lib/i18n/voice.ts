@@ -97,13 +97,21 @@ export function playAuditoryChime(): void {
 }
 
 let currentAudio: HTMLAudioElement | null = null;
+let keepAliveTimer: ReturnType<typeof setInterval> | null = null;
+
+function clearKeepAlive() {
+  if (keepAliveTimer) {
+    clearInterval(keepAliveTimer);
+    keepAliveTimer = null;
+  }
+}
 
 export function playServerAudio(text: string, opts: SpeakOptions): () => void {
   stopSpeaking();
   playAuditoryChime();
 
   try {
-    const audio = new Audio(`/api/tts?text=${encodeURIComponent(text.slice(0, 500))}&lang=${opts.lang}`);
+    const audio = new Audio(`/api/tts?text=${encodeURIComponent(text.slice(0, 2000))}&lang=${opts.lang}`);
     audio.playbackRate = opts.rate ?? 1.0;
     currentAudio = audio;
 
@@ -165,6 +173,7 @@ export function speak(text: string, opts: SpeakOptions): () => void {
     synth.cancel();
   } catch {}
   activeUtterances.clear();
+  clearKeepAlive();
 
   const langTag = bcp47(opts.lang);
   const utter = new SpeechSynthesisUtterance(text);
@@ -185,6 +194,7 @@ export function speak(text: string, opts: SpeakOptions): () => void {
   activeUtterances.add(utter);
 
   const cleanup = () => {
+    clearKeepAlive();
     activeUtterances.delete(utter);
     opts.onEnd?.();
   };
@@ -196,6 +206,19 @@ export function speak(text: string, opts: SpeakOptions): () => void {
     playServerAudio(text, opts);
   };
 
+  // Chromium keepalive: Chromium pauses speech after 15 seconds. Periodic pause/resume keeps it speaking to completion.
+  keepAliveTimer = setInterval(() => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      const s = window.speechSynthesis;
+      if (s.speaking && !s.paused) {
+        try {
+          s.pause();
+          s.resume();
+        } catch {}
+      }
+    }
+  }, 7000);
+
   // Execute synchronously within the user gesture click handler
   try {
     if (synth.paused) synth.resume();
@@ -206,6 +229,7 @@ export function speak(text: string, opts: SpeakOptions): () => void {
   }
 
   return () => {
+    clearKeepAlive();
     activeUtterances.delete(utter);
     try {
       synth.cancel();
@@ -214,6 +238,7 @@ export function speak(text: string, opts: SpeakOptions): () => void {
 }
 
 export function stopSpeaking(): void {
+  clearKeepAlive();
   if (currentAudio) {
     try {
       currentAudio.pause();
