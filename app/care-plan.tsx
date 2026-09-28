@@ -84,6 +84,57 @@ const FREQ_OPTIONS: { value: Frequency["kind"]; label: string }[] = [
   { value: "ambiguous", label: "Ambiguous (blocked)" },
 ];
 
+const INITIAL_SAMPLE_ORDERS: MedicationOrder[] = [
+  {
+    id: "mo-htn-01",
+    carePlanId: "cp-active-01",
+    patientId: "pt-NR-1001",
+    medicine: "Amlodipine",
+    strength: "5mg",
+    form: "tablet",
+    dose: "1 tablet (5mg)",
+    route: "oral",
+    frequency: { kind: "times_per_day", times: 1 },
+    foodRelation: "after_food",
+    indication: "Primary Essential Hypertension Management",
+    instructions: "Take once daily in the morning after breakfast with plain water.",
+    startDate: new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10),
+    endDate: new Date(Date.now() + 27 * 86400000).toISOString().slice(0, 10),
+    highRisk: false,
+    signedByDoctorId: "dr-001",
+    signedAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+    signature: "RMP-IN-2026-SIG-VALID",
+    status: "active",
+    createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+    version: 1,
+  },
+  {
+    id: "mo-dm-02",
+    carePlanId: "cp-active-01",
+    patientId: "pt-NR-1001",
+    medicine: "Metformin Hydrochloride",
+    strength: "500mg",
+    form: "tablet",
+    dose: "1 tablet (500mg)",
+    route: "oral",
+    frequency: { kind: "times_per_day", times: 2 },
+    foodRelation: "with_food",
+    indication: "Type 2 Diabetes Mellitus Glycemic Maintenance",
+    instructions: "Take twice daily with morning and evening meals.",
+    startDate: new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10),
+    endDate: new Date(Date.now() + 23 * 86400000).toISOString().slice(0, 10),
+    highRisk: false,
+    signedByDoctorId: "dr-001",
+    signedAt: new Date(Date.now() - 7 * 86400000).toISOString(),
+    signature: "RMP-IN-2026-SIG-VALID",
+    status: "active",
+    createdAt: new Date(Date.now() - 7 * 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 7 * 86400000).toISOString(),
+    version: 1,
+  },
+];
+
 export default function CarePlanView() {
   const { t } = useLanguage();
   const [role, setRole] = useState<Role>("doctor");
@@ -98,8 +149,9 @@ export default function CarePlanView() {
     regNo: "RMP-IN-2026",
   });
 
-  const [orders, setOrders] = useState<MedicationOrder[]>([]);
+  const [orders, setOrders] = useState<MedicationOrder[]>(INITIAL_SAMPLE_ORDERS);
   const [items] = useState<CareItem[]>([]);
+  const [acknowledgedDoses, setAcknowledgedDoses] = useState<Record<string, "taken" | "snoozed" | "skipped">>({});
 
   // Editor draft order
   const [draft, setDraft] = useState<MedicationOrder>(mkEmptyOrder);
@@ -116,9 +168,9 @@ export default function CarePlanView() {
     [patientRef]
   );
 
-  const issues = useMemo(() => validateOrderCompleteness(draft), [draft]);
-  const blocking = issues.filter((i) => i.severity === "blocking");
-  const dups = useMemo(() => findDuplicateActiveOrders(orders, draft), [draft, orders]);
+  const completeness = useMemo(() => validateOrderCompleteness(draft), [draft]);
+  const blocking = completeness.errors;
+  const dups = useMemo(() => findDuplicateActiveOrders(orders), [orders]);
   const allergy = useMemo(() => allergyConflict(draft, currentPatient), [draft, currentPatient]);
 
   const windowStart = `${today}T00:00:00`;
@@ -127,6 +179,71 @@ export default function CarePlanView() {
     () => buildReminders({ orders, items, windowStart, windowEnd, now }),
     [orders, items, windowStart, windowEnd, now],
   );
+
+  const loadTemplate = (type: "htn" | "diabetes" | "ors" | "fever") => {
+    const cur = new Date();
+    const start = cur.toISOString().slice(0, 10);
+    const end = new Date(cur.getTime() + 14 * 86400000).toISOString().slice(0, 10);
+
+    if (type === "htn") {
+      setDraft({
+        ...mkEmptyOrder(),
+        medicine: "Amlodipine Besylate",
+        strength: "5mg",
+        dose: "1 tablet (5mg)",
+        route: "oral",
+        frequency: { kind: "times_per_day", times: 1 },
+        foodRelation: "after_food",
+        indication: "Hypertension / BP Stabilization",
+        instructions: "Take 1 tablet every morning after breakfast with water.",
+        startDate: start,
+        endDate: end,
+      });
+    } else if (type === "diabetes") {
+      setDraft({
+        ...mkEmptyOrder(),
+        medicine: "Metformin Hydrochloride",
+        strength: "500mg",
+        dose: "1 tablet (500mg)",
+        route: "oral",
+        frequency: { kind: "times_per_day", times: 2 },
+        foodRelation: "with_food",
+        indication: "Type 2 Diabetes Mellitus glycemic control",
+        instructions: "Take with breakfast and dinner. Do not skip meals.",
+        startDate: start,
+        endDate: end,
+      });
+    } else if (type === "ors") {
+      setDraft({
+        ...mkEmptyOrder(),
+        medicine: "Oral Rehydration Salts (WHO-ORS) + Zinc",
+        strength: "20.5g packet + 20mg Zinc",
+        form: "solution",
+        dose: "200ml after each loose stool",
+        route: "oral",
+        frequency: { kind: "prn" },
+        foodRelation: "any",
+        indication: "Acute watery diarrhea rehydration therapy",
+        instructions: "Dissolve 1 full sachet in 1 liter of safe drinking water. Discard after 24 hours.",
+        startDate: start,
+        endDate: new Date(cur.getTime() + 5 * 86400000).toISOString().slice(0, 10),
+      });
+    } else if (type === "fever") {
+      setDraft({
+        ...mkEmptyOrder(),
+        medicine: "Paracetamol",
+        strength: "500mg",
+        dose: "1 tablet (500mg)",
+        route: "oral",
+        frequency: { kind: "every_hours", hours: 6 },
+        foodRelation: "after_food",
+        indication: "Acute pyrexia / fever & body aches",
+        instructions: "Take every 6 hours only if fever > 100°F. Maximum 2g per day.",
+        startDate: start,
+        endDate: new Date(cur.getTime() + 3 * 86400000).toISOString().slice(0, 10),
+      });
+    }
+  };
 
   const sign = () => {
     try {
@@ -188,6 +305,26 @@ export default function CarePlanView() {
             </div>
             <span className="cp-draft-status"><i /> {t("plan.draftOrder")}</span>
           </header>
+
+          <div style={{ marginBottom: "16px", padding: "12px", background: "var(--surface-muted)", borderRadius: "8px", border: "1px solid var(--line)" }}>
+            <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--primary)", display: "block", marginBottom: "8px" }}>
+              ⚡ Quick 1-Click Regimen Templates:
+            </span>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              <button type="button" className="secondary-button" style={{ fontSize: "12px", padding: "4px 10px" }} onClick={() => loadTemplate("htn")}>
+                🫀 Hypertension (Amlodipine 5mg)
+              </button>
+              <button type="button" className="secondary-button" style={{ fontSize: "12px", padding: "4px 10px" }} onClick={() => loadTemplate("diabetes")}>
+                🩸 Diabetes (Metformin 500mg)
+              </button>
+              <button type="button" className="secondary-button" style={{ fontSize: "12px", padding: "4px 10px" }} onClick={() => loadTemplate("fever")}>
+                🌡️ Acute Fever (Paracetamol 500mg)
+              </button>
+              <button type="button" className="secondary-button" style={{ fontSize: "12px", padding: "4px 10px" }} onClick={() => loadTemplate("ors")}>
+                💧 Pediatric ORS + Zinc
+              </button>
+            </div>
+          </div>
 
           <div className="cp-grid">
             <label>{t("plan.medicine")}
@@ -256,7 +393,7 @@ export default function CarePlanView() {
             <div className="cp-safety" role="alert">
               <strong>{t("plan.safety")}</strong>
               <ul>
-                {blocking.map((i, idx) => <li key={idx} className="cp-block">⛔ {i.message}</li>)}
+                {blocking.map((err, idx) => <li key={idx} className="cp-block">⛔ {err}</li>)}
                 {dups.map((d) => <li key={d.id} className="cp-warn">⚠ Duplicate active order: {d.medicine}</li>)}
                 {allergy.map((a) => <li key={a} className="cp-warn">⚠ Allergy conflict: {a}</li>)}
               </ul>
@@ -305,11 +442,16 @@ export default function CarePlanView() {
               const item = items.find((i) => i.id === r.sourceId);
               const taper = order ? activeTaperStep(order, r.dueAt.slice(0, 10)) : null;
               const advice = order ? missedDoseAdviceFor(order) : DEFAULT_MISSED_DOSE_ADVICE;
+              const userAction = acknowledgedDoses[r.id];
+              const displayState = userAction ?? r.state;
+
               return (
-                <li key={r.id} className={`cp-item cp-${r.state}`}>
+                <li key={r.id} className={`cp-item cp-${displayState}`} style={userAction === "taken" ? { opacity: 0.85, borderColor: "#10b981" } : undefined}>
                   <div className="cp-item-head">
                     <strong>{order ? `${order.medicine} ${order.strength}` : item?.title}</strong>
-                    <span className={`cp-badge ${r.state}`}>{r.state}</span>
+                    <span className={`cp-badge ${displayState}`}>
+                      {userAction === "taken" ? "✓ TAKEN" : userAction === "snoozed" ? "⏰ SNOOZED (15m)" : userAction === "skip" ? "⏭ SKIPPED" : r.state}
+                    </span>
                   </div>
                   <div className="cp-item-meta">
                     {r.dueAt.slice(11, 16)}
@@ -320,9 +462,28 @@ export default function CarePlanView() {
                     <p className="cp-advice">Missed a dose? {advice}</p>
                   )}
                   <div className="cp-item-actions">
-                    <button type="button" className="secondary-button">{t("plan.taken")}</button>
-                    <button type="button" className="nc-link">{t("plan.snooze")}</button>
-                    <button type="button" className="nc-link">{t("plan.skip")}</button>
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      style={userAction === "taken" ? { background: "#10b981", color: "#fff", borderColor: "#10b981" } : undefined}
+                      onClick={() => setAcknowledgedDoses((prev) => ({ ...prev, [r.id]: "taken" }))}
+                    >
+                      {userAction === "taken" ? "✓ Completed" : t("plan.taken")}
+                    </button>
+                    <button
+                      type="button"
+                      className="nc-link"
+                      onClick={() => setAcknowledgedDoses((prev) => ({ ...prev, [r.id]: "snoozed" }))}
+                    >
+                      {t("plan.snooze")}
+                    </button>
+                    <button
+                      type="button"
+                      className="nc-link"
+                      onClick={() => setAcknowledgedDoses((prev) => ({ ...prev, [r.id]: "skip" as any }))}
+                    >
+                      {t("plan.skip")}
+                    </button>
                   </div>
                 </li>
               );

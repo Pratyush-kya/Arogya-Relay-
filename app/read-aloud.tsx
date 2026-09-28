@@ -25,7 +25,12 @@ export function ReadAloud({
   const [rate, setRate] = useState(1);
   const cancelRef = useRef<() => void>(() => {});
 
-  useEffect(() => () => cancelRef.current(), []);
+  useEffect(() => {
+    return () => {
+      cancelRef.current();
+      setSpeaking(false);
+    };
+  }, [text]);
 
   const play = useCallback(() => {
     if (!canSpeak()) return;
@@ -38,6 +43,7 @@ export function ReadAloud({
   }, [text, effectiveLang, rate]);
 
   const stop = useCallback(() => {
+    cancelRef.current();
     stopSpeaking();
     setSpeaking(false);
   }, []);

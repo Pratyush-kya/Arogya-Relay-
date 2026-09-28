@@ -219,16 +219,26 @@ export function IconTooltip({
           {howToUse && (
             <div
               style={{
-                fontSize: "9.5px",
-                color: "#94a3b8",
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-                paddingTop: "3px",
+                marginTop: "6px",
+                paddingTop: "6px",
+                borderTop: "1px solid rgba(255, 255, 255, 0.12)",
+                fontSize: "10px",
+                lineHeight: "1.45",
+                display: "block",
+                textAlign: "left",
               }}
             >
-              <span style={{ color: "#34d399", fontWeight: 700 }}>💡 How to use:</span>
-              <span>{howToUse}</span>
+              <span
+                style={{
+                  color: "#34d399",
+                  fontWeight: 700,
+                  display: "inline-block",
+                  marginRight: "5px",
+                }}
+              >
+                💡 How to use:
+              </span>
+              <span style={{ color: "#cbd5e1" }}>{howToUse}</span>
             </div>
           )}
         </div>

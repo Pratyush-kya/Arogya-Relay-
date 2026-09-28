@@ -381,6 +381,49 @@ function ResultPanel(props: {
 
         <div className="cg-medicine"><span>{t("care.medicinesLabel")}</span> {guidance.medicineStatus}</div>
 
+        {/* Relatable Visual Action Guidance Cards */}
+        <div className="cg-visual-guidance-grid" style={{ margin: "16px 0", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "10px" }}>
+          <div style={{ background: "rgba(16, 185, 129, 0.08)", border: "1px solid rgba(16, 185, 129, 0.25)", borderRadius: "10px", padding: "12px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+              <span style={{ fontSize: "24px" }}>💧</span>
+              <strong style={{ fontSize: "13px", color: "#065f46" }}>Hydration &amp; Fluids</strong>
+            </div>
+            <p style={{ fontSize: "12px", margin: 0, color: "var(--foreground)", lineHeight: "1.4" }}>
+              Sip boiled and cooled water, coconut water, or fresh ORS solution. Avoid carbonated or sugary commercial sodas.
+            </p>
+          </div>
+
+          <div style={{ background: "rgba(59, 130, 246, 0.08)", border: "1px solid rgba(59, 130, 246, 0.25)", borderRadius: "10px", padding: "12px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+              <span style={{ fontSize: "24px" }}>🛏️</span>
+              <strong style={{ fontSize: "13px", color: "#1e40af" }}>Rest &amp; Ventilation</strong>
+            </div>
+            <p style={{ fontSize: "12px", margin: 0, color: "var(--foreground)", lineHeight: "1.4" }}>
+              Rest in a well-ventilated, mosquito-netted room. Wear loose, breathable cotton clothes. Avoid strenuous outdoor exertion.
+            </p>
+          </div>
+
+          <div style={{ background: "rgba(245, 158, 11, 0.08)", border: "1px solid rgba(245, 158, 11, 0.25)", borderRadius: "10px", padding: "12px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+              <span style={{ fontSize: "24px" }}>🌡️</span>
+              <strong style={{ fontSize: "13px", color: "#92400e" }}>Thermal Comfort</strong>
+            </div>
+            <p style={{ fontSize: "12px", margin: 0, color: "var(--foreground)", lineHeight: "1.4" }}>
+              If body temperature rises, sponge forehead and neck with clean lukewarm or room-temperature cloth (never ice water).
+            </p>
+          </div>
+
+          <div style={{ background: "rgba(239, 68, 68, 0.08)", border: "1px solid rgba(239, 68, 68, 0.25)", borderRadius: "10px", padding: "12px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+              <span style={{ fontSize: "24px" }}>🚨</span>
+              <strong style={{ fontSize: "13px", color: "#991b1b" }}>When to Call 112</strong>
+            </div>
+            <p style={{ fontSize: "12px", margin: 0, color: "var(--foreground)", lineHeight: "1.4" }}>
+              Seek emergency transfer immediately if experiencing breathing difficulty, chest pain, confusion, or unable to retain liquids.
+            </p>
+          </div>
+        </div>
+
         {guidance.warningSigns.length > 0 && (
           <div className="cg-warnings">
             <strong>{t("care.watchFor")}</strong>

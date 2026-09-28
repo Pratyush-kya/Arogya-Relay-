@@ -27,22 +27,34 @@ import type { LiveFacilityCounts } from "@/lib/nearby/overpass-adapter";
 import { REGION_CENTER } from "@/lib/nearby/synthetic-data";
 import { useLanguage } from "@/lib/i18n/provider";
 
-const FACILITY_TYPES: { value: FacilityType; labelKey?: string; label: string }[] = [
-  { value: "hospital", labelKey: "nearby.hospital", label: "Hospital" },
-  { value: "chc", label: "CHC" },
-  { value: "phc", label: "PHC" },
-  { value: "aam", labelKey: "nearby.arogyaMandir", label: "Arogya Mandir" },
-  { value: "clinic", labelKey: "nearby.clinic", label: "Clinic" },
-  { value: "pharmacy", labelKey: "nearby.pharmacy", label: "Pharmacy" },
+const FACILITY_TYPES: { value: FacilityType; labelKey?: string; label: string; icon: string }[] = [
+  { value: "hospital", labelKey: "nearby.hospital", label: "Hospital", icon: "🏥" },
+  { value: "chc", label: "CHC", icon: "🩺" },
+  { value: "phc", label: "PHC", icon: "🏥" },
+  { value: "aam", labelKey: "nearby.arogyaMandir", label: "Arogya Mandir", icon: "🌿" },
+  { value: "clinic", labelKey: "nearby.clinic", label: "Clinic", icon: "🩺" },
+  { value: "pharmacy", labelKey: "nearby.pharmacy", label: "Pharmacy / Jan Aushadhi", icon: "💊" },
+];
+
+export const LOCATION_PRESETS = [
+  { id: "pynursla", label: "📍 Pynursla Block (CHC Zone)", lat: 25.3082, lng: 91.9022 },
+  { id: "shillong", label: "🏥 Shillong District Hospital", lat: 25.5788, lng: 91.8933 },
+  { id: "bhubaneswar", label: "🩺 Bhubaneswar Central PHC", lat: 20.2648, lng: 85.8281 },
+  { id: "delhi", label: "🏛️ New Delhi Medical Hub", lat: 28.5672, lng: 77.2100 },
 ];
 
 export default function NearbyCare() {
   const { t, tf, effectiveLang } = useLanguage();
   const [tab, setTab] = useState<"map" | "list">("list");
-  const [locState, setLocState] = useState<LocationState>("idle");
-  const [pos, setPos] = useState<{ lat: number; lng: number; accuracy?: number } | null>(null);
-  const [locNote, setLocNote] = useState("");
-  const [consent, setConsent] = useState(false);
+  const [locState, setLocState] = useState<LocationState>("approximate");
+  const [pos, setPos] = useState<{ lat: number; lng: number; accuracy?: number } | null>({
+    lat: REGION_CENTER.lat,
+    lng: REGION_CENTER.lng,
+    accuracy: 350,
+  });
+  const [selectedPreset, setSelectedPreset] = useState("pynursla");
+  const [locNote, setLocNote] = useState("Showing facilities for default operational perimeter.");
+  const [consent, setConsent] = useState(true);
   const [filters, setFilters] = useState<NearbyFilters>(DEFAULT_FILTERS);
   const [emergency, setEmergency] = useState(false);
   const [results, setResults] = useState<ReferralResult[]>([]);
@@ -54,10 +66,7 @@ export default function NearbyCare() {
   const mapRef = useRef<maplibregl.Map | null>(null);
 
   const acquire = useCallback(() => {
-    if (!consent) {
-      setLocNote(t("nearby.allowFirst"));
-      return;
-    }
+    setConsent(true);
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       setLocState("unavailable");
       setPos({ ...REGION_CENTER });
@@ -65,6 +74,7 @@ export default function NearbyCare() {
       return;
     }
     setLocState("acquiring");
+    setLocNote("Acquiring high-accuracy GPS fix from device...");
     navigator.geolocation.getCurrentPosition(
       (p) => {
         const coords = {
@@ -76,16 +86,17 @@ export default function NearbyCare() {
         };
         setPos({ lat: coords.lat, lng: coords.lng, accuracy: coords.accuracy });
         setLocState(classifyLocation(coords));
+        setSelectedPreset("custom");
         setLocNote(
           coords.accuracy && coords.accuracy > 500
-            ? `Approximate (±${Math.round(coords.accuracy)} m). Confirm before relying on it.`
-            : `Captured (±${Math.round(coords.accuracy ?? 0)} m).`,
+            ? `Device GPS fix acquired (approx ±${Math.round(coords.accuracy)} m).`
+            : `Accurate device GPS fix acquired (±${Math.round(coords.accuracy ?? 0)} m).`,
         );
       },
       (err) => {
         if (err.code === err.PERMISSION_DENIED) {
           setLocState("denied");
-          setLocNote(t("nearby.permissionDenied"));
+          setLocNote("Location access was denied. Showing facilities for selected regional preset.");
         } else {
           setLocState("unavailable");
           setLocNote(t("nearby.unavailable"));
@@ -93,16 +104,26 @@ export default function NearbyCare() {
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
     );
-  }, [consent, t]);
+  }, [t]);
+
+  const setPreset = useCallback((presetId: string) => {
+    const p = LOCATION_PRESETS.find((x) => x.id === presetId);
+    if (!p) return;
+    setSelectedPreset(presetId);
+    setPos({ lat: p.lat, lng: p.lng, accuracy: 200 });
+    setLocState("approximate");
+    setLocNote(`Location set to ${p.label}`);
+  }, []);
 
   const setManual = useCallback((lat: number, lng: number) => {
     if (!isValidCoordinate(lat, lng)) {
       setLocNote(t("nearby.invalidCoords"));
       return;
     }
+    setSelectedPreset("manual");
     setPos({ lat, lng });
     setLocState("approximate");
-    setLocNote("Manual coordinate set.");
+    setLocNote(`Coordinates updated to (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
   }, [t]);
 
   useEffect(() => {
@@ -210,46 +231,156 @@ export default function NearbyCare() {
       </div>
 
       <section className="cg-card nc-consent" aria-label={t("nearby.locationConsent")}>
-        <h2>{t("nearby.where")}</h2>
-        {!consent ? (
-          <div className="nc-consent-box">
-            <p>{t("nearby.locationWhy")}</p>
-            <label className="nc-check"><input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} /> {t("nearby.allowLocation")}</label>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "10px" }}>
+          <div>
+            <span className="eyebrow">STEP 1 · LOCATION REFERENCE</span>
+            <h2 style={{ margin: "2px 0 6px" }}>📍 {t("nearby.where")}</h2>
+            <p style={{ margin: 0, fontSize: "13px", color: "var(--muted)" }}>
+              Select your health zone or use high-accuracy GPS to find nearest medical care:
+            </p>
           </div>
-        ) : (
-          <div className="nc-consent-box">
-            <div className="nc-loc-row">
-              <button type="button" className="primary-button" onClick={acquire}>{t("nearby.useMyLocation")}</button>
-              <span className={`nc-state nc-${locState}`}>{locState}</span>
-            </div>
-            <div className="nc-manual">
-              <label>Lat<input type="number" step="0.0001" placeholder="25.1986" onChange={(e) => setManual(Number(e.target.value), pos?.lng ?? REGION_CENTER.lng)} /></label>
-              <label>Lng<input type="number" step="0.0001" placeholder="91.8785" onChange={(e) => setManual(pos?.lat ?? REGION_CENTER.lat, Number(e.target.value))} /></label>
-            </div>
-            {locNote && <p className="nc-note" role="status">{locNote}</p>}
-            {consentSnapshot && (
-              <p className="nc-note">{tf("nearby.retainedUntil", { date: new Date(consentSnapshot.retentionUntil).toLocaleDateString(`${effectiveLang}-IN`) })} · <button type="button" className="nc-link" onClick={() => { setConsent(false); setPos(null); setLocState("idle"); }}>{t("common.deleteNow")}</button></p>
-            )}
+          <button
+            type="button"
+            className="primary-button"
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+            onClick={acquire}
+          >
+            <span>🎯</span> {t("nearby.useMyLocation")}
+          </button>
+        </div>
+
+        {/* Quick Region Presets */}
+        <div style={{ marginTop: "14px" }}>
+          <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--muted)", display: "block", marginBottom: "8px" }}>
+            Quick Regional Hubs (1-Tap Switch):
+          </span>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            {LOCATION_PRESETS.map((lp) => {
+              const isSelected = selectedPreset === lp.id;
+              return (
+                <button
+                  key={lp.id}
+                  type="button"
+                  className={isSelected ? "secondary-button active" : "secondary-button"}
+                  style={{
+                    fontSize: "12px",
+                    padding: "6px 12px",
+                    borderRadius: "20px",
+                    background: isSelected ? "var(--primary)" : "var(--surface)",
+                    color: isSelected ? "#ffffff" : "inherit",
+                    borderColor: isSelected ? "var(--primary)" : "var(--line)",
+                    fontWeight: isSelected ? 600 : "normal",
+                  }}
+                  onClick={() => setPreset(lp.id)}
+                >
+                  {lp.label}
+                </button>
+              );
+            })}
           </div>
-        )}
+        </div>
+
+        {/* Active Coordinates & Telemetry Note */}
+        <div style={{ marginTop: "12px", padding: "10px 14px", background: "var(--surface-muted)", borderRadius: "8px", border: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px", fontSize: "12px" }}>
+          <div>
+            <strong>Current Target: </strong>
+            <span>{pos ? `(${pos.lat.toFixed(4)}, ${pos.lng.toFixed(4)})` : "Acquiring..."}</span>
+            <span className={`nc-state nc-${locState}`} style={{ marginLeft: "8px" }}>{locState}</span>
+            {locNote && <span style={{ display: "block", color: "var(--muted)", marginTop: "2px" }}>{locNote}</span>}
+          </div>
+          <details style={{ fontSize: "11px", color: "var(--muted)" }}>
+            <summary style={{ cursor: "pointer" }}>Edit coordinates manually</summary>
+            <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
+              <input
+                type="number"
+                step="0.0001"
+                placeholder="Latitude"
+                value={pos?.lat ?? ""}
+                onChange={(e) => setManual(Number(e.target.value), pos?.lng ?? REGION_CENTER.lng)}
+                style={{ width: "90px", padding: "4px 8px", borderRadius: "4px", border: "1px solid var(--line)" }}
+              />
+              <input
+                type="number"
+                step="0.0001"
+                placeholder="Longitude"
+                value={pos?.lng ?? ""}
+                onChange={(e) => setManual(pos?.lat ?? REGION_CENTER.lat, Number(e.target.value))}
+                style={{ width: "90px", padding: "4px 8px", borderRadius: "4px", border: "1px solid var(--line)" }}
+              />
+            </div>
+          </details>
+        </div>
       </section>
 
       <section className="cg-card nc-filters" aria-label={t("nearby.filtersLabel")}>
-        <h2>2 · {t("nearby.filter")}</h2>
-        <div className="nc-filter-chips">
-          {FACILITY_TYPES.map((ft) => (
-            <label key={ft.value} className={filters.types.includes(ft.value) ? "selected" : ""}>
-              <input type="checkbox" checked={filters.types.includes(ft.value)} onChange={() => setFilters((f) => ({ ...f, types: f.types.includes(ft.value) ? f.types.filter((x) => x !== ft.value) : [...f.types, ft.value] }))} /> <span>{ft.labelKey ? t(ft.labelKey) : ft.label}</span>
-            </label>
-          ))}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+          <div>
+            <span className="eyebrow">STEP 2 · FACILITY FILTER</span>
+            <h2 style={{ margin: "2px 0 0" }}>Filter Facilities &amp; Services</h2>
+          </div>
+          <span style={{ fontSize: "12px", color: "var(--muted)" }}>
+            {results.length} facilities match
+          </span>
         </div>
-        <div className="nc-filter-rows">
-          <label className="nc-check"><input type="checkbox" checked={emergency} onChange={(e) => setEmergency(e.target.checked)} /> {t("nearby.needEmergency")}</label>
-          <label className="nc-check"><input type="checkbox" checked={filters.emergencyOnly} onChange={(e) => setFilters((f) => ({ ...f, emergencyOnly: e.target.checked }))} /> {t("nearby.emergencyCare")}</label>
-          <label className="nc-check"><input type="checkbox" checked={filters.maternity} onChange={(e) => setFilters((f) => ({ ...f, maternity: e.target.checked }))} /> {t("nearby.maternal")}</label>
-          <label className="nc-check"><input type="checkbox" checked={filters.child} onChange={(e) => setFilters((f) => ({ ...f, child: e.target.checked }))} /> {t("nearby.child")}</label>
-          <label className="nc-check"><input type="checkbox" checked={filters.pmjay} onChange={(e) => setFilters((f) => ({ ...f, pmjay: e.target.checked }))} /> Ayushman / PM-JAY</label>
-          <label className="nc-check"><input type="checkbox" checked={filters.showUnverified} onChange={(e) => setFilters((f) => ({ ...f, showUnverified: e.target.checked }))} /> {t("nearby.showUnverified")}</label>
+
+        <div className="nc-filter-chips" style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+          {FACILITY_TYPES.map((ft) => {
+            const active = filters.types.includes(ft.value);
+            return (
+              <button
+                key={ft.value}
+                type="button"
+                className={`filter-pill-button ${active ? "active" : ""}`}
+                style={{
+                  padding: "8px 14px",
+                  borderRadius: "20px",
+                  border: `1px solid ${active ? "var(--primary)" : "var(--line)"}`,
+                  background: active ? "var(--primary)" : "var(--surface)",
+                  color: active ? "#ffffff" : "inherit",
+                  fontSize: "13px",
+                  fontWeight: active ? 600 : "normal",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                }}
+                onClick={() =>
+                  setFilters((f) => ({
+                    ...f,
+                    types: active ? f.types.filter((x) => x !== ft.value) : [...f.types, ft.value],
+                  }))
+                }
+              >
+                <span>{ft.icon}</span>
+                <span>{ft.labelKey ? t(ft.labelKey) : ft.label}</span>
+                {active && <span style={{ fontSize: "11px", opacity: 0.9 }}>✓</span>}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="nc-filter-rows" style={{ marginTop: "14px", display: "flex", flexWrap: "wrap", gap: "12px" }}>
+          <label className={`nc-check ${emergency ? "highlight-emergency" : ""}`} style={{ fontWeight: 600 }}>
+            <input type="checkbox" checked={emergency} onChange={(e) => setEmergency(e.target.checked)} />
+            🚨 {t("nearby.needEmergency")}
+          </label>
+          <label className="nc-check">
+            <input type="checkbox" checked={filters.emergencyOnly} onChange={(e) => setFilters((f) => ({ ...f, emergencyOnly: e.target.checked }))} />
+            🏥 {t("nearby.emergencyCare")}
+          </label>
+          <label className="nc-check">
+            <input type="checkbox" checked={filters.maternity} onChange={(e) => setFilters((f) => ({ ...f, maternity: e.target.checked }))} />
+            🤱 {t("nearby.maternal")}
+          </label>
+          <label className="nc-check">
+            <input type="checkbox" checked={filters.child} onChange={(e) => setFilters((f) => ({ ...f, child: e.target.checked }))} />
+            👶 {t("nearby.child")}
+          </label>
+          <label className="nc-check">
+            <input type="checkbox" checked={filters.pmjay} onChange={(e) => setFilters((f) => ({ ...f, pmjay: e.target.checked }))} />
+            💳 Ayushman / PM-JAY
+          </label>
         </div>
       </section>
 

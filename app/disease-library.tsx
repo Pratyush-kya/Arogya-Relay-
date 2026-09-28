@@ -14,14 +14,15 @@ export default function DiseaseLibrary({ onTransferToScreening }: DiseaseLibrary
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"quick" | "clinical">("quick");
 
   const categories = [
-    { id: "all", label: "All Conditions", labelHi: "सभी रोग" },
-    { id: "fever", label: "Fever & Vitals", labelHi: "बुखार और संक्रमण" },
-    { id: "stomach", label: "Stomach & Digestion", labelHi: "पेट और दस्त" },
-    { id: "respiratory", label: "Cough & Breathing", labelHi: "खांसी और सांस" },
-    { id: "skin", label: "Skin & Eyes", labelHi: "त्वचा और आंखें" },
-    { id: "first_aid", label: "First Aid & Emergencies", labelHi: "प्राथमिक चिकित्सा" },
+    { id: "all", label: "All Conditions", labelHi: "सभी रोग", icon: "🌐" },
+    { id: "fever", label: "Fever & Chills", labelHi: "बुखार", icon: "🌡️" },
+    { id: "stomach", label: "Stomach & Loose Motion", labelHi: "पेट व दस्त", icon: "🤢" },
+    { id: "respiratory", label: "Cough & Cold", labelHi: "खांसी व जुकाम", icon: "🤧" },
+    { id: "skin", label: "Skin, Rash & Eyes", labelHi: "त्वचा व दाद", icon: "🩹" },
+    { id: "first_aid", label: "First Aid & Urgent", labelHi: "प्राथमिक चिकित्सा", icon: "🚑" },
   ];
 
   const filteredDiseases = useMemo(() => {
@@ -40,14 +41,37 @@ export default function DiseaseLibrary({ onTransferToScreening }: DiseaseLibrary
 
   return (
     <div className="disease-library-container" style={{ padding: "0 4px" }}>
-      <header className="page-heading" style={{ marginBottom: "20px" }}>
+      <header className="page-heading" style={{ marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
         <div>
           <span className="eyebrow">AROGYA GYAN · PREDEFINED HEALTH LIBRARY</span>
           <h1>Common Diseases &amp; Home Remedies Library</h1>
           <p>
-            Offline-accessible clinical guide for common community conditions, safe household remedies, OTC guidelines,
-            and red-flag emergency indicators.
+            {viewMode === "quick"
+              ? "Simple, easy-to-understand health guides with safe home remedies and warning signs."
+              : "Offline-accessible clinical guide for primary health workers with OTC protocols and red flags."}
           </p>
+        </div>
+
+        {/* View Mode Toggle: Quick Idea (Easy) vs Full Clinical */}
+        <div className="cg-toggle" role="group" aria-label="Arogya Gyan View Mode">
+          <button
+            type="button"
+            className={viewMode === "quick" ? "active" : ""}
+            aria-pressed={viewMode === "quick"}
+            onClick={() => setViewMode("quick")}
+            style={{ fontWeight: 600, fontSize: "12px" }}
+          >
+            💡 Quick Idea (Easy)
+          </button>
+          <button
+            type="button"
+            className={viewMode === "clinical" ? "active" : ""}
+            aria-pressed={viewMode === "clinical"}
+            onClick={() => setViewMode("clinical")}
+            style={{ fontWeight: 600, fontSize: "12px" }}
+          >
+            📋 Clinical Details
+          </button>
         </div>
       </header>
 
@@ -110,9 +134,13 @@ export default function DiseaseLibrary({ onTransferToScreening }: DiseaseLibrary
                 fontWeight: selectedCategory === cat.id ? "600" : "normal",
                 cursor: "pointer",
                 transition: "all 0.15s ease",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px",
               }}
             >
-              {effectiveLang === "hi" ? cat.labelHi : cat.label}
+              <span>{cat.icon}</span>
+              <span>{effectiveLang === "hi" ? cat.labelHi : cat.label}</span>
             </button>
           ))}
         </div>
@@ -140,7 +168,7 @@ export default function DiseaseLibrary({ onTransferToScreening }: DiseaseLibrary
           >
             <p style={{ fontSize: "16px", fontWeight: "500", margin: "0 0 8px" }}>No matching health condition found</p>
             <p style={{ fontSize: "13px", color: "var(--muted)", margin: 0 }}>
-              Try searching with broader terms like &quot;fever&quot;, &quot;rash&quot;, or &quot;pain&quot;.
+              Try searching with simpler words like &quot;fever&quot;, &quot;rash&quot;, or &quot;pain&quot;.
             </p>
           </div>
         )}
@@ -167,15 +195,16 @@ export default function DiseaseLibrary({ onTransferToScreening }: DiseaseLibrary
                 padding: "20px",
                 display: "flex",
                 flexDirection: "column",
-                gap: "14px",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.02)",
+                gap: "12px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
               }}
             >
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px" }}>
+              {/* Card Header */}
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "10px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <span style={{ fontSize: "28px" }}>{item.icon}</span>
+                  <span style={{ fontSize: "32px", lineHeight: 1 }}>{item.icon}</span>
                   <div>
-                    <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "600" }}>{item.name}</h3>
+                    <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "700" }}>{item.name}</h3>
                     <span style={{ fontSize: "13px", color: "var(--muted)" }}>{item.hindiName}</span>
                   </div>
                 </div>
@@ -189,90 +218,82 @@ export default function DiseaseLibrary({ onTransferToScreening }: DiseaseLibrary
                     background: `${urgencyColor}20`,
                     color: urgencyColor,
                     border: `1px solid ${urgencyColor}40`,
+                    whiteSpace: "nowrap",
                   }}
                 >
                   {item.urgency}
                 </span>
               </div>
 
-              {/* Symptoms Overview */}
-              <div>
-                <strong style={{ fontSize: "12px", textTransform: "uppercase", color: "var(--muted)" }}>
-                  Common Signs &amp; Symptoms
+              {/* Quick Idea: In Plain Words Box */}
+              <div
+                style={{
+                  background: "var(--surface-muted)",
+                  padding: "10px 12px",
+                  borderRadius: "8px",
+                  borderLeft: "3px solid var(--primary)",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                  <strong style={{ fontSize: "11px", textTransform: "uppercase", color: "var(--primary)" }}>
+                    💡 What is this?
+                  </strong>
+                  <ReadAloud text={item.narrationText} />
+                </div>
+                <p style={{ margin: 0, fontSize: "12.5px", lineHeight: "1.45", color: "var(--foreground)" }}>
+                  {item.narrationText}
+                </p>
+              </div>
+
+              {/* What to do at home (Quick remedies) */}
+              <div style={{ background: "rgba(16, 185, 129, 0.08)", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(16, 185, 129, 0.2)" }}>
+                <strong style={{ fontSize: "12px", color: "#065f46", display: "flex", alignItems: "center", gap: "6px" }}>
+                  🌿 What to Do First at Home:
                 </strong>
-                <ul style={{ margin: "6px 0 0", paddingLeft: "18px", fontSize: "13px", lineHeight: "1.4" }}>
-                  {item.symptoms.slice(0, isExpanded ? undefined : 2).map((s, idx) => (
+                <ul style={{ margin: "6px 0 0", paddingLeft: "16px", fontSize: "12px", lineHeight: "1.4" }}>
+                  {item.remedies.slice(0, isExpanded ? undefined : 2).map((rem, idx) => (
                     <li key={idx} style={{ marginBottom: "3px" }}>
-                      {s}
+                      {rem}
                     </li>
                   ))}
                 </ul>
               </div>
 
-              {/* Expandable Section: Remedies, OTC & Red Flags */}
+              {/* Danger signs / Red Flags */}
+              <div style={{ background: "rgba(239, 68, 68, 0.08)", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(239, 68, 68, 0.2)" }}>
+                <strong style={{ fontSize: "12px", color: "#991b1b", display: "flex", alignItems: "center", gap: "6px" }}>
+                  🚨 Danger Signs (Go to Hospital If):
+                </strong>
+                <ul style={{ margin: "6px 0 0", paddingLeft: "16px", fontSize: "12px", lineHeight: "1.4", color: "#7f1d1d" }}>
+                  {item.redFlags.slice(0, isExpanded ? undefined : 2).map((rf, idx) => (
+                    <li key={idx} style={{ marginBottom: "2px" }}>
+                      {rf}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Expandable Section for Detailed Clinical OTC & Symptoms */}
               {isExpanded && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px", paddingTop: "8px", borderTop: "1px solid var(--line)" }}>
-                  {/* Home Remedies */}
-                  <div style={{ background: "rgba(16, 185, 129, 0.08)", padding: "12px", borderRadius: "8px" }}>
-                    <strong style={{ fontSize: "13px", color: "#059669", display: "flex", alignItems: "center", gap: "6px" }}>
-                      🌿 Safe Home Remedies &amp; First Aid
-                    </strong>
-                    <ul style={{ margin: "6px 0 0", paddingLeft: "18px", fontSize: "12px", lineHeight: "1.45" }}>
-                      {item.remedies.map((rem, idx) => (
-                        <li key={idx} style={{ marginBottom: "4px" }}>
-                          {rem}
-                        </li>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px", paddingTop: "8px", borderTop: "1px dashed var(--line)" }}>
+                  {/* Common symptoms */}
+                  <div>
+                    <strong style={{ fontSize: "12px", color: "var(--muted)" }}>All Recognized Symptoms:</strong>
+                    <ul style={{ margin: "4px 0 0", paddingLeft: "16px", fontSize: "12px" }}>
+                      {item.symptoms.map((s, idx) => (
+                        <li key={idx}>{s}</li>
                       ))}
                     </ul>
                   </div>
 
-                  {/* OTC & Safe Guidelines */}
-                  <div style={{ background: "rgba(59, 130, 246, 0.08)", padding: "12px", borderRadius: "8px" }}>
-                    <strong style={{ fontSize: "13px", color: "#2563eb", display: "flex", alignItems: "center", gap: "6px" }}>
-                      💊 OTC Medication Guidelines
-                    </strong>
-                    <ul style={{ margin: "6px 0 0", paddingLeft: "18px", fontSize: "12px", lineHeight: "1.45" }}>
+                  {/* OTC Guidance */}
+                  <div style={{ background: "rgba(59, 130, 246, 0.08)", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(59, 130, 246, 0.2)" }}>
+                    <strong style={{ fontSize: "12px", color: "#1e40af" }}>💊 OTC Medication Guidelines:</strong>
+                    <ul style={{ margin: "4px 0 0", paddingLeft: "16px", fontSize: "12px" }}>
                       {item.otcGuidance.map((otc, idx) => (
-                        <li key={idx} style={{ marginBottom: "4px" }}>
-                          {otc}
-                        </li>
+                        <li key={idx}>{otc}</li>
                       ))}
                     </ul>
-                  </div>
-
-                  {/* Red Flags / Danger Signs */}
-                  <div style={{ background: "rgba(239, 68, 68, 0.08)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(239, 68, 68, 0.2)" }}>
-                    <strong style={{ fontSize: "13px", color: "#dc2626", display: "flex", alignItems: "center", gap: "6px" }}>
-                      🚨 Red Flags (Seek Immediate Hospital Care)
-                    </strong>
-                    <ul style={{ margin: "6px 0 0", paddingLeft: "18px", fontSize: "12px", lineHeight: "1.45" }}>
-                      {item.redFlags.map((rf, idx) => (
-                        <li key={idx} style={{ marginBottom: "4px" }}>
-                          {rf}
-                        </li>
-                      ))}
-                    </ul>
-                    {item.urgency === "emergency" && (
-                      <div style={{ marginTop: "10px" }}>
-                        <a
-                          href="tel:112"
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            padding: "6px 14px",
-                            background: "#dc2626",
-                            color: "#ffffff",
-                            borderRadius: "6px",
-                            fontSize: "12px",
-                            fontWeight: "600",
-                            textDecoration: "none",
-                          }}
-                        >
-                          📞 Call 112 (National Emergency)
-                        </a>
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
@@ -285,28 +306,25 @@ export default function DiseaseLibrary({ onTransferToScreening }: DiseaseLibrary
                   justifyContent: "space-between",
                   gap: "8px",
                   marginTop: "auto",
-                  paddingTop: "10px",
+                  paddingTop: "8px",
                   borderTop: "1px solid var(--line)",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <button
-                    type="button"
-                    onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      color: "var(--primary)",
-                      fontSize: "13px",
-                      fontWeight: "600",
-                      cursor: "pointer",
-                      padding: "4px 0",
-                    }}
-                  >
-                    {isExpanded ? "▲ Show Less" : "▼ Remedies & Guidance"}
-                  </button>
-                  <ReadAloud text={item.narrationText} />
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--primary)",
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    padding: "4px 0",
+                  }}
+                >
+                  {isExpanded ? "▲ Less Details" : "▼ More Guidance"}
+                </button>
 
                 {onTransferToScreening && (
                   <button

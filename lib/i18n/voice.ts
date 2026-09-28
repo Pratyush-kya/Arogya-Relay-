@@ -39,39 +39,112 @@ export interface SpeakOptions {
   onEnd?: () => void;
 }
 
+// Keep active utterances in module scope to prevent V8/Chromium garbage collection mid-speech
+const activeUtterances = new Set<SpeechSynthesisUtterance>();
+
+function selectBestVoice(synth: SpeechSynthesis, langCode: string): SpeechSynthesisVoice | null {
+  const voices = synth.getVoices();
+  if (!voices || voices.length === 0) return null;
+
+  const target = langCode.toLowerCase();
+  // 1. Try exact lang tag match (e.g. "hi-in", "en-in")
+  const exact = voices.find((v) => v.lang.toLowerCase() === target);
+  if (exact) return exact;
+
+  // 2. Try language prefix match (e.g. "hi", "en", "te")
+  const prefix = target.split("-")[0];
+  const langMatch = voices.find((v) => v.lang.toLowerCase().startsWith(prefix));
+  if (langMatch) return langMatch;
+
+  // 3. Fallback to Indian English ("en-IN")
+  const enIn = voices.find((v) => v.lang.toLowerCase().includes("en-in"));
+  if (enIn) return enIn;
+
+  // 4. Fallback to any English or primary system voice
+  const anyEn = voices.find((v) => v.lang.toLowerCase().startsWith("en"));
+  if (anyEn) return anyEn;
+
+  return voices[0] ?? null;
+}
+
 /** True when the browser can speak at all. */
 export function canSpeak(): boolean {
   return typeof window !== "undefined" && "speechSynthesis" in window;
 }
 
 /**
- * Speak text aloud. Returns a cancel function. If speech is unavailable, the
- * onEnd callback fires immediately so callers can degrade gracefully (e.g. show
- * the text louder / fall back to a recorded clip reference).
+ * Speak text aloud. Returns a cancel function.
+ * Hardened against Chromium speech stall, garbage-collection, and missing regional voice packs.
  */
 export function speak(text: string, opts: SpeakOptions): () => void {
   if (!canSpeak()) {
     opts.onEnd?.();
     return () => {};
   }
+
   const synth = window.speechSynthesis;
-  synth.cancel(); // never overlap utterances
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = bcp47(opts.lang);
-  utter.rate = opts.rate ?? 1.0;
-  if (opts.onEnd) {
-    utter.onend = () => opts.onEnd?.();
-    utter.onerror = () => opts.onEnd?.();
+
+  // Unpause in case browser audio pipeline was backgrounded or frozen
+  if (synth.paused) {
+    try {
+      synth.resume();
+    } catch {}
   }
-  synth.speak(utter);
+
+  // Cancel prior utterances
+  synth.cancel();
+  activeUtterances.clear();
+
+  const langTag = bcp47(opts.lang);
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = langTag;
+  utter.rate = opts.rate ?? 1.0;
+  utter.pitch = 1.0;
+
+  // Select best voice if loaded
+  const matchedVoice = selectBestVoice(synth, langTag);
+  if (matchedVoice) {
+    utter.voice = matchedVoice;
+  }
+
+  // Prevent GC from collecting utterance before onend fires
+  activeUtterances.add(utter);
+
+  const cleanup = () => {
+    activeUtterances.delete(utter);
+    opts.onEnd?.();
+  };
+
+  utter.onend = cleanup;
+  utter.onerror = (e) => {
+    // If canceled by another action, don't treat as fatal
+    cleanup();
+  };
+
+  // Chromium workaround: cancel() in the same tick can cancel the subsequent speak()
+  const timer = setTimeout(() => {
+    try {
+      if (synth.paused) synth.resume();
+      synth.speak(utter);
+    } catch (err) {
+      cleanup();
+    }
+  }, 25);
+
   return () => {
-    synth.cancel();
+    clearTimeout(timer);
+    activeUtterances.delete(utter);
+    try {
+      synth.cancel();
+    } catch {}
   };
 }
 
 export function stopSpeaking(): void {
   if (typeof window !== "undefined" && "speechSynthesis" in window) {
+    activeUtterances.clear();
     window.speechSynthesis.cancel();
   }
 }
+
 

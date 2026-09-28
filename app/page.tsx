@@ -13,7 +13,6 @@ import { AuthScreen } from "./auth-screen";
 import { ScreeningScreen } from "./screening-screen";
 import { SupabaseScreen } from "./supabase-screen";
 import { ClinicDateWidget } from "./clinic-date-widget";
-import { FieldDeviceStation } from "./field-device";
 
 // Keep specialist workspaces out of the first dashboard payload.
 const CareGuidance = lazy(() => import("./care-guidance"));
@@ -36,7 +35,7 @@ import { HealthPassCard } from "./health-pass-card";
 import { startVitalsListening, isSpeechRecognitionSupported, type ParsedVitals } from "@/lib/voice/vitals-dictation";
 import type { VisualDiseaseMatcherTransferData } from "./visual-disease-matcher";
 
-type Tab = "overview" | "cases" | "library" | "prescriptions" | "matcher" | "care" | "nearby" | "plan" | "device";
+type Tab = "overview" | "cases" | "library" | "prescriptions" | "matcher" | "care" | "nearby" | "plan";
 type SyncState = "ready" | "syncing" | "done";
 type CaseFilter = "all" | "urgent" | "review" | "evaluated";
 
@@ -588,22 +587,6 @@ export default function Home() {
               <span className="nav-glyph">♥</span> {t("nav.plan")}
             </button>
           </IconTooltip>
-
-          <IconTooltip
-            title="Offline Sync & Hotspot Relay"
-            desc="Manage offline database cache, peer-to-peer Wi-Fi hotspot relay, and Supabase cloud sync."
-            howToUse="Click to view sync status and peer mesh relay."
-            position="right"
-          >
-            <button
-              type="button"
-              className={activeTab === "device" ? "nav-item active" : "nav-item"}
-              aria-current={activeTab === "device" ? "page" : undefined}
-              onClick={() => setActiveTab("device")}
-            >
-              <span className="nav-glyph">▣</span> {t("nav.device")}
-            </button>
-          </IconTooltip>
         </nav>
 
         <div className="sidebar-spacer" />
@@ -707,7 +690,6 @@ export default function Home() {
             onOpenLibrary={() => setActiveTab("library")}
             onOpenPrescriptions={() => setActiveTab("prescriptions")}
             onOpenNearby={() => setActiveTab("nearby")}
-            onOpenDevice={() => setActiveTab("device")}
           />
         )}
         {activeTab === "cases" && (
@@ -737,7 +719,6 @@ export default function Home() {
           {activeTab === "nearby" && <NearbyCare />}
           {activeTab === "plan" && <CarePlanView />}
         </Suspense>
-        {activeTab === "device" && <DevicePanel />}
       </section>
 
       {/* Screening Modal */}
@@ -1104,7 +1085,7 @@ interface OverviewProps {
   onOpenLibrary: () => void;
   onOpenPrescriptions: () => void;
   onOpenNearby: () => void;
-  onOpenDevice: () => void;
+  onOpenDevice?: () => void;
 }
 
 function Overview({
@@ -1584,7 +1565,7 @@ function CaseQueue({ screenings, onDoctorEvaluate, onOpenHealthPass }: CaseQueue
   );
 }
 
-function DevicePanel() {
+export function DevicePanel() {
   const { t, effectiveLang } = useLanguage();
   const [selfCheckState, setSelfCheckState] = useState<"idle" | "testing" | "passed">("idle");
   const [lastCheck, setLastCheck] = useState("08:10");
@@ -1632,108 +1613,54 @@ function DevicePanel() {
   ];
 
   return (
-    <div>
-      <FieldDeviceStation />
-      <div className="page-content section-page" style={{ paddingTop: "0" }}>
-        <section className="device-overview">
-        <article className="hardware-card">
-          <div className="large-device">
-            <div className="speaker">••••••</div>
-            <div className="large-screen"><span>RELAY</span><strong>ACTIVE</strong><small>OFFLINE FIRST</small><b>SYNC</b></div>
-            <div className="sensor-dock"><i /><span>DATABASE LINK</span></div>
-          </div>
-          <div>
-            <span className="eyebrow">{t("device.designed")}</span>
-            <h2>{t("device.headline")}</h2>
-            <p>{t("device.description")}</p>
-            <ul>
-              <li>{t("device.vitals")}</li>
-              <li>{t("device.localPrompts")}</li>
-              <li>{t("device.forward")}</li>
-            </ul>
+    <div className="page-content section-page" style={{ paddingTop: "0" }}>
+      <section className="device-tech-grid" aria-label={t("device.technicalStatus")}>
+        <article className="panel device-sensor-panel">
+          <header className="device-tech-head">
+            <div><span className="eyebrow">{t("device.technicalStatus")}</span><h2>System Diagnostics</h2></div>
+            <span className="device-health"><i /> All Services Operational</span>
+          </header>
+          <div className="device-sensor-table" role="table" aria-label={t("device.sensorChain")}>
+            <div className="device-sensor-row device-sensor-columns" role="row">
+              <span role="columnheader">Component</span>
+              <span role="columnheader">Status</span>
+              <span role="columnheader">Protocol</span>
+              <span role="columnheader">Mode</span>
+            </div>
+            {sensors.map((sensor) => (
+              <div className="device-sensor-row" role="row" key={sensor.name}>
+                <strong role="cell"><i /> {sensor.name}</strong>
+                <span role="cell">{sensor.reading}</span>
+                <span role="cell">{sensor.tolerance}</span>
+                <span role="cell"><b>{sensor.calibrated}</b></span>
+              </div>
+            ))}
           </div>
         </article>
-        <div className="diagnostics-grid">
-          <article className="diagnostic">
-            <span>Connection</span>
-            <strong>{typeof navigator !== "undefined" && navigator.onLine ? "Online" : "Offline"}</strong>
-            <p>Auto-sync active</p>
-            <i><b style={{ width: "100%" }} /></i>
-          </article>
-          <article className="diagnostic">
-            <span>Database</span>
-            <strong>Supabase</strong>
-            <p>PostgreSQL Edge</p>
-          </article>
-          <article className="diagnostic">
-            <span>Storage</span>
-            <strong>{storageText}</strong>
-            <p>Offline encrypted</p>
-          </article>
-          <article className="diagnostic">
-            <span>System Self-Check</span>
-            <strong>{selfCheckState === "testing" ? t("device.testing") : t("common.passed")}</strong>
-            <p>{lastCheck} · Operational</p>
-          </article>
-        </div>
-        <p className="nc-synthetic device-telemetry-note">
-          System diagnostics verify real database connectivity and browser offline caching.
-        </p>
-        <section className="device-tech-grid" aria-label={t("device.technicalStatus")}>
-          <article className="panel device-sensor-panel">
-            <header className="device-tech-head">
-              <div><span className="eyebrow">{t("device.technicalStatus")}</span><h2>System Components</h2></div>
-              <span className="device-health"><i /> All Services Operational</span>
-            </header>
-            <div className="device-sensor-table" role="table" aria-label={t("device.sensorChain")}>
-              <div className="device-sensor-row device-sensor-columns" role="row">
-                <span role="columnheader">Component</span>
-                <span role="columnheader">Status</span>
-                <span role="columnheader">Protocol</span>
-                <span role="columnheader">Mode</span>
-              </div>
-              {sensors.map((sensor) => (
-                <div className="device-sensor-row" role="row" key={sensor.name}>
-                  <strong role="cell"><i /> {sensor.name}</strong>
-                  <span role="cell">{sensor.reading}</span>
-                  <span role="cell">{sensor.tolerance}</span>
-                  <span role="cell"><b>{sensor.calibrated}</b></span>
-                </div>
-              ))}
-            </div>
-          </article>
 
-          <article className="panel device-system-panel">
-            <header className="device-tech-head">
-              <div><span className="eyebrow">AR-07</span><h2>{t("device.systemIntegrity")}</h2></div>
-            </header>
-            <dl className="device-system-list">
-              <div><dt>Database Engine</dt><dd>Supabase PostgreSQL</dd></div>
-              <div><dt>{t("device.rulesPack")}</dt><dd>v1.0.0 · SHA-256 verified</dd></div>
-              <div><dt>{t("device.storageEncryption")}</dt><dd>AES-256-GCM · Client</dd></div>
-              <div><dt>{t("device.lastSync")}</dt><dd>Real-time Active</dd></div>
-              <div><dt>{t("device.network")}</dt><dd>{typeof navigator !== "undefined" && navigator.onLine ? "Broadband / 4G" : "Offline 2G"}</dd></div>
-              <div><dt>{t("device.queue")}</dt><dd>Encrypted Offline Queue</dd></div>
-            </dl>
-            <div
-              className={selfCheckState === "testing" ? "device-self-check testing" : "device-self-check"}
-              aria-live="polite"
-            >
-              <strong>{selfCheckState === "testing" ? t("device.testing") : t("device.selfCheckPassed")}</strong>
-              <p>{t("device.noFaults")}</p>
-            </div>
-            <button
-              type="button"
-              className="secondary-button device-check-button"
-              onClick={runSelfCheck}
-              disabled={selfCheckState === "testing"}
-            >
-              {selfCheckState === "testing" ? t("device.testing") : t("device.runSelfCheck")}
-            </button>
-          </article>
-        </section>
+        <article className="panel device-system-panel">
+          <header className="device-tech-head">
+            <div><span className="eyebrow">AR-07</span><h2>{t("device.systemIntegrity")}</h2></div>
+          </header>
+          <div
+            className={selfCheckState === "testing" ? "device-self-check testing" : "device-self-check"}
+            aria-live="polite"
+          >
+            <strong>{selfCheckState === "testing" ? t("device.testing") : t("device.selfCheckPassed")}</strong>
+            <p>{t("device.noFaults")}</p>
+          </div>
+          <button
+            type="button"
+            className="secondary-button device-check-button"
+            onClick={runSelfCheck}
+            disabled={selfCheckState === "testing"}
+          >
+            {selfCheckState === "testing" ? t("device.testing") : t("device.runSelfCheck")}
+          </button>
+        </article>
       </section>
-      </div>
     </div>
   );
 }
+
+

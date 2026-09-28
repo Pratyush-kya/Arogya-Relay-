@@ -2,6 +2,7 @@
 
 import { useState, useRef, type ChangeEvent } from "react";
 import { useLanguage } from "@/lib/i18n/provider";
+import { ReadAloud } from "./read-aloud";
 
 interface PatternResult {
   condition: string;
@@ -13,6 +14,41 @@ interface PatternResult {
   fieldAction: string;
   isEmergency?: boolean;
 }
+
+export const SAMPLE_CASES = [
+  {
+    id: "ringworm",
+    label: "⭕ Ringworm (Tinea)",
+    chips: ["ring_shape", "scaling"],
+    body: "arms",
+    duration: "few_days",
+    feel: "Circular itchy rash with raised scaling outer border and clearer skin in the middle.",
+  },
+  {
+    id: "scabies",
+    label: "🌙 Scabies (Night Itch)",
+    chips: ["night_itch"],
+    body: "arms",
+    duration: "few_days",
+    feel: "Severe unbearable itching especially at night, tiny red burrow lines between fingers and on wrists.",
+  },
+  {
+    id: "impetigo",
+    label: "🍯 Impetigo (Crusts)",
+    chips: ["crust", "blisters"],
+    body: "face",
+    duration: "few_days",
+    feel: "Red sores around mouth and nose bursting to form honey-colored sticky crusts.",
+  },
+  {
+    id: "chickenpox",
+    label: "💧 Chickenpox (Vesicles)",
+    chips: ["blisters", "fever"],
+    body: "torso",
+    duration: "few_days",
+    feel: "Itchy red spots with tiny fluid blisters spreading across chest, back, and face with mild fever.",
+  },
+];
 
 const COMMON_SENSATION_CHIPS = [
   { id: "night_itch", label: "Intense Night Itching", icon: "🌙" },
@@ -301,7 +337,34 @@ export default function VisualDiseaseMatcher({ onTransferToScreening }: VisualDi
             />
           </div>
 
-          <div className="matcher-section-title" style={{ marginTop: "24px" }}>
+          <div style={{ marginTop: "14px", padding: "10px 12px", background: "var(--surface-muted)", borderRadius: "8px", border: "1px solid var(--line)" }}>
+            <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--primary)", display: "block", marginBottom: "6px" }}>
+              ⚡ Or Try a Sample Case (1-Click Instant Evaluation):
+            </span>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+              {SAMPLE_CASES.map((sc) => (
+                <button
+                  key={sc.id}
+                  type="button"
+                  className="secondary-button"
+                  style={{ fontSize: "11px", padding: "4px 8px" }}
+                  onClick={() => {
+                    setSelectedChips(new Set(sc.chips));
+                    setBodyLocation(sc.body);
+                    setDuration(sc.duration);
+                    setPatientFeelText(sc.feel);
+                    setTimeout(() => {
+                      runPatternAnalysis();
+                    }, 50);
+                  }}
+                >
+                  {sc.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="matcher-section-title" style={{ marginTop: "20px" }}>
             <span className="step-num">02</span>
             <div>
               <h3>What Does The Patient Feel?</h3>
@@ -417,6 +480,10 @@ export default function VisualDiseaseMatcher({ onTransferToScreening }: VisualDi
               </div>
 
               <p className="condition-description">{result.description}</p>
+
+              <div style={{ margin: "10px 0 14px" }}>
+                <ReadAloud text={`${result.condition}. ${result.description}. Recommended action: ${result.fieldAction}`} />
+              </div>
 
               <div className="danger-signs-box">
                 <strong>⚠️ Danger Signs to Watch:</strong>
