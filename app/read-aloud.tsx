@@ -69,18 +69,44 @@ export function ReadAloud({
       <button type="button" className="ra-replay" onClick={play} disabled={speaking} title={t("read.replay")}>
         ↻
       </button>
-      <label className="ra-speed">
-        {t("read.speed")}
-        <input
-          type="range"
-          min={0.5}
-          max={2}
-          step={0.25}
-          value={rate}
-          onChange={(e) => setRate(Number(e.target.value))}
-          aria-label={`${t("action.readAloud")} ${t("read.speed")}`}
-        />
-      </label>
+      <div className="ra-speed-pills" role="group" aria-label={t("read.speed")} style={{ display: "inline-flex", gap: "2px", alignItems: "center" }}>
+        {[1, 1.5, 2].map((s) => (
+          <button
+            key={s}
+            type="button"
+            className={rate === s ? "ra-speed-btn active" : "ra-speed-btn"}
+            onClick={() => {
+              setRate(s);
+              if (speaking) {
+                stop();
+                setTimeout(() => {
+                  if (!canSpeak()) return;
+                  setSpeaking(true);
+                  cancelRef.current = speak(text, {
+                    lang: effectiveLang,
+                    rate: s,
+                    onEnd: () => setSpeaking(false),
+                  });
+                }, 50);
+              }
+            }}
+            aria-pressed={rate === s}
+            title={`${s}x speed`}
+            style={{
+              padding: "2px 6px",
+              fontSize: "11px",
+              fontWeight: rate === s ? 700 : 500,
+              borderRadius: "4px",
+              border: rate === s ? "1px solid var(--primary)" : "1px solid var(--line)",
+              background: rate === s ? "var(--primary)" : "var(--surface)",
+              color: rate === s ? "#fff" : "var(--foreground)",
+              cursor: "pointer",
+            }}
+          >
+            {s}x
+          </button>
+        ))}
+      </div>
     </span>
   );
 }

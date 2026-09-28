@@ -158,6 +158,92 @@ export default function CareGuidance() {
         <KnowledgeModeToggle mode={knowledgeMode} onChange={setKnowledgeMode} />
       </div>
 
+      {/* Prominent Visual First-Aid & Home Care Reference Cards */}
+      <section className="cg-visual-guides" style={{ marginBottom: "24px" }} aria-label="Visual First-Aid and Home Care Guidance">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
+          <div>
+            <span className="eyebrow" style={{ color: "var(--primary)" }}>COMMUNITY FIRST-AID &amp; HOME REMEDIES</span>
+            <h2 style={{ margin: "2px 0 0", fontSize: "18px", fontWeight: "800" }}>Relatable Visual Care Guides</h2>
+          </div>
+          <span style={{ fontSize: "12px", color: "var(--muted)" }}>Verified WHO/MoHFW Community Care Protocols</span>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "14px" }}>
+          {/* Card 1: ORS */}
+          <div style={{ background: "#f0fdf4", border: "2px solid #bbf7d0", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ fontSize: "32px" }}>💧</span>
+              <div>
+                <strong style={{ fontSize: "14px", color: "#166534", display: "block" }}>Hydration &amp; ORS Solution</strong>
+                <span style={{ fontSize: "11px", color: "#15803d" }}>For Diarrhea, Vomiting &amp; Dehydration</span>
+              </div>
+            </div>
+            <div style={{ background: "#ffffff", padding: "8px 10px", borderRadius: "8px", border: "1px solid #dcfce7", fontSize: "12px", color: "#14532d", lineHeight: "1.45" }}>
+              <strong>Recipe:</strong> Mix 1 liter boiled &amp; cooled water with 1 ORS packet (or 6 tsp sugar + ½ tsp salt). Sip slowly after every loose motion.
+            </div>
+          </div>
+
+          {/* Card 2: Fever */}
+          <div style={{ background: "#fffbeb", border: "2px solid #fde68a", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ fontSize: "32px" }}>🌡️</span>
+              <div>
+                <strong style={{ fontSize: "14px", color: "#92400e", display: "block" }}>Tepid Fever Sponging</strong>
+                <span style={{ fontSize: "11px", color: "#b45309" }}>For High Temperature &amp; Body Heat</span>
+              </div>
+            </div>
+            <div style={{ background: "#ffffff", padding: "8px 10px", borderRadius: "8px", border: "1px solid #fef3c7", fontSize: "12px", color: "#78350f", lineHeight: "1.45" }}>
+              <strong>Method:</strong> Sponge forehead, neck, and armpits with clean lukewarm/room-temp water. <em>Never use ice or cold water</em>. Wear loose cotton.
+            </div>
+          </div>
+
+          {/* Card 3: Respiratory / Cough */}
+          <div style={{ background: "#eff6ff", border: "2px solid #bfdbfe", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ fontSize: "32px" }}>💨</span>
+              <div>
+                <strong style={{ fontSize: "14px", color: "#1e40af", display: "block" }}>Steam &amp; Airway Relief</strong>
+                <span style={{ fontSize: "11px", color: "#2563eb" }}>For Cough, Congestion &amp; Cold</span>
+              </div>
+            </div>
+            <div style={{ background: "#ffffff", padding: "8px 10px", borderRadius: "8px", border: "1px solid #dbeafe", fontSize: "12px", color: "#1e3a8a", lineHeight: "1.45" }}>
+              <strong>Method:</strong> Inhale clean hot water steam for 5–10 minutes. Sleep with head elevated on an extra pillow. Sip warm ginger water with honey.
+            </div>
+          </div>
+
+          {/* Card 4: 112 Emergency */}
+          <div style={{ background: "#fef2f2", border: "2px solid #fecaca", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ fontSize: "32px" }}>🚨</span>
+              <div>
+                <strong style={{ fontSize: "14px", color: "#991b1b", display: "block" }}>When to Call 112 Immediately</strong>
+                <span style={{ fontSize: "11px", color: "#dc2626" }}>Emergency Danger Signals</span>
+              </div>
+            </div>
+            <div style={{ background: "#ffffff", padding: "8px 10px", borderRadius: "8px", border: "1px solid #fee2e2", fontSize: "12px", color: "#7f1d1d", lineHeight: "1.45" }}>
+              <strong>Emergency Signs:</strong> Extreme breathlessness, bluish lips/fingers, chest crushing pain, or unconsciousness.
+            </div>
+            <a
+              href="tel:112"
+              className="primary-button"
+              style={{
+                background: "#dc2626",
+                borderColor: "#b91c1c",
+                color: "#ffffff",
+                textAlign: "center",
+                fontSize: "12px",
+                padding: "6px 12px",
+                marginTop: "auto",
+                textDecoration: "none",
+                display: "block",
+              }}
+            >
+              📞 One-Tap Call 112 Ambulance
+            </a>
+          </div>
+        </div>
+      </section>
+
       {!result && (
         <IntakeForm
           selected={selected}

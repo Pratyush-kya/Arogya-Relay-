@@ -72,15 +72,42 @@ export function canSpeak(): boolean {
   return typeof window !== "undefined" && "speechSynthesis" in window;
 }
 
+// Audio feedback chime helper using Web Audio API
+export function playAuditoryChime(): void {
+  try {
+    if (typeof window === "undefined") return;
+    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    if (ctx.state === "suspended") {
+      void ctx.resume();
+    }
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1); // A5
+    gain.gain.setValueAtTime(0.06, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.2);
+  } catch {}
+}
+
 /**
  * Speak text aloud. Returns a cancel function.
- * Hardened against Chromium speech stall, garbage-collection, and missing regional voice packs.
+ * Hardened against Chromium speech stall, garbage-collection, user-gesture loss, and missing regional voice packs.
  */
 export function speak(text: string, opts: SpeakOptions): () => void {
   if (!canSpeak()) {
     opts.onEnd?.();
     return () => {};
   }
+
+  // Play subtle audio confirmation chime
+  playAuditoryChime();
 
   const synth = window.speechSynthesis;
 
@@ -92,19 +119,24 @@ export function speak(text: string, opts: SpeakOptions): () => void {
   }
 
   // Cancel prior utterances
-  synth.cancel();
+  try {
+    synth.cancel();
+  } catch {}
   activeUtterances.clear();
 
   const langTag = bcp47(opts.lang);
   const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = langTag;
   utter.rate = opts.rate ?? 1.0;
   utter.pitch = 1.0;
 
-  // Select best voice if loaded
+  // Select best voice if loaded; match utterance lang to selected voice to avoid language-unavailable failure
   const matchedVoice = selectBestVoice(synth, langTag);
   if (matchedVoice) {
     utter.voice = matchedVoice;
+    utter.lang = matchedVoice.lang;
+  } else {
+    // If no voices loaded yet or none matched, fallback to system default
+    utter.lang = langTag;
   }
 
   // Prevent GC from collecting utterance before onend fires
@@ -116,23 +148,19 @@ export function speak(text: string, opts: SpeakOptions): () => void {
   };
 
   utter.onend = cleanup;
-  utter.onerror = (e) => {
-    // If canceled by another action, don't treat as fatal
+  utter.onerror = (_e) => {
     cleanup();
   };
 
-  // Chromium workaround: cancel() in the same tick can cancel the subsequent speak()
-  const timer = setTimeout(() => {
-    try {
-      if (synth.paused) synth.resume();
-      synth.speak(utter);
-    } catch (err) {
-      cleanup();
-    }
-  }, 25);
+  // Execute synchronously within the user gesture click handler
+  try {
+    if (synth.paused) synth.resume();
+    synth.speak(utter);
+  } catch (err) {
+    cleanup();
+  }
 
   return () => {
-    clearTimeout(timer);
     activeUtterances.delete(utter);
     try {
       synth.cancel();

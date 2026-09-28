@@ -52,14 +52,14 @@ function mkEmptyOrder(): MedicationOrder {
     id: "mo-draft",
     carePlanId: "cp-active",
     patientId: "pt-current",
-    medicine: "",
-    strength: "",
+    medicine: "Paracetamol",
+    strength: "500mg",
     form: "tablet",
-    dose: "1 tablet",
+    dose: "1 tablet (500mg)",
     route: "oral",
     frequency: { kind: "times_per_day", times: 2 },
     foodRelation: "after_food",
-    indication: "",
+    indication: "Fever and mild body aches",
     instructions: "Take with water after food.",
     startDate: todayStr,
     endDate: nextWeekStr,
@@ -137,7 +137,7 @@ const INITIAL_SAMPLE_ORDERS: MedicationOrder[] = [
 
 export default function CarePlanView() {
   const { t } = useLanguage();
-  const [role, setRole] = useState<Role>("doctor");
+  const [role, setRole] = useState<Role>("patient");
   const [now, setNow] = useState(() => new Date().toISOString().slice(0, 16));
   const today = now.slice(0, 10);
 
@@ -400,27 +400,59 @@ export default function CarePlanView() {
             </div>
           )}
 
-          <div className="cp-actions">
+          <div className="cp-actions" style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
             <button type="button" className="primary-button" disabled={blocking.length > 0} onClick={sign}>{t("plan.sign")}</button>
-            {signMsg && <span className="cp-msg" role="status">{signMsg}</span>}
+            <button type="button" className="secondary-button" onClick={() => setRole("patient")}>
+              📅 View Patient Daily Schedule →
+            </button>
+            {signMsg && <span className="cp-msg" role="status" style={{ color: "#059669", fontWeight: "600" }}>{signMsg}</span>}
           </div>
           <p className="cp-note">{draft.status === "active" && draft.signedAt ? `Order signed ${draft.signedAt} · signature ${draft.signature}` : t("plan.unsigned")}</p>
         </section>
       ) : (
         <section className="cg-card">
-          <div className="cp-patient-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-            <h2>{t("plan.schedule")} — {patientRef}</h2>
-            <label style={{ fontSize: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
-              Patient Ref:
-              <input
-                type="text"
-                value={patientRef}
-                onChange={(e) => setPatientRef(e.target.value)}
-                style={{ width: "120px", padding: "4px 8px", borderRadius: "6px", border: "1px solid var(--line)" }}
-                placeholder="e.g. NR-1001"
-              />
-            </label>
+          <div className="cp-patient-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
+            <div>
+              <h2 style={{ margin: 0 }}>{t("plan.schedule")} — {patientRef}</h2>
+              <span style={{ fontSize: "12px", color: "var(--muted)" }}>Active daily medication regimen &amp; adherence alarms</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <label style={{ fontSize: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
+                Patient:
+                <input
+                  type="text"
+                  value={patientRef}
+                  onChange={(e) => setPatientRef(e.target.value)}
+                  style={{ width: "100px", padding: "4px 8px", borderRadius: "6px", border: "1px solid var(--line)" }}
+                  placeholder="e.g. NR-1001"
+                />
+              </label>
+              <button
+                type="button"
+                className="primary-button"
+                style={{ fontSize: "12px", padding: "6px 12px" }}
+                onClick={() => setRole("doctor")}
+              >
+                ✍️ Prescribe Medicine
+              </button>
+            </div>
           </div>
+
+          <div style={{ padding: "10px 14px", background: "var(--surface-muted)", borderRadius: "10px", marginBottom: "16px", border: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "20px" }}>💊</span>
+              <div>
+                <strong style={{ fontSize: "13px", color: "var(--foreground)" }}>Active Prescriptions ({orders.length}):</strong>
+                <span style={{ fontSize: "12px", color: "var(--muted)", marginLeft: "6px" }}>
+                  {orders.map((o) => `${o.medicine} (${o.strength})`).join(", ")}
+                </span>
+              </div>
+            </div>
+            <span style={{ fontSize: "11px", fontWeight: "700", color: "#059669", background: "#ecfdf5", padding: "3px 8px", borderRadius: "12px", border: "1px solid #a7f3d0" }}>
+              ● Monitoring Active
+            </span>
+          </div>
+
           <div className="cp-now">
             <label>{t("plan.demoClock")}
               <input type="datetime-local" value={now} onChange={(e) => setNow(e.target.value.replace("T", "T") + ":00")} />

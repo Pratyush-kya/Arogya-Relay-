@@ -184,10 +184,165 @@ export default function DiseaseLibrary({ onTransferToScreening }: DiseaseLibrary
               ? "#eab308"
               : "#10b981";
 
+          if (viewMode === "quick") {
+            // 💡 QUICK IDEA MODE: Easy, visual, plain-language guidance for patients and families
+            return (
+              <div
+                key={item.id}
+                className="disease-card quick-idea-card"
+                style={{
+                  background: "var(--surface)",
+                  border: "2px solid #a7f3d0",
+                  borderRadius: "16px",
+                  padding: "20px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "14px",
+                  boxShadow: "0 4px 14px rgba(16, 185, 129, 0.08)",
+                }}
+              >
+                {/* Header */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <span style={{ fontSize: "36px", lineHeight: 1 }}>{item.icon}</span>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: "17px", fontWeight: "800", color: "var(--foreground)" }}>
+                        {item.name}
+                      </h3>
+                      <span style={{ fontSize: "14px", color: "var(--primary)", fontWeight: "600" }}>
+                        {item.hindiName}
+                      </span>
+                    </div>
+                  </div>
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: "700",
+                      padding: "4px 10px",
+                      borderRadius: "12px",
+                      background: "#ecfdf5",
+                      color: "#047857",
+                      border: "1px solid #a7f3d0",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                    }}
+                  >
+                    💡 Quick Idea
+                  </span>
+                </div>
+
+                {/* 1 Simple Sentence Summary */}
+                <div
+                  style={{
+                    background: "var(--surface-muted)",
+                    padding: "12px 14px",
+                    borderRadius: "10px",
+                    borderLeft: "4px solid #10b981",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                    <span style={{ fontSize: "12px", fontWeight: "700", color: "#065f46" }}>
+                      📢 In Simple Words:
+                    </span>
+                    <ReadAloud text={item.narrationText} />
+                  </div>
+                  <p style={{ margin: 0, fontSize: "13.5px", lineHeight: "1.5", color: "var(--foreground)" }}>
+                    {item.narrationText}
+                  </p>
+                </div>
+
+                {/* 3 Things You Can Do at Home */}
+                <div
+                  style={{
+                    background: "rgba(16, 185, 129, 0.06)",
+                    border: "1px solid rgba(16, 185, 129, 0.2)",
+                    borderRadius: "10px",
+                    padding: "12px 14px",
+                  }}
+                >
+                  <strong style={{ fontSize: "13px", color: "#065f46", display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
+                    🏡 Safe Things To Do Right Now:
+                  </strong>
+                  <ul style={{ margin: 0, paddingLeft: "18px", fontSize: "13px", lineHeight: "1.5", color: "var(--foreground)" }}>
+                    {item.remedies.slice(0, 3).map((rem, idx) => (
+                      <li key={idx} style={{ marginBottom: "4px" }}>
+                        {rem}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Plain Danger Sign */}
+                <div
+                  style={{
+                    background: "rgba(239, 68, 68, 0.06)",
+                    border: "1px solid rgba(239, 68, 68, 0.2)",
+                    borderRadius: "10px",
+                    padding: "10px 14px",
+                  }}
+                >
+                  <strong style={{ fontSize: "12.5px", color: "#991b1b", display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                    🚨 See Doctor If:
+                  </strong>
+                  <p style={{ margin: 0, fontSize: "12.5px", lineHeight: "1.4", color: "#7f1d1d" }}>
+                    {item.redFlags[0] ?? "Symptoms do not improve after 48 hours or breathing becomes difficult."}
+                  </p>
+                </div>
+
+                {/* Action Bar */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "8px",
+                    marginTop: "auto",
+                    paddingTop: "10px",
+                    borderTop: "1px solid var(--line)",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("clinical")}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "var(--primary)",
+                      fontSize: "12px",
+                      fontWeight: "700",
+                      cursor: "pointer",
+                      padding: "4px 0",
+                    }}
+                  >
+                    📋 View Medicine Dosages →
+                  </button>
+
+                  {onTransferToScreening && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onTransferToScreening(
+                          item.symptoms.slice(0, 3),
+                          `Suspected: ${item.name} (${item.hindiName}). Category: ${item.category}`
+                        )
+                      }
+                      className="primary-button"
+                      style={{ fontSize: "12px", padding: "6px 12px" }}
+                    >
+                      ✚ Start Screening
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          }
+
+          // 📋 CLINICAL DETAILS MODE: Rigorous clinical guide with OTC dosage protocols and red flags
           return (
             <div
               key={item.id}
-              className="disease-card"
+              className="disease-card clinical-card"
               style={{
                 background: "var(--surface)",
                 border: "1px solid var(--line)",
@@ -196,22 +351,24 @@ export default function DiseaseLibrary({ onTransferToScreening }: DiseaseLibrary
                 display: "flex",
                 flexDirection: "column",
                 gap: "12px",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
               }}
             >
-              {/* Card Header */}
+              {/* Clinical Card Header */}
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "10px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                   <span style={{ fontSize: "32px", lineHeight: 1 }}>{item.icon}</span>
                   <div>
                     <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "700" }}>{item.name}</h3>
-                    <span style={{ fontSize: "13px", color: "var(--muted)" }}>{item.hindiName}</span>
+                    <span style={{ fontSize: "12px", color: "var(--muted)" }}>
+                      {item.hindiName} · Category: <span style={{ textTransform: "capitalize" }}>{item.category.replace("_", " ")}</span>
+                    </span>
                   </div>
                 </div>
                 <span
                   style={{
                     fontSize: "11px",
-                    fontWeight: "600",
+                    fontWeight: "700",
                     textTransform: "uppercase",
                     padding: "3px 8px",
                     borderRadius: "12px",
@@ -221,51 +378,62 @@ export default function DiseaseLibrary({ onTransferToScreening }: DiseaseLibrary
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {item.urgency}
+                  Tier: {item.urgency}
                 </span>
               </div>
 
-              {/* Quick Idea: In Plain Words Box */}
-              <div
-                style={{
-                  background: "var(--surface-muted)",
-                  padding: "10px 12px",
-                  borderRadius: "8px",
-                  borderLeft: "3px solid var(--primary)",
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                  <strong style={{ fontSize: "11px", textTransform: "uppercase", color: "var(--primary)" }}>
-                    💡 What is this?
-                  </strong>
-                  <ReadAloud text={item.narrationText} />
-                </div>
-                <p style={{ margin: 0, fontSize: "12.5px", lineHeight: "1.45", color: "var(--foreground)" }}>
-                  {item.narrationText}
-                </p>
+              {/* Clinical Case Audio & Brief */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--surface-muted)", padding: "8px 12px", borderRadius: "8px" }}>
+                <span style={{ fontSize: "12px", fontWeight: "600", color: "var(--muted)" }}>
+                  Clinical Case Narration:
+                </span>
+                <ReadAloud text={`Clinical protocol for ${item.name}. ${item.narrationText}`} />
               </div>
 
-              {/* What to do at home (Quick remedies) */}
-              <div style={{ background: "rgba(16, 185, 129, 0.08)", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(16, 185, 129, 0.2)" }}>
-                <strong style={{ fontSize: "12px", color: "#065f46", display: "flex", alignItems: "center", gap: "6px" }}>
-                  🌿 What to Do First at Home:
+              {/* Symptoms Checklist */}
+              <div>
+                <strong style={{ fontSize: "12px", color: "var(--foreground)", display: "block", marginBottom: "4px" }}>
+                  🩺 Recognized Clinical Symptoms:
                 </strong>
-                <ul style={{ margin: "6px 0 0", paddingLeft: "16px", fontSize: "12px", lineHeight: "1.4" }}>
-                  {item.remedies.slice(0, isExpanded ? undefined : 2).map((rem, idx) => (
-                    <li key={idx} style={{ marginBottom: "3px" }}>
-                      {rem}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
+                  {item.symptoms.map((s, idx) => (
+                    <span
+                      key={idx}
+                      style={{
+                        fontSize: "11.5px",
+                        padding: "3px 8px",
+                        borderRadius: "6px",
+                        background: "var(--surface-muted)",
+                        border: "1px solid var(--line)",
+                      }}
+                    >
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Standard Regimen & OTC Medication Protocols */}
+              <div style={{ background: "rgba(59, 130, 246, 0.08)", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(59, 130, 246, 0.25)" }}>
+                <strong style={{ fontSize: "12px", color: "#1e40af", display: "block", marginBottom: "4px" }}>
+                  💊 Standard OTC Protocol &amp; Dosages:
+                </strong>
+                <ul style={{ margin: 0, paddingLeft: "16px", fontSize: "12px", lineHeight: "1.45" }}>
+                  {item.otcGuidance.map((otc, idx) => (
+                    <li key={idx} style={{ marginBottom: "2px" }}>
+                      {otc}
                     </li>
                   ))}
                 </ul>
               </div>
 
-              {/* Danger signs / Red Flags */}
-              <div style={{ background: "rgba(239, 68, 68, 0.08)", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(239, 68, 68, 0.2)" }}>
-                <strong style={{ fontSize: "12px", color: "#991b1b", display: "flex", alignItems: "center", gap: "6px" }}>
-                  🚨 Danger Signs (Go to Hospital If):
+              {/* Comprehensive Red Flags */}
+              <div style={{ background: "rgba(239, 68, 68, 0.08)", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(239, 68, 68, 0.25)" }}>
+                <strong style={{ fontSize: "12px", color: "#991b1b", display: "block", marginBottom: "4px" }}>
+                  🚨 Triage Exclusion &amp; Hospital Referral Criteria:
                 </strong>
-                <ul style={{ margin: "6px 0 0", paddingLeft: "16px", fontSize: "12px", lineHeight: "1.4", color: "#7f1d1d" }}>
-                  {item.redFlags.slice(0, isExpanded ? undefined : 2).map((rf, idx) => (
+                <ul style={{ margin: 0, paddingLeft: "16px", fontSize: "12px", lineHeight: "1.4", color: "#7f1d1d" }}>
+                  {item.redFlags.map((rf, idx) => (
                     <li key={idx} style={{ marginBottom: "2px" }}>
                       {rf}
                     </li>
@@ -273,28 +441,19 @@ export default function DiseaseLibrary({ onTransferToScreening }: DiseaseLibrary
                 </ul>
               </div>
 
-              {/* Expandable Section for Detailed Clinical OTC & Symptoms */}
+              {/* Full Non-Pharmacological Care (Expandable) */}
               {isExpanded && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px", paddingTop: "8px", borderTop: "1px dashed var(--line)" }}>
-                  {/* Common symptoms */}
-                  <div>
-                    <strong style={{ fontSize: "12px", color: "var(--muted)" }}>All Recognized Symptoms:</strong>
-                    <ul style={{ margin: "4px 0 0", paddingLeft: "16px", fontSize: "12px" }}>
-                      {item.symptoms.map((s, idx) => (
-                        <li key={idx}>{s}</li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* OTC Guidance */}
-                  <div style={{ background: "rgba(59, 130, 246, 0.08)", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(59, 130, 246, 0.2)" }}>
-                    <strong style={{ fontSize: "12px", color: "#1e40af" }}>💊 OTC Medication Guidelines:</strong>
-                    <ul style={{ margin: "4px 0 0", paddingLeft: "16px", fontSize: "12px" }}>
-                      {item.otcGuidance.map((otc, idx) => (
-                        <li key={idx}>{otc}</li>
-                      ))}
-                    </ul>
-                  </div>
+                <div style={{ background: "rgba(16, 185, 129, 0.08)", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(16, 185, 129, 0.2)" }}>
+                  <strong style={{ fontSize: "12px", color: "#065f46", display: "block", marginBottom: "4px" }}>
+                    🌿 Supportive Clinical Regimen:
+                  </strong>
+                  <ul style={{ margin: 0, paddingLeft: "16px", fontSize: "12px", lineHeight: "1.4" }}>
+                    {item.remedies.map((rem, idx) => (
+                      <li key={idx} style={{ marginBottom: "2px" }}>
+                        {rem}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
 
@@ -323,7 +482,7 @@ export default function DiseaseLibrary({ onTransferToScreening }: DiseaseLibrary
                     padding: "4px 0",
                   }}
                 >
-                  {isExpanded ? "▲ Less Details" : "▼ More Guidance"}
+                  {isExpanded ? "▲ Hide Supportive Regimen" : "▼ Supportive Regimen"}
                 </button>
 
                 {onTransferToScreening && (
