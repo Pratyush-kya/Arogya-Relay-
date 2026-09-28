@@ -100,6 +100,17 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
 
   async function loadProfile(currentUser: User) {
     try {
+      // 1. Try secure RPC decrypting AES-256 protected fields (phone, address, gov_id)
+      const { data: rpcData, error: rpcError } = await (supabase.rpc as any)("get_my_decrypted_profile");
+      if (!rpcError && rpcData) {
+        setProfile(rpcData as Profile);
+        if (rpcData.role === "admin") {
+          loadDoctorsForAdmin();
+        }
+        return;
+      }
+
+      // 2. Fallback to standard profiles query if RPC is not yet created in remote DB
       const { data, error } = await supabase
         .from("profiles")
         .select("*")

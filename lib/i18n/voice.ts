@@ -96,20 +96,62 @@ export function playAuditoryChime(): void {
   } catch {}
 }
 
+let currentAudio: HTMLAudioElement | null = null;
+
+export function playServerAudio(text: string, opts: SpeakOptions): () => void {
+  stopSpeaking();
+  playAuditoryChime();
+
+  try {
+    const audio = new Audio(`/api/tts?text=${encodeURIComponent(text.slice(0, 500))}&lang=${opts.lang}`);
+    audio.playbackRate = opts.rate ?? 1.0;
+    currentAudio = audio;
+
+    const cleanup = () => {
+      if (currentAudio === audio) currentAudio = null;
+      opts.onEnd?.();
+    };
+
+    audio.onended = cleanup;
+    audio.onerror = cleanup;
+
+    audio.play().catch(() => {
+      cleanup();
+    });
+
+    return () => {
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+      } catch {}
+      cleanup();
+    };
+  } catch {
+    opts.onEnd?.();
+    return () => {};
+  }
+}
+
 /**
  * Speak text aloud. Returns a cancel function.
  * Hardened against Chromium speech stall, garbage-collection, user-gesture loss, and missing regional voice packs.
+ * Automatically falls back to /api/tts server audio if client OS speech synthesis lacks voices or fails.
  */
 export function speak(text: string, opts: SpeakOptions): () => void {
   if (!canSpeak()) {
-    opts.onEnd?.();
-    return () => {};
+    return playServerAudio(text, opts);
+  }
+
+  const synth = window.speechSynthesis;
+  const voices = synth.getVoices();
+
+  // If host OS has zero installed TTS voices, immediately use resilient server audio
+  if (!voices || voices.length === 0) {
+    return playServerAudio(text, opts);
   }
 
   // Play subtle audio confirmation chime
   playAuditoryChime();
-
-  const synth = window.speechSynthesis;
 
   // Unpause in case browser audio pipeline was backgrounded or frozen
   if (synth.paused) {
@@ -135,8 +177,8 @@ export function speak(text: string, opts: SpeakOptions): () => void {
     utter.voice = matchedVoice;
     utter.lang = matchedVoice.lang;
   } else {
-    // If no voices loaded yet or none matched, fallback to system default
-    utter.lang = langTag;
+    // If no voice matched the regional tag, fall back to server audio for safety
+    return playServerAudio(text, opts);
   }
 
   // Prevent GC from collecting utterance before onend fires
@@ -150,6 +192,8 @@ export function speak(text: string, opts: SpeakOptions): () => void {
   utter.onend = cleanup;
   utter.onerror = (_e) => {
     cleanup();
+    // Fall back to server audio on speech synthesis error
+    playServerAudio(text, opts);
   };
 
   // Execute synchronously within the user gesture click handler
@@ -158,6 +202,7 @@ export function speak(text: string, opts: SpeakOptions): () => void {
     synth.speak(utter);
   } catch (err) {
     cleanup();
+    return playServerAudio(text, opts);
   }
 
   return () => {
@@ -169,9 +214,18 @@ export function speak(text: string, opts: SpeakOptions): () => void {
 }
 
 export function stopSpeaking(): void {
+  if (currentAudio) {
+    try {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    } catch {}
+    currentAudio = null;
+  }
   if (typeof window !== "undefined" && "speechSynthesis" in window) {
     activeUtterances.clear();
-    window.speechSynthesis.cancel();
+    try {
+      window.speechSynthesis.cancel();
+    } catch {}
   }
 }
 

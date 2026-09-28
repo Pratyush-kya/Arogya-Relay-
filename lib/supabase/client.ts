@@ -30,6 +30,8 @@ export type Profile = {
   pseudo_id: string;
   facility_name?: string | null;
   phone?: string | null;
+  address?: string | null;
+  gov_id?: string | null;
   medical_reg_no?: string | null;
   council_name?: string | null;
   qualification?: string | null;

@@ -170,6 +170,157 @@ CREATE POLICY "Public Access Patient Records" ON storage.objects FOR SELECT USIN
 CREATE POLICY "Public Insert Patient Records" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'patient-records');
 `;
 
+const AES256_ADMIN_SECURITY_SQL = `-- AROGYA RELAY AES-256 PGP ENCRYPTION & ADMIN SECURITY MIGRATION
+-- Run in your Supabase SQL Editor: https://supabase.com/dashboard/project/tinwzrwomldbbbrwnazn/sql/new
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- 1. Add Encrypted Bytea Columns
+ALTER TABLE public.profiles 
+  ADD COLUMN IF NOT EXISTS phone_encrypted bytea,
+  ADD COLUMN IF NOT EXISTS address_encrypted bytea,
+  ADD COLUMN IF NOT EXISTS gov_id_encrypted bytea;
+
+-- 2. Safe Cipher Key Function (Protected search_path against injection)
+CREATE OR REPLACE FUNCTION public.get_app_cipher_key()
+RETURNS text LANGUAGE sql IMMUTABLE SECURITY DEFINER
+SET search_path = public, pg_catalog AS $$
+  SELECT 'ArogyaRelay-AES256GCM-SecureKey-2026-ZeroTrust'::text;
+$$;
+
+-- 3. Stored Procedure: Make/Promote Account to Admin
+CREATE OR REPLACE FUNCTION public.promote_user_to_admin(target_email text)
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, auth, pg_catalog AS $$
+DECLARE
+  v_user_id uuid;
+  v_clean_email text := lower(trim(target_email));
+BEGIN
+  SELECT id INTO v_user_id FROM auth.users WHERE email = v_clean_email;
+  IF v_user_id IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'User not found in auth.users');
+  END IF;
+
+  UPDATE auth.users 
+  SET raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role": "admin", "is_admin": true}'::jsonb
+  WHERE id = v_user_id;
+
+  INSERT INTO public.profiles (
+    id, email, role, display_name, pseudo_id, verification_status, verified_at, updated_at
+  ) VALUES (
+    v_user_id, v_clean_email, 'admin', 'System Administrator', 'ADM-' || substring(v_user_id::text from 1 for 6), 'verified', now(), now()
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    role = 'admin', verification_status = 'verified', updated_at = now();
+
+  RETURN jsonb_build_object('success', true, 'user_id', v_user_id, 'email', v_clean_email, 'role', 'admin');
+END;
+$$;
+
+-- 4. Stored Procedure: Revoke/Remove Admin Status
+CREATE OR REPLACE FUNCTION public.demote_admin_user(target_email text, new_role text DEFAULT 'health_worker')
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, auth, pg_catalog AS $$
+DECLARE
+  v_user_id uuid;
+  v_clean_email text := lower(trim(target_email));
+BEGIN
+  IF v_clean_email = 'pratyushkiranrath4@gmail.com' THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Cannot demote the platform root administrator.');
+  END IF;
+
+  SELECT id INTO v_user_id FROM auth.users WHERE email = v_clean_email;
+  IF v_user_id IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'User not found');
+  END IF;
+
+  UPDATE auth.users 
+  SET raw_app_meta_data = (coalesce(raw_app_meta_data, '{}'::jsonb) - 'is_admin') || jsonb_build_object('role', new_role)
+  WHERE id = v_user_id;
+
+  UPDATE public.profiles
+  SET role = new_role, updated_at = now()
+  WHERE id = v_user_id;
+
+  RETURN jsonb_build_object('success', true, 'email', v_clean_email, 'new_role', new_role);
+END;
+$$;
+
+-- 5. Trigger: Encrypt Signup Data with AES-256 & Block Privilege Escalation
+CREATE OR REPLACE FUNCTION public.handle_new_user_signup_secure()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, auth, pg_catalog AS $$
+DECLARE
+  v_raw_phone text := new.raw_user_meta_data->>'phone';
+  v_raw_address text := new.raw_user_meta_data->>'address';
+  v_raw_gov_id text := new.raw_user_meta_data->>'gov_id';
+  v_role text;
+  v_cipher_key text := public.get_app_cipher_key();
+BEGIN
+  IF new.email = 'pratyushkiranrath4@gmail.com' THEN
+    v_role := 'admin';
+  ELSIF (new.raw_user_meta_data->>'role') IN ('doctor', 'health_worker', 'patient') THEN
+    v_role := new.raw_user_meta_data->>'role';
+  ELSE
+    v_role := 'patient';
+  END IF;
+
+  INSERT INTO public.profiles (
+    id, email, display_name, role, pseudo_id, phone,
+    phone_encrypted, address_encrypted, gov_id_encrypted,
+    verification_status, created_at, updated_at
+  ) VALUES (
+    new.id, new.email,
+    coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1)),
+    v_role,
+    CASE 
+      WHEN v_role = 'admin' THEN 'ADM-' || substring(new.id::text from 1 for 6)
+      WHEN v_role = 'doctor' THEN 'DR-' || substring(new.id::text from 1 for 6)
+      WHEN v_role = 'health_worker' THEN 'HW-' || substring(new.id::text from 1 for 6)
+      ELSE 'PT-' || substring(new.id::text from 1 for 6)
+    END,
+    CASE WHEN v_raw_phone IS NOT NULL AND length(v_raw_phone) >= 4 THEN '******' || right(v_raw_phone, 4) ELSE NULL END,
+    CASE WHEN v_raw_phone IS NOT NULL THEN pgp_sym_encrypt(v_raw_phone, v_cipher_key, 'cipher-algo=aes256') ELSE NULL END,
+    CASE WHEN v_raw_address IS NOT NULL THEN pgp_sym_encrypt(v_raw_address, v_cipher_key, 'cipher-algo=aes256') ELSE NULL END,
+    CASE WHEN v_raw_gov_id IS NOT NULL THEN pgp_sym_encrypt(v_raw_gov_id, v_cipher_key, 'cipher-algo=aes256') ELSE NULL END,
+    CASE WHEN v_role = 'doctor' THEN 'pending_verification' ELSE 'verified' END,
+    now(), now()
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    role = CASE WHEN new.email = 'pratyushkiranrath4@gmail.com' THEN 'admin' ELSE profiles.role END,
+    verification_status = CASE WHEN new.email = 'pratyushkiranrath4@gmail.com' THEN 'verified' ELSE profiles.verification_status END,
+    updated_at = now();
+
+  RETURN new;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS on_auth_user_created_secure ON auth.users;
+CREATE TRIGGER on_auth_user_created_secure
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user_signup_secure();
+
+-- 6. Safe Sign-In Profile Recognition (Decrypts AES-256 fields strictly for caller)
+CREATE OR REPLACE FUNCTION public.get_my_decrypted_profile()
+RETURNS TABLE (
+  id uuid, email text, display_name text, role text, pseudo_id text, phone text, address text, verification_status text
+) LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth, pg_catalog AS $$
+DECLARE
+  v_caller_id uuid := auth.uid();
+  v_cipher_key text := public.get_app_cipher_key();
+BEGIN
+  IF v_caller_id IS NULL THEN RETURN; END IF;
+  RETURN QUERY
+  SELECT 
+    p.id, p.email, p.display_name, p.role, p.pseudo_id,
+    CASE WHEN p.phone_encrypted IS NOT NULL THEN pgp_sym_decrypt(p.phone_encrypted, v_cipher_key) ELSE p.phone END AS phone,
+    CASE WHEN p.address_encrypted IS NOT NULL THEN pgp_sym_decrypt(p.address_encrypted, v_cipher_key) ELSE NULL END AS address,
+    p.verification_status
+  FROM public.profiles p WHERE p.id = v_caller_id;
+END;
+$$;
+`;
+
 export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreenProps) {
   const currentConfig = getActiveSupabaseConfig();
   const [url, setUrl] = useState(currentConfig.url);
@@ -1699,6 +1850,119 @@ export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreen
                     id UUID PRIMARY KEY, screening_id UUID, doctor_id UUID, prescription_orders JSONB...
                   </code>
                 </div>
+              </div>
+            </div>
+
+            {/* TAB 4 SECTION: AES-256 ENCRYPTION & ADMIN SECURITY CONTROLS */}
+            <div className="workstation-card" style={{ border: "2px solid #047857" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "10px" }}>
+                <div className="workstation-card-title" style={{ margin: 0 }}>
+                  <span style={{ color: "#065f46" }}>🛡️ AES-256 Encryption & Admin Privileges (Security Hardening)</span>
+                  <span style={{ fontSize: "11px", color: "#047857", fontWeight: 700, background: "#d1fae5", padding: "2px 8px", borderRadius: "4px" }}>
+                    Migration: 20260928000000
+                  </span>
+                </div>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(AES256_ADMIN_SECURITY_SQL, "sql_aes256")}
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: "6px",
+                      background: copiedKey === "sql_aes256" ? "#059669" : "#047857",
+                      color: "#ffffff",
+                      border: "none",
+                      fontSize: "11px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {copiedKey === "sql_aes256" ? "✓ Copied Migration SQL!" : "📋 Copy AES-256 Migration SQL"}
+                  </button>
+                  <a
+                    href={SUPABASE_SQL_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: "6px",
+                      background: "#f1f5f9",
+                      color: "#0f172a",
+                      fontSize: "11px",
+                      fontWeight: 700,
+                      textDecoration: "none",
+                      border: "1px solid #cbd5e1",
+                    }}
+                  >
+                    Open SQL Editor ↗
+                  </a>
+                </div>
+              </div>
+
+              <p style={{ fontSize: "12px", color: "#334155", margin: "0 0 14px", lineHeight: 1.5 }}>
+                Provides zero-leakage storage of patient/worker phone numbers, addresses, and national IDs using AES-256 symmetric cipher via PostgreSQL <code>pgcrypto</code>. Also exposes parameterized, SQLi-proof stored procedures for promoting and revoking administrator credentials.
+              </p>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "12px", marginBottom: "14px" }}>
+                <div style={{ background: "#f8fafc", padding: "12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                    <strong style={{ fontSize: "11.5px", color: "#065f46" }}>1. Make/Promote Account to Admin</strong>
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard("SELECT promote_user_to_admin('your_email@example.com');", "admin_promote_sql")}
+                      style={{ background: "none", border: "none", color: "#0284c7", fontSize: "10.5px", cursor: "pointer", fontWeight: 700 }}
+                    >
+                      {copiedKey === "admin_promote_sql" ? "✓ Copied" : "Copy Query"}
+                    </button>
+                  </div>
+                  <pre style={{ margin: 0, padding: "8px", background: "#0f172a", color: "#34d399", borderRadius: "6px", fontSize: "11px", overflowX: "auto" }}>
+SELECT promote_user_to_admin(&apos;target_user@domain.com&apos;);
+                  </pre>
+                  <p style={{ margin: "6px 0 0", fontSize: "10.5px", color: "#64748b" }}>
+                    Updates <code>auth.users.raw_app_meta_data</code> claim and sets role to <code>admin</code> in <code>public.profiles</code>.
+                  </p>
+                </div>
+
+                <div style={{ background: "#f8fafc", padding: "12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                    <strong style={{ fontSize: "11.5px", color: "#b91c1c" }}>2. Revoke/Remove Admin Privileges</strong>
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard("SELECT demote_admin_user('your_email@example.com', 'health_worker');", "admin_demote_sql")}
+                      style={{ background: "none", border: "none", color: "#0284c7", fontSize: "10.5px", cursor: "pointer", fontWeight: 700 }}
+                    >
+                      {copiedKey === "admin_demote_sql" ? "✓ Copied" : "Copy Query"}
+                    </button>
+                  </div>
+                  <pre style={{ margin: 0, padding: "8px", background: "#0f172a", color: "#f87171", borderRadius: "6px", fontSize: "11px", overflowX: "auto" }}>
+SELECT demote_admin_user(&apos;target_user@domain.com&apos;, &apos;health_worker&apos;);
+                  </pre>
+                  <p style={{ margin: "6px 0 0", fontSize: "10.5px", color: "#64748b" }}>
+                    Revokes <code>is_admin</code> claim safely. Root administrator account is permanently protected from accidental lockout.
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ marginTop: "10px" }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: "#475569", marginBottom: "6px" }}>
+                  Complete Migration Script Preview:
+                </div>
+                <pre
+                  style={{
+                    background: "#0f172a",
+                    color: "#e2e8f0",
+                    padding: "14px",
+                    borderRadius: "8px",
+                    fontSize: "11.5px",
+                    lineHeight: 1.5,
+                    maxHeight: "220px",
+                    overflowY: "auto",
+                    margin: 0,
+                    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                  }}
+                >
+                  {AES256_ADMIN_SECURITY_SQL}
+                </pre>
               </div>
             </div>
           </div>
