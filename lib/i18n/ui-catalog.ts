@@ -41,10 +41,10 @@ export const UI_CATALOG: Catalog = {
   "shell.notificationDetail": ui("North Ridge · SpO₂ 91% · received 12 minutes ago", "नॉर्थ रिज · SpO₂ 91% · 12 मिनट पहले प्राप्त", "ନର୍ଥ ରିଜ୍ · SpO₂ 91% · 12 ମିନିଟ୍ ପୂର୍ବେ ମିଳିଛି"),
   "shell.prototypeSession": ui("Prototype session · no real patient account", "प्रोटोटाइप सत्र · कोई वास्तविक रोगी खाता नहीं", "ପ୍ରୋଟୋଟାଇପ୍ ସେସନ୍ · ପ୍ରକୃତ ରୋଗୀ ଖାତା ନୁହେଁ"),
 
-  "overview.kicker": ui("FIELD PULSE · LAST 24 HOURS", "फील्ड पल्स · पिछले 24 घंटे", "କ୍ଷେତ୍ର ସ୍ପନ୍ଦନ · ଗତ 24 ଘଣ୍ଟା"),
+  "overview.kicker": ui("CARE PULSE · LAST 24 HOURS", "केयर पल्स · पिछले 24 घंटे", "ଯତ୍ନ ସ୍ପନ୍ଦନ · ଗତ 24 ଘଣ୍ଟା"),
   "overview.begin": ui("Begin screening", "जाँच शुरू करें", "ସ୍କ୍ରିନିଂ ଆରମ୍ଭ କରନ୍ତୁ"),
   "overview.liveQueue": ui("View live case queue", "लाइव केस कतार देखें", "ଲାଇଭ୍ କେସ୍ ଧାଡ଼ି ଦେଖନ୍ତୁ"),
-  "overview.liveNetwork": ui("LIVE FIELD NETWORK", "लाइव फील्ड नेटवर्क", "ଲାଇଭ୍ କ୍ଷେତ୍ର ନେଟୱର୍କ"),
+  "overview.liveNetwork": ui("LIVE CARE NETWORK", "लाइव केयर नेटवर्क", "ଲାଇଭ୍ କେୟାର ନେଟୱର୍କ"),
   "overview.monitoring": ui("Monitoring active", "निगरानी सक्रिय", "ନିରୀକ୍ଷଣ ସକ୍ରିୟ"),
   "overview.communities": ui("4 communities", "4 समुदाय", "4ଟି ଗୋଷ୍ଠୀ"),
   "overview.coverage": ui("Coverage is steady across the Mawlynnong cluster. One respiratory signal needs review.", "मावलिन्नोंग क्लस्टर में कवरेज स्थिर है। एक श्वसन संकेत की समीक्षा आवश्यक है।", "ମାଉଲିନ୍ନଙ୍ଗ କ୍ଲଷ୍ଟରରେ କଭରେଜ୍ ସ୍ଥିର ଅଛି। ଗୋଟିଏ ଶ୍ୱାସ ସଙ୍କେତର ସମୀକ୍ଷା ଆବଶ୍ୟକ।"),

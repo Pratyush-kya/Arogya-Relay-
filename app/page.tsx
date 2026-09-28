@@ -1098,6 +1098,7 @@ function Overview({
   onOpenDevice,
 }: OverviewProps) {
   const { t } = useLanguage();
+  void onOpenDevice;
   const chartBars = useMemo(() => computeActivityBars(screenings), [screenings]);
   const urgentScreenings = screenings.filter((s) => s.urgency_tier === "urgent" || s.urgency_tier === "emergency");
   const urgentCase = urgentScreenings[0] ?? null;
@@ -1119,7 +1120,7 @@ function Overview({
             </button>
           </div>
         </div>
-        <aside className="hero-command" aria-label="Field command summary">
+        <aside className="hero-command" aria-label="Care command summary">
           <div className="command-head">
             <span>{t("overview.liveNetwork")}</span>
             <b><i /> {t("overview.monitoring")}</b>
@@ -1237,7 +1238,7 @@ function Overview({
         </article>
       </section>
 
-      <section className="lower-grid">
+      <section className="lower-grid" style={{ gridTemplateColumns: "1fr" }}>
         <article className="panel cases-panel">
           <header className="panel-header">
             <div>
@@ -1254,39 +1255,6 @@ function Overview({
               <p className="case-empty">No screening signals recorded yet.</p>
             )}
           </div>
-        </article>
-
-        <article className="panel device-card">
-          <header className="panel-header">
-            <div>
-              <span className="eyebrow">{t("overview.fieldKit")}</span>
-              <h2>Arogya Relay AR-07</h2>
-            </div>
-            <span className="device-online"><i /> {t("common.ready")}</span>
-          </header>
-          <div className="device-illustration" aria-label="Arogya Relay field device status">
-            <div className="device-screen">
-              <span>AR-07</span>
-              <strong>READY</strong>
-              <small>12:42 · OFFLINE SAFE</small>
-            </div>
-            <div className="device-sensor"><i /><i /><i /></div>
-          </div>
-          <div className="device-stats">
-            <div>
-              <span>{t("overview.battery")}</span>
-              <strong>76%</strong>
-              <i><b style={{ width: "76%" }} /></i>
-            </div>
-            <div>
-              <span>{t("overview.sensorCheck")}</span>
-              <strong>{t("common.passed")}</strong>
-              <em>08:10</em>
-            </div>
-          </div>
-          <button type="button" className="secondary-button full" onClick={onOpenDevice}>
-            {t("overview.deviceDetails")}
-          </button>
         </article>
       </section>
     </div>
