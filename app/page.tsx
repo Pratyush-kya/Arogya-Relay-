@@ -103,7 +103,7 @@ export default function Home() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [supabaseSettingsOpen, setSupabaseSettingsOpen] = useState(false);
-  const [userMode, setUserMode] = useState<"patient" | "staff">("staff");
+  const [userMode, setUserMode] = useState<"patient" | "staff">("patient");
 
   // Sync URL hash for direct links and separate screen tabs (#auth, #screening, #supabase, #chemist)
   useEffect(() => {
@@ -478,35 +478,57 @@ export default function Home() {
         </div>
 
         <nav className="side-nav">
+          {/* Section: Patient & Family Services */}
+          <div
+            className="nav-section-label"
+            style={{
+              fontSize: "10.5px",
+              fontWeight: "700",
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+              color: "var(--muted)",
+              padding: "8px 12px 4px",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            <span>👤</span>
+            <span>{t("mode.patient")}</span>
+          </div>
+
           <IconTooltip
             title="Overview Dashboard"
-            desc="Community health metrics, patient triage volume, and field unit operational status."
+            desc="Community health portal, emergency advice, and healthcare services."
             howToUse="Click to return to primary clinic overview."
             position="right"
           >
             <button
               type="button"
-              className={activeTab === "overview" ? "nav-item active" : "nav-item"}
-              aria-current={activeTab === "overview" ? "page" : undefined}
-              onClick={() => setActiveTab("overview")}
+              className={activeTab === "overview" && viewMode === "dashboard" ? "nav-item active" : "nav-item"}
+              aria-current={activeTab === "overview" && viewMode === "dashboard" ? "page" : undefined}
+              onClick={() => {
+                setViewMode("dashboard");
+                setActiveTab("overview");
+              }}
             >
               <span className="nav-glyph">⌂</span> {t("nav.overview")}
             </button>
           </IconTooltip>
 
           <IconTooltip
-            title="Patient Cases Registry"
-            desc="Track, review, and filter registered patient screenings with vitals and doctor evaluations."
-            howToUse="Click to view all patient records or filter by triage tier."
+            title="Consult a Doctor"
+            desc="Connect with an on-duty clinician or start a guided health assessment."
+            howToUse="Click to launch consultation & screening."
             position="right"
           >
             <button
               type="button"
-              className={activeTab === "cases" ? "nav-item active" : "nav-item"}
-              aria-current={activeTab === "cases" ? "page" : undefined}
-              onClick={() => setActiveTab("cases")}
+              className="nav-item"
+              onClick={openScreening}
+              style={{ color: "var(--primary)", fontWeight: "700" }}
             >
-              <span className="nav-glyph">◎</span> {t("nav.cases")} <b>{screenings.length}</b>
+              <span className="nav-glyph">🩺</span> {t("patient.callDoctor")}
             </button>
           </IconTooltip>
 
@@ -518,80 +540,19 @@ export default function Home() {
           >
             <button
               type="button"
-              className={activeTab === "library" ? "nav-item active" : "nav-item"}
-              aria-current={activeTab === "library" ? "page" : undefined}
-              onClick={() => setActiveTab("library")}
+              className={activeTab === "library" && viewMode === "dashboard" ? "nav-item active" : "nav-item"}
+              aria-current={activeTab === "library" && viewMode === "dashboard" ? "page" : undefined}
+              onClick={() => {
+                setViewMode("dashboard");
+                setActiveTab("library");
+              }}
             >
               <span className="nav-glyph">📖</span> {t("nav.library")}
             </button>
           </IconTooltip>
 
           <IconTooltip
-            title="Digital Prescription Tracker"
-            desc="Author, digitally sign, and review prescriptions with dosage schedules and reminder alerts."
-            howToUse="Click to issue or view verified electronic prescriptions."
-            position="right"
-          >
-            <button
-              type="button"
-              className={activeTab === "prescriptions" ? "nav-item active" : "nav-item"}
-              aria-current={activeTab === "prescriptions" ? "page" : undefined}
-              onClick={() => setActiveTab("prescriptions")}
-            >
-              <span className="nav-glyph">💊</span> {t("nav.prescriptions")}
-            </button>
-          </IconTooltip>
-
-          <IconTooltip
-            title="Drishti AI Visual Matcher"
-            desc="Upload or capture a photo of a skin condition or rash to view matching clinical reference cases."
-            howToUse="Click to compare clinical skin lesion photos."
-            position="right"
-          >
-            <button
-              type="button"
-              className={activeTab === "matcher" ? "nav-item active" : "nav-item"}
-              aria-current={activeTab === "matcher" ? "page" : undefined}
-              onClick={() => setActiveTab("matcher")}
-            >
-              <span className="nav-glyph">📷</span> {t("nav.matcher")}
-            </button>
-          </IconTooltip>
-
-          <IconTooltip
-            title="Clinical Decision Support"
-            desc="Evidence-based clinical guidelines and diagnostic triage questions for field health workers."
-            howToUse="Click to launch interactive triage assessment."
-            position="right"
-          >
-            <button
-              type="button"
-              className={activeTab === "care" ? "nav-item active" : "nav-item"}
-              aria-current={activeTab === "care" ? "page" : undefined}
-              onClick={() => setActiveTab("care")}
-            >
-              <span className="nav-glyph">✚</span> {t("nav.care")}
-            </button>
-          </IconTooltip>
-
-          <IconTooltip
-            title="Healthcare Locator & Referral"
-            desc="Find nearest verified hospitals, PHCs, CHCs, pharmacies, and scheduled health camps."
-            howToUse="Click to view closest medical facilities and road travel times."
-            position="right"
-          >
-            <button
-              type="button"
-              className={activeTab === "nearby" ? "nav-item active" : "nav-item"}
-              aria-current={activeTab === "nearby" ? "page" : undefined}
-              onClick={() => setActiveTab("nearby")}
-            >
-              <span className="nav-glyph">⌖</span> {t("nav.nearby")}
-            </button>
-          </IconTooltip>
-
-          <IconTooltip
-            title="Chemist & Pharmacy Fulfillment"
+            title="Chemist & Jan Aushadhi Workstation"
             desc="Verify single-use digital prescriptions, view Jan Aushadhi generic equivalents, and dispense medicines."
             howToUse="Click to open the Chemist & Jan Aushadhi Workstation."
             position="right"
@@ -606,6 +567,120 @@ export default function Home() {
           </IconTooltip>
 
           <IconTooltip
+            title="Drishti AI Visual Matcher"
+            desc="Upload or capture a photo of a skin condition or rash to view matching clinical reference cases."
+            howToUse="Click to compare clinical skin lesion photos."
+            position="right"
+          >
+            <button
+              type="button"
+              className={activeTab === "matcher" && viewMode === "dashboard" ? "nav-item active" : "nav-item"}
+              aria-current={activeTab === "matcher" && viewMode === "dashboard" ? "page" : undefined}
+              onClick={() => {
+                setViewMode("dashboard");
+                setActiveTab("matcher");
+              }}
+            >
+              <span className="nav-glyph">📷</span> {t("nav.matcher")}
+            </button>
+          </IconTooltip>
+
+          <IconTooltip
+            title="Digital Prescription Tracker"
+            desc="Author, digitally sign, and review prescriptions with dosage schedules and reminder alerts."
+            howToUse="Click to issue or view verified electronic prescriptions."
+            position="right"
+          >
+            <button
+              type="button"
+              className={activeTab === "prescriptions" && viewMode === "dashboard" ? "nav-item active" : "nav-item"}
+              aria-current={activeTab === "prescriptions" && viewMode === "dashboard" ? "page" : undefined}
+              onClick={() => {
+                setViewMode("dashboard");
+                setActiveTab("prescriptions");
+              }}
+            >
+              <span className="nav-glyph">💊</span> {t("nav.prescriptions")}
+            </button>
+          </IconTooltip>
+
+          <IconTooltip
+            title="Healthcare Locator & Referral"
+            desc="Find nearest verified hospitals, PHCs, CHCs, pharmacies, and scheduled health camps."
+            howToUse="Click to view closest medical facilities and road travel times."
+            position="right"
+          >
+            <button
+              type="button"
+              className={activeTab === "nearby" && viewMode === "dashboard" ? "nav-item active" : "nav-item"}
+              aria-current={activeTab === "nearby" && viewMode === "dashboard" ? "page" : undefined}
+              onClick={() => {
+                setViewMode("dashboard");
+                setActiveTab("nearby");
+              }}
+            >
+              <span className="nav-glyph">⌖</span> {t("nav.nearby")}
+            </button>
+          </IconTooltip>
+
+          {/* Section: Clinical & Health Worker Workbench */}
+          <div
+            className="nav-section-label"
+            style={{
+              fontSize: "10.5px",
+              fontWeight: "700",
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+              color: "var(--muted)",
+              padding: "14px 12px 4px",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            <span>🩺</span>
+            <span>{t("mode.staff")}</span>
+          </div>
+
+          <IconTooltip
+            title="Clinical Decision Support"
+            desc="Evidence-based clinical guidelines and diagnostic triage questions for field health workers."
+            howToUse="Click to launch interactive triage assessment."
+            position="right"
+          >
+            <button
+              type="button"
+              className={activeTab === "care" && viewMode === "dashboard" ? "nav-item active" : "nav-item"}
+              aria-current={activeTab === "care" && viewMode === "dashboard" ? "page" : undefined}
+              onClick={() => {
+                setViewMode("dashboard");
+                setActiveTab("care");
+              }}
+            >
+              <span className="nav-glyph">✚</span> {t("nav.care")}
+            </button>
+          </IconTooltip>
+
+          <IconTooltip
+            title="Patient Cases Registry"
+            desc="Track, review, and filter registered patient screenings with vitals and doctor evaluations."
+            howToUse="Click to view all patient records or filter by triage tier."
+            position="right"
+          >
+            <button
+              type="button"
+              className={activeTab === "cases" && viewMode === "dashboard" ? "nav-item active" : "nav-item"}
+              aria-current={activeTab === "cases" && viewMode === "dashboard" ? "page" : undefined}
+              onClick={() => {
+                setViewMode("dashboard");
+                setActiveTab("cases");
+              }}
+            >
+              <span className="nav-glyph">◎</span> {t("nav.cases")} <b>{screenings.length}</b>
+            </button>
+          </IconTooltip>
+
+          <IconTooltip
             title="Personalized Chronic Care Plans"
             desc="Manage chronic treatment plans, medication adherence schedules, and lifestyle follow-ups."
             howToUse="Click to review active care plans and dosage alarms."
@@ -613,9 +688,12 @@ export default function Home() {
           >
             <button
               type="button"
-              className={activeTab === "plan" ? "nav-item active" : "nav-item"}
-              aria-current={activeTab === "plan" ? "page" : undefined}
-              onClick={() => setActiveTab("plan")}
+              className={activeTab === "plan" && viewMode === "dashboard" ? "nav-item active" : "nav-item"}
+              aria-current={activeTab === "plan" && viewMode === "dashboard" ? "page" : undefined}
+              onClick={() => {
+                setViewMode("dashboard");
+                setActiveTab("plan");
+              }}
             >
               <span className="nav-glyph">♥</span> {t("nav.plan")}
             </button>
@@ -658,63 +736,6 @@ export default function Home() {
             >
               <ClinicDateWidget />
             </IconTooltip>
-
-            {/* Dual Mode Switcher Pill */}
-            <div
-              className="mode-toggle-pill"
-              role="group"
-              aria-label="User mode switcher"
-              style={{
-                display: "inline-flex",
-                background: "var(--surface-muted)",
-                borderRadius: "20px",
-                padding: "2px",
-                border: "1px solid var(--line)",
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setUserMode("patient")}
-                style={{
-                  padding: "4px 10px",
-                  borderRadius: "16px",
-                  fontSize: "11.5px",
-                  fontWeight: userMode === "patient" ? 700 : 500,
-                  background: userMode === "patient" ? "var(--primary)" : "transparent",
-                  color: userMode === "patient" ? "#ffffff" : "var(--foreground)",
-                  border: "none",
-                  cursor: "pointer",
-                  transition: "all 0.15s ease",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "4px",
-                }}
-              >
-                <span>👤</span>
-                <span>{t("mode.patient")}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setUserMode("staff")}
-                style={{
-                  padding: "4px 10px",
-                  borderRadius: "16px",
-                  fontSize: "11.5px",
-                  fontWeight: userMode === "staff" ? 700 : 500,
-                  background: userMode === "staff" ? "var(--primary)" : "transparent",
-                  color: userMode === "staff" ? "#ffffff" : "var(--foreground)",
-                  border: "none",
-                  cursor: "pointer",
-                  transition: "all 0.15s ease",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "4px",
-                }}
-              >
-                <span>🩺</span>
-                <span>{t("mode.staff")}</span>
-              </button>
-            </div>
 
             <LanguageSwitcher />
 
@@ -777,11 +798,13 @@ export default function Home() {
             screenings={screenings}
             userMode={userMode}
             onSwitchMode={setUserMode}
+            onOpenScreening={openScreening}
             onOpenCases={openCases}
             onOpenMatcher={() => setActiveTab("matcher")}
             onOpenLibrary={() => setActiveTab("library")}
             onOpenPrescriptions={() => setActiveTab("prescriptions")}
             onOpenNearby={() => setActiveTab("nearby")}
+            onOpenChemist={() => setViewMode("chemist")}
           />
         )}
         {activeTab === "cases" && (
@@ -1177,11 +1200,13 @@ interface OverviewProps {
   screenings: ScreeningRecord[];
   userMode?: "patient" | "staff";
   onSwitchMode?: (mode: "patient" | "staff") => void;
+  onOpenScreening?: () => void;
   onOpenCases: () => void;
   onOpenMatcher: () => void;
   onOpenLibrary: () => void;
   onOpenPrescriptions: () => void;
   onOpenNearby: () => void;
+  onOpenChemist?: () => void;
   onOpenDevice?: () => void;
 }
 
@@ -1189,11 +1214,13 @@ function Overview({
   screenings,
   userMode = "staff",
   onSwitchMode,
+  onOpenScreening,
   onOpenCases,
   onOpenMatcher,
   onOpenLibrary,
   onOpenPrescriptions,
   onOpenNearby,
+  onOpenChemist,
   onOpenDevice,
 }: OverviewProps) {
   const { t } = useLanguage();
@@ -1210,26 +1237,62 @@ function Overview({
            ═══════════════════════════════════════════════════════════════════ */
         <section className="patient-portal-hero" aria-labelledby="patient-title" style={{ padding: "8px 0 24px" }}>
           {/* Main Welcome & Header */}
-          <div style={{ marginBottom: "24px" }}>
+          <div style={{ marginBottom: "20px" }}>
             <span style={{ fontSize: "12px", fontWeight: "700", color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
               ✨ {t("patient.heroTitle")}
             </span>
-            <h1 id="patient-title" style={{ fontSize: "28px", fontWeight: "800", margin: "6px 0 10px", color: "var(--foreground)" }}>
-              {t("patient.heroTitle")}
-            </h1>
-            <p style={{ fontSize: "15px", color: "var(--muted)", margin: 0, maxWidth: "700px", lineHeight: "1.5" }}>
+            <DynamicGreeting />
+            <p style={{ fontSize: "15px", color: "var(--muted)", margin: "4px 0 0", maxWidth: "700px", lineHeight: "1.5" }}>
               {t("patient.heroSubtitle")}
             </p>
           </div>
 
+          {/* Community Health Alert & Local Offline Notice */}
+          <div
+            style={{
+              background: "rgba(16, 185, 129, 0.08)",
+              border: "1px solid rgba(16, 185, 129, 0.25)",
+              borderRadius: "12px",
+              padding: "12px 18px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: "12px",
+              marginBottom: "24px",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ fontSize: "20px" }}>📢</span>
+              <div>
+                <strong style={{ fontSize: "14px", color: "var(--foreground)", display: "block" }}>
+                  Symptoms are rising in North Ridge.
+                </strong>
+                <span style={{ fontSize: "12.5px", color: "var(--muted)" }}>
+                  {screenings.length || 14} Screenings today · Offline capture is active.
+                </span>
+              </div>
+            </div>
+            {onOpenScreening && (
+              <button
+                type="button"
+                className="primary-button"
+                onClick={onOpenScreening}
+                style={{ fontSize: "13px", padding: "6px 14px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+              >
+                <span>+</span> New screening
+              </button>
+            )}
+          </div>
+
           {/* 3 Large Action Cards for Citizens */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px", marginBottom: "20px" }}>
-            {/* Card 1: Consult Doctor */}
+            {/* Card 1: Consult Doctor & New Screening */}
             <div
               role="button"
               tabIndex={0}
-              onClick={onOpenCases}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onOpenCases(); }}
+              onClick={onOpenScreening || onOpenCases}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") (onOpenScreening || onOpenCases)(); }}
               style={{
                 background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
                 color: "#ffffff",
@@ -1251,7 +1314,7 @@ function Overview({
                 {t("patient.callDoctorDesc")}
               </p>
               <div style={{ marginTop: "auto", paddingTop: "8px", fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
-                <span>{t("overview.liveQueue")}</span> <span>→</span>
+                <span>{t("action.newScreening") || "New screening"}</span> <span>→</span>
               </div>
             </div>
 
@@ -1286,12 +1349,12 @@ function Overview({
               </div>
             </div>
 
-            {/* Card 3: Generic Medicines & Nearby Care */}
+            {/* Card 3: Generic Medicines & Jan Aushadhi Dispensary */}
             <div
               role="button"
               tabIndex={0}
-              onClick={onOpenNearby}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onOpenNearby(); }}
+              onClick={onOpenChemist || onOpenNearby}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") (onOpenChemist || onOpenNearby)(); }}
               style={{
                 background: "var(--surface)",
                 border: "2px solid #3b82f6",
@@ -1313,7 +1376,7 @@ function Overview({
                 {t("patient.findMedsDesc")}
               </p>
               <div style={{ marginTop: "auto", paddingTop: "8px", fontWeight: 700, fontSize: "14px", color: "#2563eb", display: "flex", alignItems: "center", gap: "6px" }}>
-                <span>{t("nav.nearby")}</span> <span>→</span>
+                <span>{t("nav.chemist")}</span> <span>→</span>
               </div>
             </div>
           </div>
