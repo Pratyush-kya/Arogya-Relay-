@@ -18,7 +18,7 @@ export type StorageBucket = "screenings" | "prescriptions" | "doctor-credentials
 export type Profile = {
   id: string;
   email?: string | null;
-  role: "admin" | "doctor" | "health_worker" | "reviewer" | "patient" | "caregiver";
+  role: "admin" | "doctor" | "health_worker" | "reviewer" | "patient" | "caregiver" | "chemist";
   display_name: string | null;
   pseudo_id: string;
   facility_name?: string | null;

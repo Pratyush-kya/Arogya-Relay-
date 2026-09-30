@@ -16,11 +16,11 @@ export interface AuthScreenProps {
 
 export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSuccess }: AuthScreenProps) {
   const supabase = useMemo(() => createClient(), []);
-  const [tab, setTab] = useState<"signin" | "doctor_signup" | "asha_signup" | "admin_console" | "profile">(
+  const [tab, setTab] = useState<"signin" | "signup" | "admin_console" | "profile">(
     initialMode === "admin"
       ? "admin_console"
       : initialMode === "signup"
-      ? "doctor_signup"
+      ? "signup"
       : initialMode === "profile"
       ? "profile"
       : "signin"
@@ -37,6 +37,7 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [phone, setPhone] = useState("");
+  const [signupRole, setSignupRole] = useState<"patient" | "doctor" | "health_worker" | "chemist">("patient");
 
   // Doctor Verification Form State
   const [docNmcNumber, setDocNmcNumber] = useState("");
@@ -46,8 +47,9 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
   const [docProofFile, setDocProofFile] = useState<File | null>(null);
   const [uploadedProofUrl, setUploadedProofUrl] = useState<string>("");
 
-  // ASHA form state
+  // ASHA & Chemist form states
   const [ashaUnit, setAshaUnit] = useState("Mawlynnong Community Unit");
+  const [chemistStoreName, setChemistStoreName] = useState("PMBJP Jan Aushadhi Kendra");
 
   // Admin doctor list
   const [doctorsList, setDoctorsList] = useState<Profile[]>([]);
@@ -217,6 +219,18 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
         setUser(data.user);
         await loadProfile(data.user);
         setStatus({ tone: "good", text: "✓ Successfully signed in! Welcome back." });
+
+        // If user is a doctor, simultaneously open doctor workstation webpage
+        try {
+          const { data: p } = await supabase.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
+          const userRole = p?.role || (data.user.user_metadata?.role as any);
+          if (userRole === "doctor" && typeof window !== "undefined") {
+            try {
+              window.open("/doctor", "_blank");
+            } catch {}
+          }
+        } catch {}
+
         setTimeout(() => {
           if (onSuccess) onSuccess();
           onBackToDashboard();
@@ -229,13 +243,13 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
     }
   }
 
-  async function handleDoctorSignUp(e: FormEvent) {
+  async function handleUnifiedSignUp(e: FormEvent) {
     e.preventDefault();
     if (!email.trim() || !password.trim() || !displayName.trim()) {
       setStatus({ tone: "error", text: "Please complete name, email, and password." });
       return;
     }
-    if (!docNmcNumber.trim() || !docCouncil.trim() || !docSpecialization.trim() || !docHospital.trim()) {
+    if (signupRole === "doctor" && (!docNmcNumber.trim() || !docCouncil.trim() || !docHospital.trim())) {
       setStatus({
         tone: "error",
         text: "National Medical Commission (NMC) registration number, State Council, and Hospital affiliation are mandatory for physician authorization.",
@@ -248,7 +262,7 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
 
     try {
       let docUrl = uploadedProofUrl;
-      if (docProofFile) {
+      if (signupRole === "doctor" && docProofFile) {
         const uploadRes = await uploadToStorage(
           "doctor-credentials",
           `nmc_${Date.now()}_${docProofFile.name.replace(/\s+/g, "_")}`,
@@ -257,20 +271,34 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
         docUrl = uploadRes.url;
       }
 
+      const assignedRole = signupRole;
+      const initialVerification = assignedRole === "doctor" ? "pending_verification" : "verified";
+      const pseudo = assignedRole === "doctor"
+        ? `DOC-${docNmcNumber.replace(/[^A-Za-z0-9]/g, "").slice(-4) || Math.floor(1000 + Math.random() * 9000)}`
+        : assignedRole === "health_worker"
+        ? `HW-${Math.floor(1000 + Math.random() * 9000)}`
+        : assignedRole === "chemist"
+        ? `CHM-${Math.floor(1000 + Math.random() * 9000)}`
+        : `PAT-${Math.floor(1000 + Math.random() * 9000)}`;
+
+      const formattedName = assignedRole === "doctor" && !displayName.trim().startsWith("Dr.")
+        ? `Dr. ${displayName.trim()}`
+        : displayName.trim();
+
       const { data, error } = await supabase.auth.signUp({
         email: email.trim(),
         password: password.trim(),
         options: {
           data: {
-            display_name: displayName.trim().startsWith("Dr.") ? displayName.trim() : `Dr. ${displayName.trim()}`,
-            role: "doctor",
+            display_name: formattedName,
+            role: assignedRole,
             phone: phone.trim() || null,
-            medical_reg_no: docNmcNumber.trim(),
-            council_name: docCouncil.trim(),
-            specialization: docSpecialization.trim(),
-            facility_name: docHospital.trim(),
-            verification_status: "pending_verification",
-            license_document_url: docUrl,
+            medical_reg_no: assignedRole === "doctor" ? docNmcNumber.trim() : undefined,
+            council_name: assignedRole === "doctor" ? docCouncil.trim() : undefined,
+            specialization: assignedRole === "doctor" ? docSpecialization.trim() : undefined,
+            facility_name: assignedRole === "doctor" ? docHospital.trim() : assignedRole === "chemist" ? chemistStoreName.trim() : ashaUnit.trim() || undefined,
+            verification_status: initialVerification,
+            license_document_url: docUrl || undefined,
           },
         },
       });
@@ -278,78 +306,56 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
       if (error) throw error;
 
       if (data.user) {
-        // Upsert into profiles table with pending_verification
-        await supabase.from("profiles").upsert({
+        const newProf: Profile = {
           id: data.user.id,
           email: data.user.email,
-          role: "doctor",
-          display_name: displayName.trim().startsWith("Dr.") ? displayName.trim() : `Dr. ${displayName.trim()}`,
-          pseudo_id: `DOC-${docNmcNumber.replace(/[^A-Za-z0-9]/g, "").slice(-4)}`,
+          role: assignedRole,
+          display_name: formattedName,
+          pseudo_id: pseudo,
           phone: phone.trim() || null,
-          medical_reg_no: docNmcNumber.trim(),
-          council_name: docCouncil.trim(),
-          specialization: docSpecialization.trim(),
-          facility_name: docHospital.trim(),
-          verification_status: "pending_verification",
-          license_document_url: docUrl,
-        });
+          medical_reg_no: assignedRole === "doctor" ? docNmcNumber.trim() : undefined,
+          council_name: assignedRole === "doctor" ? docCouncil.trim() : undefined,
+          specialization: assignedRole === "doctor" ? docSpecialization.trim() : undefined,
+          facility_name: assignedRole === "doctor" ? docHospital.trim() : assignedRole === "chemist" ? chemistStoreName.trim() : ashaUnit.trim() || undefined,
+          verification_status: initialVerification,
+          license_document_url: docUrl || undefined,
+        };
+
+        await supabase.from("profiles").upsert(newProf).catch(() => null);
+
+        if (assignedRole === "doctor") {
+          const curList = JSON.parse(localStorage.getItem("arogya.doctors.list") || "[]");
+          curList.unshift(newProf);
+          localStorage.setItem("arogya.doctors.list", JSON.stringify(curList));
+        }
 
         setUser(data.user);
-        setStatus({
-          tone: "good",
-          text: "✓ Doctor registration submitted! Status: PENDING NMC VERIFICATION by System Administrator.",
-        });
+        setProfile(newProf);
+
+        if (assignedRole === "doctor") {
+          setStatus({
+            tone: "good",
+            text: "✓ Doctor account registered! Status: PENDING NMC VERIFICATION. Launching Doctor Station...",
+          });
+          if (typeof window !== "undefined") {
+            try {
+              window.open("/doctor", "_blank");
+            } catch {}
+          }
+        } else {
+          setStatus({
+            tone: "good",
+            text: `✓ Account created successfully as ${assignedRole === "patient" ? "Citizen / Patient" : assignedRole}! Welcome to Arogya Relay.`,
+          });
+        }
+
+        setTimeout(() => {
+          if (onSuccess) onSuccess();
+          onBackToDashboard();
+        }, 1000);
       }
     } catch (err: any) {
-      setStatus({ tone: "error", text: err.message || "Failed to register doctor. Check network connection." });
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function handleAshaSignUp(e: FormEvent) {
-    e.preventDefault();
-    if (!email.trim() || !password.trim() || !displayName.trim()) {
-      setStatus({ tone: "error", text: "Please complete name, email, and password." });
-      return;
-    }
-
-    setBusy(true);
-    setStatus({ tone: "idle", text: "" });
-
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email: email.trim(),
-        password: password.trim(),
-        options: {
-          data: {
-            display_name: displayName.trim(),
-            role: "health_worker",
-            facility_name: ashaUnit,
-            phone: phone.trim() || null,
-          },
-        },
-      });
-
-      if (error) throw error;
-
-      if (data.user) {
-        await supabase.from("profiles").upsert({
-          id: data.user.id,
-          email: data.user.email,
-          role: "health_worker",
-          display_name: displayName.trim(),
-          pseudo_id: `HW-${Math.floor(1000 + Math.random() * 9000)}`,
-          facility_name: ashaUnit,
-          phone: phone.trim() || null,
-          verification_status: "verified",
-        });
-
-        setUser(data.user);
-        setStatus({ tone: "good", text: "✓ Frontline Health Worker / ASHA registered and authenticated!" });
-      }
-    } catch (err: any) {
-      setStatus({ tone: "error", text: err.message || "Failed to register health worker." });
+      setStatus({ tone: "error", text: err.message || "Failed to create account. Check connection." });
     } finally {
       setBusy(false);
     }
@@ -455,26 +461,14 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
 
             <button
               type="button"
-              className={`auth-tab-btn ${tab === "doctor_signup" ? "active" : ""}`}
+              className={`auth-tab-btn ${tab === "signup" ? "active" : ""}`}
               onClick={() => {
-                setTab("doctor_signup");
+                setTab("signup");
                 setStatus({ tone: "idle", text: "" });
               }}
             >
-              <span>🩺</span>
-              <span>Doctor Registration (NMC)</span>
-            </button>
-
-            <button
-              type="button"
-              className={`auth-tab-btn ${tab === "asha_signup" ? "active" : ""}`}
-              onClick={() => {
-                setTab("asha_signup");
-                setStatus({ tone: "idle", text: "" });
-              }}
-            >
-              <span>👩‍⚕️</span>
-              <span>ASHA / Health Worker</span>
+              <span>✨</span>
+              <span>Sign Up</span>
             </button>
 
             {(profile?.role === "admin" || isAdminEmail(user?.email)) && (
@@ -604,220 +598,96 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
             </div>
           )}
 
-          {/* TAB 2: DOCTOR REGISTRATION WITH NMC VERIFICATION */}
-          {tab === "doctor_signup" && (
+          {/* TAB 2: UNIFIED ROLE-BASED SIGN UP */}
+          {tab === "signup" && (
             <div style={{ padding: "28px" }}>
-              <div
-                style={{
-                  background: "#eff6ff",
-                  border: "1px solid #bfdbfe",
-                  borderRadius: "12px",
-                  padding: "14px",
-                  marginBottom: "20px",
-                }}
-              >
-                <strong style={{ fontSize: "13px", color: "#1e40af", display: "flex", alignItems: "center", gap: "6px" }}>
-                  <span>🩺</span> National Medical Commission (NMC) Verification Gate
-                </strong>
-                <p style={{ margin: "4px 0 0", fontSize: "11px", color: "#3b82f6", lineHeight: 1.4 }}>
-                  To prevent clinical malpractice and unauthorized prescription generation, all doctor accounts undergo mandatory verification against their State Medical Council registration before prescriptions are unlocked.
-                </p>
+              {/* Persona Selector */}
+              <div style={{ marginBottom: "20px" }}>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "8px", color: "var(--foreground, #0f172a)" }}>
+                  Choose Your Account Type
+                </label>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "8px" }}>
+                  {[
+                    { id: "patient", icon: "👤", label: "Citizen / Patient", desc: "Access care & remedies" },
+                    { id: "doctor", icon: "🩺", label: "Medical Doctor", desc: "NMC case reviews & Rx" },
+                    { id: "health_worker", icon: "👩‍⚕️", label: "Health Worker", desc: "ASHA field screenings" },
+                    { id: "chemist", icon: "🏪", label: "Jan Aushadhi Chemist", desc: "Prescription dispensing" },
+                  ].map((r) => {
+                    const isSelected = signupRole === r.id;
+                    return (
+                      <button
+                        key={r.id}
+                        type="button"
+                        onClick={() => setSignupRole(r.id as any)}
+                        style={{
+                          padding: "10px",
+                          borderRadius: "10px",
+                          border: isSelected ? "2px solid #0d9488" : "1px solid #cbd5e1",
+                          background: isSelected ? "rgba(13, 148, 136, 0.08)" : "#ffffff",
+                          textAlign: "left",
+                          cursor: "pointer",
+                          transition: "all 0.15s ease",
+                        }}
+                      >
+                        <span style={{ fontSize: "16px" }}>{r.icon}</span>
+                        <div style={{ fontSize: "11.5px", fontWeight: 700, color: "#0f172a", marginTop: "2px" }}>{r.label}</div>
+                        <small style={{ fontSize: "9.5px", color: "#64748b" }}>{r.desc}</small>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
-              <form onSubmit={handleDoctorSignUp} style={{ display: "grid", gap: "14px" }}>
+              {signupRole === "doctor" && (
+                <div
+                  style={{
+                    background: "#eff6ff",
+                    border: "1px solid #bfdbfe",
+                    borderRadius: "12px",
+                    padding: "12px 14px",
+                    marginBottom: "16px",
+                  }}
+                >
+                  <strong style={{ fontSize: "12px", color: "#1e40af", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span>🩺</span> National Medical Commission (NMC) Verification Required
+                  </strong>
+                  <p style={{ margin: "2px 0 0", fontSize: "11px", color: "#3b82f6", lineHeight: 1.4 }}>
+                    Doctor accounts require valid council registration details. Doctor Workstation will simultaneously open for your consultation queue.
+                  </p>
+                </div>
+              )}
+
+              {signupRole === "patient" && (
+                <div
+                  style={{
+                    background: "#f0fdf4",
+                    border: "1px solid #bbf7d0",
+                    borderRadius: "12px",
+                    padding: "10px 14px",
+                    marginBottom: "16px",
+                  }}
+                >
+                  <p style={{ margin: 0, fontSize: "11.5px", color: "#166534", lineHeight: 1.4 }}>
+                    👤 <strong>Citizen Portal Access:</strong> Consult licensed physicians, browse Jan Aushadhi OTC remedies, and manage your encrypted health pass.
+                  </p>
+                </div>
+              )}
+
+              <form onSubmit={handleUnifiedSignUp} style={{ display: "grid", gap: "14px" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
                   <div>
                     <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
-                      Physician Full Name (with title) *
+                      {signupRole === "doctor" ? "Physician Full Name (with title) *" : "Full Name *"}
                     </label>
                     <input
                       type="text"
                       required
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      placeholder="e.g. Dr. Ramesh Chandra Das, MBBS"
+                      placeholder={signupRole === "doctor" ? "e.g. Dr. Ramesh Chandra Das, MBBS" : "e.g. Priya Sharma"}
                       style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "12.5px" }}
                     />
                   </div>
-                  <div>
-                    <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
-                      Official Email *
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="e.g. dr.ramesh@hospital.org"
-                      style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "12.5px" }}
-                    />
-                  </div>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-                  <div>
-                    <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
-                      NMC / State Council Reg No. *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={docNmcNumber}
-                      onChange={(e) => setDocNmcNumber(e.target.value)}
-                      placeholder="e.g. OMC-2022-77123 or MCI-10924"
-                      style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "12.5px" }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
-                      State Medical Council *
-                    </label>
-                    <select
-                      value={docCouncil}
-                      onChange={(e) => setDocCouncil(e.target.value)}
-                      style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "12.5px", background: "#fff" }}
-                    >
-                      <option value="National Medical Commission">National Medical Commission (NMC)</option>
-                      <option value="Odisha Medical Council">Odisha Medical Council</option>
-                      <option value="Delhi Medical Council">Delhi Medical Council</option>
-                      <option value="Maharashtra Medical Council">Maharashtra Medical Council</option>
-                      <option value="West Bengal Medical Council">West Bengal Medical Council</option>
-                      <option value="Tamil Nadu Medical Council">Tamil Nadu Medical Council</option>
-                      <option value="Karnataka Medical Council">Karnataka Medical Council</option>
-                      <option value="Assam Medical Council">Assam Medical Council</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-                  <div>
-                    <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
-                      Clinical Specialization *
-                    </label>
-                    <select
-                      value={docSpecialization}
-                      onChange={(e) => setDocSpecialization(e.target.value)}
-                      style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "12.5px", background: "#fff" }}
-                    >
-                      <option value="General Medicine / Physician">General Medicine / Physician</option>
-                      <option value="Pediatrics & Child Health">Pediatrics & Child Health</option>
-                      <option value="Obstetrics & Gynecology">Obstetrics & Gynecology</option>
-                      <option value="Dermatology & Venereology">Dermatology & Venereology</option>
-                      <option value="Cardiology">Cardiology</option>
-                      <option value="Pulmonology / Chest Medicine">Pulmonology / Chest Medicine</option>
-                      <option value="Orthopedic Surgery">Orthopedic Surgery</option>
-                      <option value="Community Medicine / Public Health">Community Medicine / Public Health</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
-                      Primary Hospital / PHC Affiliation *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={docHospital}
-                      onChange={(e) => setDocHospital(e.target.value)}
-                      placeholder="e.g. SCB Medical College & Hospital / CHC"
-                      style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "12.5px" }}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
-                    NMC Certificate / Medical Registration ID Document Upload (PDF / Image)
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*,.pdf"
-                    onChange={(e) => {
-                      if (e.target.files?.[0]) setDocProofFile(e.target.files[0]);
-                    }}
-                    style={{
-                      width: "100%",
-                      padding: "8px 12px",
-                      borderRadius: "8px",
-                      border: "1px dashed #cbd5e1",
-                      fontSize: "12px",
-                      background: "#f8fafc",
-                    }}
-                  />
-                  {docProofFile && (
-                    <small style={{ fontSize: "10px", color: "#166534", marginTop: "3px", display: "block" }}>
-                      ✓ File selected: {docProofFile.name} ({(docProofFile.size / 1024).toFixed(1)} KB)
-                    </small>
-                  )}
-                </div>
-
-                <div>
-                  <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
-                    Set Password *
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Minimum 8 characters"
-                    style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "12.5px" }}
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="primary-button"
-                  disabled={busy}
-                  style={{
-                    padding: "12px",
-                    fontSize: "13px",
-                    fontWeight: 700,
-                    justifyContent: "center",
-                    marginTop: "8px",
-                  }}
-                >
-                  {busy ? "Submitting Registration..." : "Submit Doctor Credentials for Administrator Verification"}
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* TAB 3: ASHA / HEALTH WORKER SIGN UP */}
-          {tab === "asha_signup" && (
-            <div style={{ padding: "28px" }}>
-              <div
-                style={{
-                  background: "#f0fdf4",
-                  border: "1px solid #bbf7d0",
-                  borderRadius: "12px",
-                  padding: "14px",
-                  marginBottom: "20px",
-                }}
-              >
-                <strong style={{ fontSize: "13px", color: "#166534", display: "flex", alignItems: "center", gap: "6px" }}>
-                  <span>👩‍⚕️</span> Frontline Health Worker / ASHA Registration
-                </strong>
-                <p style={{ margin: "4px 0 0", fontSize: "11px", color: "#15803d", lineHeight: 1.4 }}>
-                  Enables frontline village health workers, ANMs, and ASHA facilitators to capture offline clinical screenings with automatic practitioner identity attestation.
-                </p>
-              </div>
-
-              <form onSubmit={handleAshaSignUp} style={{ display: "grid", gap: "14px" }}>
-                <div>
-                  <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
-                    Worker Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="e.g. Sunita Devi (ASHA)"
-                    style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "12.5px" }}
-                  />
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
                   <div>
                     <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
                       Email Address *
@@ -827,13 +697,143 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="e.g. sunita.asha@block-health.org"
+                      placeholder="e.g. user@health.gov.in"
+                      style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "12.5px" }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
+                      Password (min. 6 chars) *
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      minLength={6}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
                       style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "12.5px" }}
                     />
                   </div>
                   <div>
                     <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
-                      Assigned Community Unit / Village Block *
+                      Phone / Mobile Number (Optional)
+                    </label>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="e.g. +91 98765 43210"
+                      style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "12.5px" }}
+                    />
+                  </div>
+                </div>
+
+                {/* Doctor-Specific Fields */}
+                {signupRole === "doctor" && (
+                  <div style={{ background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1.5px dashed #0284c7" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                      <div>
+                        <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
+                          NMC / State Council Reg No. *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={docNmcNumber}
+                          onChange={(e) => setDocNmcNumber(e.target.value)}
+                          placeholder="e.g. NMC/2021/88492"
+                          style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "12px" }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
+                          Medical Council Name *
+                        </label>
+                        <select
+                          value={docCouncil}
+                          onChange={(e) => setDocCouncil(e.target.value)}
+                          style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "12px", background: "#fff" }}
+                        >
+                          <option value="National Medical Commission">National Medical Commission (NMC)</option>
+                          <option value="Odisha Medical Council">Odisha Medical Council</option>
+                          <option value="Delhi Medical Council">Delhi Medical Council</option>
+                          <option value="Maharashtra Medical Council">Maharashtra Medical Council</option>
+                          <option value="West Bengal Medical Council">West Bengal Medical Council</option>
+                          <option value="Tamil Nadu Medical Council">Tamil Nadu Medical Council</option>
+                          <option value="Karnataka Medical Council">Karnataka Medical Council</option>
+                          <option value="Assam Medical Council">Assam Medical Council</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginTop: "10px" }}>
+                      <div>
+                        <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
+                          Specialization
+                        </label>
+                        <input
+                          type="text"
+                          value={docSpecialization}
+                          onChange={(e) => setDocSpecialization(e.target.value)}
+                          placeholder="e.g. General Medicine, Pediatrics"
+                          style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "12px" }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
+                          Hospital / PHC / Clinic Affiliation *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={docHospital}
+                          onChange={(e) => setDocHospital(e.target.value)}
+                          placeholder="e.g. Civil Hospital Shillong"
+                          style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "12px" }}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: "10px" }}>
+                      <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
+                        Upload Registration Certificate / License ID (PDF/JPG)
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*,application/pdf"
+                        onChange={(e) => setDocProofFile(e.target.files?.[0] || null)}
+                        style={{ fontSize: "11.5px" }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Chemist-Specific Field */}
+                {signupRole === "chemist" && (
+                  <div>
+                    <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
+                      Jan Aushadhi / Pharmacy Store Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={chemistStoreName}
+                      onChange={(e) => setChemistStoreName(e.target.value)}
+                      placeholder="e.g. Pradhan Mantri Jan Aushadhi Kendra #108"
+                      style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "12.5px" }}
+                    />
+                  </div>
+                )}
+
+                {/* ASHA-Specific Field */}
+                {signupRole === "health_worker" && (
+                  <div>
+                    <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
+                      ASHA Sub-Centre / Primary Health Centre (PHC) *
                     </label>
                     <input
                       type="text"
@@ -844,21 +844,7 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
                       style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "12.5px" }}
                     />
                   </div>
-                </div>
-
-                <div>
-                  <label style={{ display: "block", fontSize: "12px", fontWeight: 700, marginBottom: "4px" }}>
-                    Set Password *
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Minimum 8 characters"
-                    style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "12.5px" }}
-                  />
-                </div>
+                )}
 
                 <button
                   type="submit"
@@ -872,7 +858,15 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
                     marginTop: "8px",
                   }}
                 >
-                  {busy ? "Registering..." : "Create ASHA / Health Worker Account"}
+                  {busy
+                    ? "Creating Account…"
+                    : signupRole === "doctor"
+                    ? "Sign Up as Medical Doctor →"
+                    : signupRole === "health_worker"
+                    ? "Sign Up as Health Worker / ASHA →"
+                    : signupRole === "chemist"
+                    ? "Sign Up as Chemist / Pharmacist →"
+                    : "Sign Up as Citizen / Patient →"}
                 </button>
               </form>
             </div>

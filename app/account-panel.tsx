@@ -7,9 +7,10 @@ import { createClient, type Profile, ADMIN_EMAIL, isAdminEmail, uploadToStorage 
 type StatusTone = "idle" | "good" | "error" | "warn";
 
 const ROLES = [
-  { id: "health_worker", label: "Health Worker / ASHA", icon: "🩺", desc: "Frontline screening & referrals" },
-  { id: "doctor", label: "Medical Doctor / Clinician", icon: "👨‍⚕️", desc: "Requires NMC council verification" },
-  { id: "reviewer", label: "Clinical Reviewer", icon: "📋", desc: "Evidence & guideline audit" },
+  { id: "patient", label: "Citizen / Patient", icon: "👤", desc: "Access care, consult doctors & Jan Aushadhi remedies" },
+  { id: "doctor", label: "Medical Doctor", icon: "🩺", desc: "Review cases, digital Rx & tele-consultation" },
+  { id: "health_worker", label: "Health Worker / ASHA", icon: "👩‍⚕️", desc: "Frontline screening, field triage & referrals" },
+  { id: "chemist", label: "Chemist / Pharmacist", icon: "🏪", desc: "Jan Aushadhi store & digital prescription dispensing" },
 ] as const;
 
 export function AccountPanel({ open, onToggle }: { open?: boolean; onToggle?: () => void }) {
@@ -105,7 +106,7 @@ export function TopRightUserNav({
   const [status, setStatus] = useState<{ tone: StatusTone; text: string }>({ tone: "idle", text: "" });
   const [busy, setBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<"health_worker" | "doctor" | "admin" | "reviewer">("doctor");
+  const [selectedRole, setSelectedRole] = useState<"patient" | "doctor" | "health_worker" | "chemist">("patient");
   const popoverRef = useRef<HTMLDivElement>(null);
 
   // Doctor Verification Form State
@@ -304,6 +305,17 @@ export function TopRightUserNav({
       }
       setStatus({ tone: "good", text: "Signed in successfully." });
       setAuthModalOpen(false);
+
+      // Check role and launch doctor workstation webpage simultaneously if logging in as doctor
+      try {
+        const { data: prof } = await supabase.from("profiles").select("role").eq("id", res.data.user.id).maybeSingle<Profile>();
+        const role = prof?.role || (res.data.user.user_metadata?.role as any) || "patient";
+        if (role === "doctor" && typeof window !== "undefined") {
+          try {
+            window.open("/doctor", "_blank");
+          } catch {}
+        }
+      } catch {}
     } catch (err: any) {
       setStatus({ tone: "error", text: err.message || "Sign in failed." });
     } finally {
@@ -407,13 +419,21 @@ export function TopRightUserNav({
       setStatus({
         tone: selectedRole === "doctor" ? "warn" : "good",
         text: selectedRole === "doctor"
-          ? "Doctor account created! Verification is pending Admin NMC review."
-          : "Account created successfully.",
+          ? "Doctor account created! Opening Doctor Station..."
+          : "Account created successfully! Welcome to Arogya Relay.",
       });
       setAuthModalOpen(false);
+
+      if (assignedRole === "doctor" && typeof window !== "undefined") {
+        try {
+          window.open("/doctor", "_blank");
+        } catch {
+          // popup blocked fallback
+        }
+      }
     } catch (err: any) {
       setBusy(false);
-      setStatus({ tone: "error", text: err.message || "Registration failed." });
+      setStatus({ tone: "error", text: err.message || "Account creation failed." });
     }
   }
 
@@ -486,9 +506,9 @@ export function TopRightUserNav({
         </IconTooltip>
       ) : (
         <IconTooltip
-          title="Sign In or Register"
-          desc="Access authenticated clinical tools, NMC doctor verification, and system admin portal."
-          howToUse="Click to open the dedicated full-screen authentication screen."
+          title="Sign In or Sign Up"
+          desc="Access authenticated clinical tools, doctor workstation, and citizen health records."
+          howToUse="Click to open the account authentication modal."
           position="bottom"
         >
           <button
@@ -513,7 +533,7 @@ export function TopRightUserNav({
               cursor: "pointer",
             }}
           >
-            <span>👤</span> Sign In / Register
+            <span>👤</span> Sign In / Sign Up
           </button>
         </IconTooltip>
       )}
@@ -856,7 +876,7 @@ export function TopRightUserNav({
                 className={`auth-tab ${authMode === "signup" ? "active" : ""}`}
                 onClick={() => { setAuthMode("signup"); setStatus({ tone: "idle", text: "" }); }}
               >
-                Register Practitioner
+                Sign Up
               </button>
             </div>
 
@@ -907,13 +927,13 @@ export function TopRightUserNav({
             ) : (
               <form className="auth-body-form" onSubmit={handleSignUp} style={{ padding: "14px 20px", maxHeight: "420px", overflowY: "auto" }}>
                 <div className="auth-field">
-                  <label htmlFor="auth-reg-name">Full Name & Title</label>
-                  <input id="auth-reg-name" type="text" name="displayName" placeholder="Dr. Rajesh Patel / Sunita Devi (ASHA)" required />
+                  <label htmlFor="auth-reg-name">Full Name</label>
+                  <input id="auth-reg-name" type="text" name="displayName" placeholder="e.g. Priya Sharma or Dr. Ananya Roy" required />
                 </div>
 
                 <div className="auth-field">
-                  <label htmlFor="auth-reg-email">Official Email</label>
-                  <input id="auth-reg-email" type="email" name="email" placeholder="practitioner@health.gov.in" required />
+                  <label htmlFor="auth-reg-email">Email Address</label>
+                  <input id="auth-reg-email" type="email" name="email" placeholder="user@domain.org" required />
                 </div>
 
                 <div className="auth-field">
@@ -923,7 +943,7 @@ export function TopRightUserNav({
 
                 {/* Role Selection */}
                 <div className="auth-field">
-                  <label>Select Clinical Role</label>
+                  <label>I am signing up as</label>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginTop: "4px" }}>
                     {ROLES.map((r) => (
                       <button
@@ -946,6 +966,57 @@ export function TopRightUserNav({
                     ))}
                   </div>
                 </div>
+
+                {/* Patient Role Info */}
+                {selectedRole === "patient" && (
+                  <div style={{ background: "#f0fdf4", padding: "10px 12px", borderRadius: "10px", border: "1px solid #bbf7d0", margin: "8px 0" }}>
+                    <p style={{ margin: 0, fontSize: "11.5px", color: "#166534", lineHeight: 1.4 }}>
+                      👤 <strong>Citizen Account:</strong> Access your personal health pass, tele-consult doctors, browse Jan Aushadhi generic remedies, and store verified digital prescriptions.
+                    </p>
+                  </div>
+                )}
+
+                {/* Chemist Role Fields */}
+                {selectedRole === "chemist" && (
+                  <div style={{ background: "#eff6ff", padding: "12px", borderRadius: "10px", border: "1.5px dashed #3b82f6", margin: "8px 0" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
+                      <span style={{ fontSize: "15px" }}>🏪</span>
+                      <strong style={{ fontSize: "11.5px", color: "#1d4ed8" }}>Jan Aushadhi / Pharmacy Store Information</strong>
+                    </div>
+                    <div style={{ display: "grid", gap: "8px" }}>
+                      <div className="auth-field">
+                        <label>Pharmacy / Jan Aushadhi Store Name *</label>
+                        <input
+                          type="text"
+                          name="facilityName"
+                          placeholder="e.g. PMBJP Jan Aushadhi Kendra #104, Shillong"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Health Worker Role Fields */}
+                {selectedRole === "health_worker" && (
+                  <div style={{ background: "#fdf4ff", padding: "12px", borderRadius: "10px", border: "1.5px dashed #c026d3", margin: "8px 0" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
+                      <span style={{ fontSize: "15px" }}>👩‍⚕️</span>
+                      <strong style={{ fontSize: "11.5px", color: "#86198f" }}>ASHA / Field Center Details</strong>
+                    </div>
+                    <div style={{ display: "grid", gap: "8px" }}>
+                      <div className="auth-field">
+                        <label>Sub-Centre / Primary Health Centre (PHC) *</label>
+                        <input
+                          type="text"
+                          name="facilityName"
+                          placeholder="e.g. Pynursla Sub-Centre Unit 2"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Doctor Verification Required Fields */}
                 {selectedRole === "doctor" && (
@@ -1015,7 +1086,15 @@ export function TopRightUserNav({
 
                 <div className="auth-submit-row" style={{ marginTop: "12px" }}>
                   <button type="submit" className="auth-primary-submit" disabled={busy}>
-                    {busy ? "Registering..." : selectedRole === "doctor" ? "Submit Doctor Registration" : "Complete Registration"}
+                    {busy
+                      ? "Creating Account…"
+                      : selectedRole === "doctor"
+                      ? "Sign Up as Medical Doctor →"
+                      : selectedRole === "health_worker"
+                      ? "Sign Up as Health Worker / ASHA →"
+                      : selectedRole === "chemist"
+                      ? "Sign Up as Chemist / Pharmacist →"
+                      : "Sign Up as Citizen / Patient →"}
                   </button>
                 </div>
               </form>

@@ -93,12 +93,20 @@ function WorkspaceLoading() {
   );
 }
 
-export default function Home() {
+export default function Home({
+  initialRole,
+}: {
+  initialRole?: "patient" | "doctor" | "health_worker" | "chemist" | "admin";
+} = {}) {
   const { t, effectiveLang } = useLanguage();
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
-  const [viewMode, setViewMode] = useState<"dashboard" | "auth" | "screening" | "supabase" | "chemist" | "admin">("dashboard");
+  const [activeTab, setActiveTab] = useState<Tab>(initialRole === "doctor" ? "cases" : "overview");
+  const [viewMode, setViewMode] = useState<"dashboard" | "auth" | "screening" | "supabase" | "chemist" | "admin">(
+    initialRole === "admin" ? "admin" : initialRole === "chemist" ? "chemist" : "dashboard"
+  );
   const [authScreenMode, setAuthScreenMode] = useState<"signin" | "signup" | "admin" | "profile">("signin");
-  const [activeRole, setActiveRole] = useState<"patient" | "doctor" | "health_worker" | "chemist" | "admin">("patient");
+  const [activeRole, setActiveRole] = useState<"patient" | "doctor" | "health_worker" | "chemist" | "admin">(
+    initialRole || "patient"
+  );
   const [screeningOpen, setScreeningOpen] = useState(false);
   const [syncState, setSyncState] = useState<SyncState>("ready");
   const [noticeKey, setNoticeKey] = useState("shell.reportsStored");
@@ -115,6 +123,17 @@ export default function Home() {
       if (pathname === "/admin" || hash === "#admin" || hash === "#console" || hash === "#admin-console") {
         setActiveRole("admin");
         setViewMode("admin");
+      } else if (pathname === "/doctor" || hash === "#doctor" || hash === "#clinic" || hash === "#cases") {
+        setActiveRole("doctor");
+        setActiveTab("cases");
+        setViewMode("dashboard");
+      } else if (pathname === "/patient" || hash === "#patient" || hash === "#citizen") {
+        setActiveRole("patient");
+        setActiveTab("overview");
+        setViewMode("dashboard");
+      } else if (pathname === "/chemist" || hash === "#chemist" || hash === "#pharmacy" || hash === "#dispensary") {
+        setActiveRole("chemist");
+        setViewMode("chemist");
       } else if (hash === "#auth" || hash === "#signin") {
         setAuthScreenMode("signin");
         setViewMode("auth");
@@ -128,8 +147,6 @@ export default function Home() {
         setViewMode("screening");
       } else if (hash === "#supabase" || hash === "#database" || hash === "#cloud") {
         setViewMode("supabase");
-      } else if (hash === "#chemist" || hash === "#pharmacy" || hash === "#dispensary") {
-        setViewMode("chemist");
       } else if (hash === "#library" || hash === "#gyan" || hash === "#arogya-gyan") {
         setViewMode("dashboard");
         setActiveTab("library");
@@ -181,13 +198,28 @@ export default function Home() {
         setCurrentUser(data.user);
         if (data.user) {
           supabase.from("profiles").select("*").eq("id", data.user.id).maybeSingle<Profile>().then(({ data: p }) => {
-            if (alive && p) {
-              setCurrentProfile(p);
-              if (p.role === "doctor" || p.role === "reviewer") setActiveRole("doctor");
-              else if (p.role === "admin") setActiveRole("admin");
-              else if (p.role === "health_worker") setActiveRole("health_worker");
-              else if (p.role === "chemist") setActiveRole("chemist");
-              else setActiveRole("patient");
+            if (alive) {
+              if (p) setCurrentProfile(p);
+              const r = p?.role || (data.user?.user_metadata?.role as any) || "patient";
+              if (r === "doctor" || r === "reviewer") {
+                setActiveRole("doctor");
+                setActiveTab("cases");
+                setViewMode("dashboard");
+              } else if (r === "admin") {
+                setActiveRole("admin");
+                setViewMode("admin");
+              } else if (r === "health_worker") {
+                setActiveRole("health_worker");
+                setActiveTab("overview");
+                setViewMode("dashboard");
+              } else if (r === "chemist") {
+                setActiveRole("chemist");
+                setViewMode("chemist");
+              } else {
+                setActiveRole("patient");
+                setActiveTab("overview");
+                setViewMode("dashboard");
+              }
             }
           });
         }
@@ -198,13 +230,28 @@ export default function Home() {
         setCurrentUser(session?.user ?? null);
         if (session?.user) {
           supabase.from("profiles").select("*").eq("id", session.user.id).maybeSingle<Profile>().then(({ data: p }) => {
-            if (alive && p) {
-              setCurrentProfile(p);
-              if (p.role === "doctor" || p.role === "reviewer") setActiveRole("doctor");
-              else if (p.role === "admin") setActiveRole("admin");
-              else if (p.role === "health_worker") setActiveRole("health_worker");
-              else if (p.role === "chemist") setActiveRole("chemist");
-              else setActiveRole("patient");
+            if (alive) {
+              if (p) setCurrentProfile(p);
+              const r = p?.role || (session.user?.user_metadata?.role as any) || "patient";
+              if (r === "doctor" || r === "reviewer") {
+                setActiveRole("doctor");
+                setActiveTab("cases");
+                setViewMode("dashboard");
+              } else if (r === "admin") {
+                setActiveRole("admin");
+                setViewMode("admin");
+              } else if (r === "health_worker") {
+                setActiveRole("health_worker");
+                setActiveTab("overview");
+                setViewMode("dashboard");
+              } else if (r === "chemist") {
+                setActiveRole("chemist");
+                setViewMode("chemist");
+              } else {
+                setActiveRole("patient");
+                setActiveTab("overview");
+                setViewMode("dashboard");
+              }
             }
           });
         } else {
@@ -764,6 +811,34 @@ export default function Home() {
                 <span>👨‍⚕️</span>
                 <span>DOCTOR WORKSTATION</span>
               </div>
+
+              <button
+                type="button"
+                className="nav-item"
+                style={{
+                  background: "rgba(2, 132, 199, 0.08)",
+                  border: "1px dashed #0284c7",
+                  color: "#0369a1",
+                  fontWeight: 700,
+                  fontSize: "11px",
+                  borderRadius: "8px",
+                  margin: "4px 8px 8px",
+                  padding: "6px 10px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  cursor: "pointer",
+                }}
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    window.open("/doctor", "_blank");
+                  }
+                }}
+                title="Open Doctor Workstation in a new browser tab/webpage"
+              >
+                <span>↗ Open in Dedicated Webpage</span>
+                <span style={{ fontSize: "10px", opacity: 0.7 }}>Tab</span>
+              </button>
 
               <button
                 type="button"
