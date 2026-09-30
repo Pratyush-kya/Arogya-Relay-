@@ -124,6 +124,9 @@ export default function Home() {
         setViewMode("supabase");
       } else if (hash === "#chemist" || hash === "#pharmacy" || hash === "#dispensary") {
         setViewMode("chemist");
+      } else if (hash === "#library" || hash === "#gyan" || hash === "#arogya-gyan") {
+        setViewMode("dashboard");
+        setActiveTab("library");
       }
     }
     checkHash();
@@ -801,7 +804,10 @@ export default function Home() {
             onOpenScreening={openScreening}
             onOpenCases={openCases}
             onOpenMatcher={() => setActiveTab("matcher")}
-            onOpenLibrary={() => setActiveTab("library")}
+            onOpenLibrary={() => {
+              setViewMode("dashboard");
+              setActiveTab("library");
+            }}
             onOpenPrescriptions={() => setActiveTab("prescriptions")}
             onOpenNearby={() => setActiveTab("nearby")}
             onOpenChemist={() => setViewMode("chemist")}

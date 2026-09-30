@@ -26,10 +26,26 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
     { id: "first_aid", label: "First Aid & Urgent", labelHi: "प्राथमिक चिकित्सा", labelOr: "ପ୍ରାଥମିକ ଚିକିତ୍ସା", icon: "🚑" },
   ];
 
-  const getCategoryLabel = (cat: typeof categories[0]) => {
+  const getCategoryLabel = (categoryOrId: string | (typeof categories)[0]) => {
+    const cat = typeof categoryOrId === "string" ? categories.find((c) => c.id === categoryOrId) : categoryOrId;
+    if (!cat) return typeof categoryOrId === "string" ? categoryOrId : "";
     if (effectiveLang === "hi") return cat.labelHi;
     if (effectiveLang === "or") return cat.labelOr;
     return cat.label;
+  };
+
+  const getDiseaseDisplayName = (item: DiseaseRemedy) => {
+    if (effectiveLang === "hi" && item.hindiName) return item.hindiName;
+    if (effectiveLang === "or" && item.odiaName) return item.odiaName;
+    if (effectiveLang === "bn" && item.bengaliName) return item.bengaliName;
+    return item.name;
+  };
+
+  const getDiseaseSecondaryName = (item: DiseaseRemedy) => {
+    if (effectiveLang === "hi" || effectiveLang === "or" || effectiveLang === "bn") {
+      return item.name;
+    }
+    return item.hindiName || item.odiaName || item.bengaliName || "";
   };
 
   const filteredDiseases = useMemo(() => {
@@ -39,7 +55,11 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
 
       if (!searchTerm.trim()) return true;
       const q = searchTerm.toLowerCase();
-      const inName = item.name.toLowerCase().includes(q) || item.hindiName.includes(q);
+      const inName =
+        item.name.toLowerCase().includes(q) ||
+        item.hindiName.includes(q) ||
+        (item.odiaName && item.odiaName.includes(q)) ||
+        (item.bengaliName && item.bengaliName.includes(q));
       const inSymptoms = item.symptoms.some((s) => s.toLowerCase().includes(q));
       const inRemedies = item.remedies.some((r) => r.toLowerCase().includes(q));
       return inName || inSymptoms || inRemedies;
@@ -279,8 +299,10 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
 
           // Full narration text that completely reads the entire disease advice without stopping
           const fullAudioGuide =
-            language === "hi"
+            effectiveLang === "hi"
               ? `${item.hindiName}। सारांश: ${item.narrationText}। सुरक्षित घरेलू उपाय: ${item.remedies.join("। ")}। खतरे के संकेत: ${item.redFlags.join("। ")}। दवा और खुराक: ${item.otcGuidance.join("। ")}।`
+              : effectiveLang === "or" && item.odiaName
+              ? `${item.odiaName}। ସାରାଂଶ: ${item.narrationText}। ସୁରକ୍ଷିତ ଘରୋଇ ଉପଚାର: ${item.remedies.join("। ")}। ବିପଦ ସଙ୍କେତ: ${item.redFlags.join("। ")}। ଔଷଧ: ${item.otcGuidance.join("। ")}।`
               : `${item.name}. Overview: ${item.narrationText}. Safe home remedies: ${item.remedies.join(". ")}. Warning signs: ${item.redFlags.join(". ")}. Standard medicine protocol: ${item.otcGuidance.join(". ")}.`;
 
           if (viewMode === "quick") {
@@ -309,10 +331,10 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                     <span style={{ fontSize: "36px", lineHeight: 1 }}>{item.icon}</span>
                     <div>
                       <h3 style={{ margin: 0, fontSize: "17px", fontWeight: "800", color: "var(--foreground)" }}>
-                        {language === "hi" ? item.hindiName : item.name}
+                        {getDiseaseDisplayName(item)}
                       </h3>
                       <span style={{ fontSize: "14px", color: "var(--primary)", fontWeight: "600" }}>
-                        {language === "hi" ? item.name : item.hindiName}
+                        {getDiseaseSecondaryName(item)}
                       </span>
                     </div>
                   </div>
@@ -612,10 +634,10 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                   <span style={{ fontSize: "32px", lineHeight: 1 }}>{item.icon}</span>
                   <div>
                     <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "700" }}>
-                      {language === "hi" ? item.hindiName : item.name}
+                      {getDiseaseDisplayName(item)}
                     </h3>
                     <span style={{ fontSize: "12px", color: "var(--muted)" }}>
-                      {language === "hi" ? item.name : item.hindiName} · {getCategoryLabel(item.category)}
+                      {getDiseaseSecondaryName(item)} · {getCategoryLabel(item.category)}
                     </span>
                   </div>
                 </div>
