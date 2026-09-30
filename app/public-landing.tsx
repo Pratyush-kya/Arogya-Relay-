@@ -263,72 +263,81 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin }: PublicLanding
         </div>
       </header>
 
-      {/* Hero Section with Split Layout: Left Platform Mission + Right Integrated Auth Card */}
+      {/* Hero Section with Balanced Split Layout: Left Content (Zero-Loss to Chemist) & Right Centralized Auth Card */}
       <section
         style={{
-          maxWidth: "1200px",
+          maxWidth: "1160px",
           margin: "0 auto",
-          padding: "48px 24px 36px",
+          padding: "36px 24px 32px",
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-          gap: "36px",
-          alignItems: "start",
+          gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
+          gap: "32px",
+          alignItems: "stretch",
+          justifyContent: "center",
         }}
       >
-        {/* Left Column (Mid Page): Platform Introduction */}
-        <div>
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              background: "#dcfce7",
-              color: "#15803d",
-              padding: "4px 14px",
-              borderRadius: "20px",
-              fontSize: "12px",
-              fontWeight: 700,
-              marginBottom: "16px",
-            }}
-          >
-            <span>🛡️</span> Zero-Loss Clinical Relay · 2G &amp; Offline Resilient
+        {/* Left Column: Starts at Zero-Loss Clinical Relay and terminates at bottom border of Chemist & Dispensary */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            height: "100%",
+          }}
+        >
+          <div>
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                background: "#dcfce7",
+                color: "#15803d",
+                padding: "4px 14px",
+                borderRadius: "20px",
+                fontSize: "12px",
+                fontWeight: 700,
+                marginBottom: "14px",
+              }}
+            >
+              <span>🛡️</span> Zero-Loss Clinical Relay · 2G &amp; Offline Resilient
+            </div>
+
+            <h2
+              style={{
+                fontSize: "clamp(26px, 3.6vw, 38px)",
+                fontWeight: 800,
+                letterSpacing: "-0.03em",
+                color: "var(--ink, #0f172a)",
+                lineHeight: 1.2,
+                margin: "0 0 14px",
+              }}
+            >
+              Institutional Health Access for Bharat, Connected or Disconnected.
+            </h2>
+
+            <p
+              style={{
+                fontSize: "15px",
+                color: "#475569",
+                lineHeight: 1.55,
+                margin: "0 0 20px",
+              }}
+            >
+              A unified, decentralized health platform bridging citizens, verified doctors, ASHA community field workers,
+              and Jan Aushadhi generic pharmacies. Sign in or register in the central portal on the right.
+            </p>
           </div>
 
-          <h2
-            style={{
-              fontSize: "clamp(28px, 4vw, 42px)",
-              fontWeight: 800,
-              letterSpacing: "-0.03em",
-              color: "var(--ink, #0f172a)",
-              lineHeight: 1.18,
-              margin: "0 0 16px",
-            }}
-          >
-            Institutional Health Access for Bharat, Connected or Disconnected.
-          </h2>
-
-          <p
-            style={{
-              fontSize: "15.5px",
-              color: "#475569",
-              lineHeight: 1.6,
-              margin: "0 0 24px",
-            }}
-          >
-            A unified, decentralized health platform bridging citizens, verified doctors, ASHA community field workers,
-            and Jan Aushadhi generic pharmacies. Sign in or create an account in the portal on the right to access your
-            authorized tools.
-          </p>
-
-          {/* Quick Pillars */}
-          <div style={{ display: "grid", gap: "12px", marginTop: "16px" }}>
+          {/* Quick Pillars from Citizen down to Chemist & Dispensary */}
+          <div style={{ display: "grid", gap: "10px", marginTop: "12px" }}>
             <div
               style={{
                 display: "flex",
                 alignItems: "flex-start",
                 gap: "12px",
                 background: "#ffffff",
-                padding: "12px 16px",
+                padding: "11px 15px",
                 borderRadius: "10px",
                 border: "1px solid #e2e8f0",
               }}
@@ -336,7 +345,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin }: PublicLanding
               <span style={{ fontSize: "20px" }}>👤</span>
               <div>
                 <strong style={{ fontSize: "13.5px", color: "#0f172a", display: "block" }}>Citizen Health Pass</strong>
-                <span style={{ fontSize: "12.5px", color: "#64748b" }}>
+                <span style={{ fontSize: "12px", color: "#64748b" }}>
                   ABHA-linked health records, doctor bookings, and Jan Aushadhi medicine savings.
                 </span>
               </div>
@@ -348,7 +357,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin }: PublicLanding
                 alignItems: "flex-start",
                 gap: "12px",
                 background: "#ffffff",
-                padding: "12px 16px",
+                padding: "11px 15px",
                 borderRadius: "10px",
                 border: "1px solid #e2e8f0",
               }}
@@ -356,7 +365,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin }: PublicLanding
               <span style={{ fontSize: "20px" }}>🩺</span>
               <div>
                 <strong style={{ fontSize: "13.5px", color: "#0f172a", display: "block" }}>Medical Doctor Workstation</strong>
-                <span style={{ fontSize: "12.5px", color: "#64748b" }}>
+                <span style={{ fontSize: "12px", color: "#64748b" }}>
                   NMC-verified clinical queue, tele-consultations, and signed digital e-prescriptions.
                 </span>
               </div>
@@ -368,7 +377,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin }: PublicLanding
                 alignItems: "flex-start",
                 gap: "12px",
                 background: "#ffffff",
-                padding: "12px 16px",
+                padding: "11px 15px",
                 borderRadius: "10px",
                 border: "1px solid #e2e8f0",
               }}
@@ -376,7 +385,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin }: PublicLanding
               <span style={{ fontSize: "20px" }}>👩‍⚕️</span>
               <div>
                 <strong style={{ fontSize: "13.5px", color: "#0f172a", display: "block" }}>ASHA Community Field Unit</strong>
-                <span style={{ fontSize: "12.5px", color: "#64748b" }}>
+                <span style={{ fontSize: "12px", color: "#64748b" }}>
                   Door-to-door screenings, voice vitals dictation in Hindi &amp; English, and local offline sync.
                 </span>
               </div>
@@ -388,7 +397,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin }: PublicLanding
                 alignItems: "flex-start",
                 gap: "12px",
                 background: "#ffffff",
-                padding: "12px 16px",
+                padding: "11px 15px",
                 borderRadius: "10px",
                 border: "1px solid #e2e8f0",
               }}
@@ -396,7 +405,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin }: PublicLanding
               <span style={{ fontSize: "20px" }}>🏪</span>
               <div>
                 <strong style={{ fontSize: "13.5px", color: "#0f172a", display: "block" }}>Chemist &amp; Dispensary</strong>
-                <span style={{ fontSize: "12.5px", color: "#64748b" }}>
+                <span style={{ fontSize: "12px", color: "#64748b" }}>
                   QR verification with single-use cryptographic token burn to prevent duplicate dispensing.
                 </span>
               </div>
@@ -404,15 +413,20 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin }: PublicLanding
           </div>
         </div>
 
-        {/* Right Column (Right Page): Unified Interactive Auth Card */}
+        {/* Right Column: Centralized Interactive Auth Card spanning between top and bottom borders */}
         <div
           id="hero-auth-card"
           style={{
             background: "#ffffff",
             borderRadius: "18px",
             border: "1.5px solid #cbd5e1",
-            boxShadow: "0 12px 36px rgba(0,0,0,0.07)",
-            padding: "26px",
+            boxShadow: "0 12px 36px rgba(0,0,0,0.06)",
+            padding: "26px 28px",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            boxSizing: "border-box",
           }}
         >
           {/* Card Header & Tab Switcher */}
