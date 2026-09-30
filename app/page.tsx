@@ -103,6 +103,7 @@ export default function Home() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [supabaseSettingsOpen, setSupabaseSettingsOpen] = useState(false);
+  const [userMode, setUserMode] = useState<"patient" | "staff">("staff");
 
   // Sync URL hash for direct links and separate screen tabs (#auth, #screening, #supabase, #chemist)
   useEffect(() => {
@@ -521,7 +522,7 @@ export default function Home() {
               aria-current={activeTab === "library" ? "page" : undefined}
               onClick={() => setActiveTab("library")}
             >
-              <span className="nav-glyph">📖</span> Arogya Gyan
+              <span className="nav-glyph">📖</span> {t("nav.library")}
             </button>
           </IconTooltip>
 
@@ -537,7 +538,7 @@ export default function Home() {
               aria-current={activeTab === "prescriptions" ? "page" : undefined}
               onClick={() => setActiveTab("prescriptions")}
             >
-              <span className="nav-glyph">💊</span> Prescriptions
+              <span className="nav-glyph">💊</span> {t("nav.prescriptions")}
             </button>
           </IconTooltip>
 
@@ -553,7 +554,7 @@ export default function Home() {
               aria-current={activeTab === "matcher" ? "page" : undefined}
               onClick={() => setActiveTab("matcher")}
             >
-              <span className="nav-glyph">📷</span> Drishti AI
+              <span className="nav-glyph">📷</span> {t("nav.matcher")}
             </button>
           </IconTooltip>
 
@@ -600,7 +601,7 @@ export default function Home() {
               className={viewMode === "chemist" ? "nav-item active" : "nav-item"}
               onClick={() => setViewMode("chemist")}
             >
-              <span className="nav-glyph">🏪</span> Chemist Hub
+              <span className="nav-glyph">🏪</span> {t("nav.chemist")}
             </button>
           </IconTooltip>
 
@@ -657,6 +658,63 @@ export default function Home() {
             >
               <ClinicDateWidget />
             </IconTooltip>
+
+            {/* Dual Mode Switcher Pill */}
+            <div
+              className="mode-toggle-pill"
+              role="group"
+              aria-label="User mode switcher"
+              style={{
+                display: "inline-flex",
+                background: "var(--surface-muted)",
+                borderRadius: "20px",
+                padding: "2px",
+                border: "1px solid var(--line)",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setUserMode("patient")}
+                style={{
+                  padding: "4px 10px",
+                  borderRadius: "16px",
+                  fontSize: "11.5px",
+                  fontWeight: userMode === "patient" ? 700 : 500,
+                  background: userMode === "patient" ? "var(--primary)" : "transparent",
+                  color: userMode === "patient" ? "#ffffff" : "var(--foreground)",
+                  border: "none",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
+              >
+                <span>👤</span>
+                <span>{t("mode.patient")}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setUserMode("staff")}
+                style={{
+                  padding: "4px 10px",
+                  borderRadius: "16px",
+                  fontSize: "11.5px",
+                  fontWeight: userMode === "staff" ? 700 : 500,
+                  background: userMode === "staff" ? "var(--primary)" : "transparent",
+                  color: userMode === "staff" ? "#ffffff" : "var(--foreground)",
+                  border: "none",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
+              >
+                <span>🩺</span>
+                <span>{t("mode.staff")}</span>
+              </button>
+            </div>
 
             <LanguageSwitcher />
 
@@ -717,6 +775,8 @@ export default function Home() {
         {activeTab === "overview" && (
           <Overview
             screenings={screenings}
+            userMode={userMode}
+            onSwitchMode={setUserMode}
             onOpenCases={openCases}
             onOpenMatcher={() => setActiveTab("matcher")}
             onOpenLibrary={() => setActiveTab("library")}
@@ -1115,6 +1175,8 @@ export default function Home() {
 
 interface OverviewProps {
   screenings: ScreeningRecord[];
+  userMode?: "patient" | "staff";
+  onSwitchMode?: (mode: "patient" | "staff") => void;
   onOpenCases: () => void;
   onOpenMatcher: () => void;
   onOpenLibrary: () => void;
@@ -1125,6 +1187,8 @@ interface OverviewProps {
 
 function Overview({
   screenings,
+  userMode = "staff",
+  onSwitchMode,
   onOpenCases,
   onOpenMatcher,
   onOpenLibrary,
@@ -1140,138 +1204,374 @@ function Overview({
 
   return (
     <div className="page-content">
-      <section className="overview-hero" aria-labelledby="overview-title">
-        <div className="hero-atmosphere" aria-hidden="true"><i /><i /><i /></div>
-        <div className="hero-copy">
-          <span className="hero-kicker"><i /> {t("overview.kicker")}</span>
-          <DynamicGreeting />
-          <p>{t("overview.subtitle")}</p>
-          <div className="hero-actions">
-            <button type="button" className="glass-button" onClick={onOpenCases}>
-              {t("overview.liveQueue")} <span>→</span>
-            </button>
-            <button type="button" className="glass-button" onClick={onOpenMatcher}>
-              📷 Drishti AI Photo Triage <span>→</span>
-            </button>
+      {userMode === "patient" ? (
+        /* ═══════════════════════════════════════════════════════════════════
+           PATIENT & FAMILY STREAMLINED PORTAL
+           ═══════════════════════════════════════════════════════════════════ */
+        <section className="patient-portal-hero" aria-labelledby="patient-title" style={{ padding: "8px 0 24px" }}>
+          {/* Main Welcome & Header */}
+          <div style={{ marginBottom: "24px" }}>
+            <span style={{ fontSize: "12px", fontWeight: "700", color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              ✨ {t("patient.heroTitle")}
+            </span>
+            <h1 id="patient-title" style={{ fontSize: "28px", fontWeight: "800", margin: "6px 0 10px", color: "var(--foreground)" }}>
+              {t("patient.heroTitle")}
+            </h1>
+            <p style={{ fontSize: "15px", color: "var(--muted)", margin: 0, maxWidth: "700px", lineHeight: "1.5" }}>
+              {t("patient.heroSubtitle")}
+            </p>
           </div>
-        </div>
-        <aside className="hero-command" aria-label="Care command summary">
-          <div className="command-head">
-            <span>{t("overview.liveNetwork")}</span>
-            <b><i /> {t("overview.monitoring")}</b>
-          </div>
-          <strong>{t("overview.communities")}</strong>
-          <p>{t("overview.coverage")}</p>
-          <div className="command-metrics">
-            <span><b>{screenings.length || 47}</b> {t("overview.screened")}</span>
-            <span><b>{screenings.filter((s) => !s.synced).length || 14}</b> {t("overview.offline")}</span>
-            <span><b>{urgentScreenings.length || 1}</b> {t("common.urgent")}</span>
-          </div>
-          <div className="command-route" aria-hidden="true"><i /><span /><i /><span /><i /></div>
-        </aside>
-      </section>
 
-      <section className="signal-layout">
-        <article className="trend-card">
-          <div className="trend-copy">
-            <span className="alert-label">{t("overview.signals")}</span>
-            <h2>Symptoms are rising in North Ridge.</h2>
-            <p>{t("overview.risingDetail") || "Clusters of acute respiratory presentations reported over the last 12 hours."}</p>
-            <div className="trend-actions">
-              <button type="button" className="dark-button" onClick={onOpenCases}>
-                {t("overview.reviewLinked")}
+          {/* 3 Large Action Cards for Citizens */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px", marginBottom: "20px" }}>
+            {/* Card 1: Consult Doctor */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={onOpenCases}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onOpenCases(); }}
+              style={{
+                background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
+                color: "#ffffff",
+                borderRadius: "16px",
+                padding: "24px",
+                cursor: "pointer",
+                boxShadow: "0 6px 20px rgba(5, 150, 105, 0.22)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px",
+                transition: "transform 0.15s ease",
+              }}
+            >
+              <span style={{ fontSize: "36px" }}>🩺</span>
+              <h2 style={{ fontSize: "20px", fontWeight: "800", margin: 0, color: "#ffffff" }}>
+                {t("patient.callDoctor")}
+              </h2>
+              <p style={{ margin: 0, fontSize: "14px", opacity: 0.9, lineHeight: 1.45 }}>
+                {t("patient.callDoctorDesc")}
+              </p>
+              <div style={{ marginTop: "auto", paddingTop: "8px", fontWeight: 700, fontSize: "14px", display: "flex", alignItems: "center", gap: "6px" }}>
+                <span>{t("overview.liveQueue")}</span> <span>→</span>
+              </div>
+            </div>
+
+            {/* Card 2: Health Guides & Remedies */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={onOpenLibrary}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onOpenLibrary(); }}
+              style={{
+                background: "var(--surface)",
+                border: "2px solid #10b981",
+                borderRadius: "16px",
+                padding: "24px",
+                cursor: "pointer",
+                boxShadow: "0 4px 16px rgba(16, 185, 129, 0.1)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px",
+                transition: "transform 0.15s ease",
+              }}
+            >
+              <span style={{ fontSize: "36px" }}>📖</span>
+              <h2 style={{ fontSize: "20px", fontWeight: "800", margin: 0, color: "var(--foreground)" }}>
+                {t("patient.checkSymptoms")}
+              </h2>
+              <p style={{ margin: 0, fontSize: "14px", color: "var(--muted)", lineHeight: 1.45 }}>
+                {t("patient.checkSymptomsDesc")}
+              </p>
+              <div style={{ marginTop: "auto", paddingTop: "8px", fontWeight: 700, fontSize: "14px", color: "var(--primary)", display: "flex", alignItems: "center", gap: "6px" }}>
+                <span>{t("nav.library")}</span> <span>→</span>
+              </div>
+            </div>
+
+            {/* Card 3: Generic Medicines & Nearby Care */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={onOpenNearby}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onOpenNearby(); }}
+              style={{
+                background: "var(--surface)",
+                border: "2px solid #3b82f6",
+                borderRadius: "16px",
+                padding: "24px",
+                cursor: "pointer",
+                boxShadow: "0 4px 16px rgba(59, 130, 246, 0.1)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px",
+                transition: "transform 0.15s ease",
+              }}
+            >
+              <span style={{ fontSize: "36px" }}>💊</span>
+              <h2 style={{ fontSize: "20px", fontWeight: "800", margin: 0, color: "var(--foreground)" }}>
+                {t("patient.findMeds")}
+              </h2>
+              <p style={{ margin: 0, fontSize: "14px", color: "var(--muted)", lineHeight: 1.45 }}>
+                {t("patient.findMedsDesc")}
+              </p>
+              <div style={{ marginTop: "auto", paddingTop: "8px", fontWeight: 700, fontSize: "14px", color: "#2563eb", display: "flex", alignItems: "center", gap: "6px" }}>
+                <span>{t("nav.nearby")}</span> <span>→</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Visual Assistant Subcard */}
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={onOpenMatcher}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onOpenMatcher(); }}
+            style={{
+              background: "var(--surface)",
+              border: "1.5px dashed var(--line)",
+              borderRadius: "14px",
+              padding: "16px 20px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "16px",
+              marginBottom: "18px",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+              <span style={{ fontSize: "30px" }}>📷</span>
+              <div>
+                <strong style={{ fontSize: "15px", display: "block", color: "var(--foreground)" }}>
+                  {t("patient.drishtiCard")}
+                </strong>
+                <span style={{ fontSize: "13px", color: "var(--muted)" }}>
+                  {t("patient.drishtiCardDesc")}
+                </span>
+              </div>
+            </div>
+            <span style={{ fontWeight: 700, color: "var(--primary)", fontSize: "13px", whiteSpace: "nowrap" }}>
+              {t("overview.drishtiAction")} →
+            </span>
+          </div>
+
+          {/* Emergency 112 Direct Call Strip */}
+          <div
+            style={{
+              background: "#fef2f2",
+              border: "1.5px solid #f87171",
+              borderRadius: "12px",
+              padding: "14px 20px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: "12px",
+              marginBottom: "20px",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ fontSize: "24px" }}>🚨</span>
+              <span style={{ fontSize: "14px", fontWeight: 700, color: "#991b1b" }}>
+                {t("patient.emergencyCall")}
+              </span>
+            </div>
+            <a
+              href="tel:112"
+              style={{
+                background: "#dc2626",
+                color: "#ffffff",
+                padding: "8px 18px",
+                borderRadius: "8px",
+                fontWeight: 700,
+                fontSize: "13px",
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+              }}
+            >
+              📞 112
+            </a>
+          </div>
+
+          {/* Switch to Staff Mode Toggle Link */}
+          {onSwitchMode && (
+            <div style={{ textAlign: "center", paddingTop: "8px" }}>
+              <button
+                type="button"
+                onClick={() => onSwitchMode("staff")}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "var(--muted)",
+                  fontSize: "13px",
+                  cursor: "pointer",
+                  textDecoration: "underline",
+                }}
+              >
+                🩺 {t("mode.switchStaff")}
               </button>
-              <span>{t("overview.updated")}</span>
             </div>
-          </div>
-          <div className="mini-chart" aria-label="Respiratory symptom reports across recent hours">
-            <div className="chart-meta">
-              <span>{t("overview.reports2h")}</span>
-              <strong>{screenings.length || 12} <small>Active</small></strong>
+          )}
+        </section>
+      ) : (
+        /* ═══════════════════════════════════════════════════════════════════
+           STAFF & CLINICIAN WORKBENCH
+           ═══════════════════════════════════════════════════════════════════ */
+        <>
+          <section className="overview-hero" aria-labelledby="overview-title">
+            <div className="hero-atmosphere" aria-hidden="true"><i /><i /><i /></div>
+            <div className="hero-copy">
+              <span className="hero-kicker"><i /> {t("overview.kicker")}</span>
+              <DynamicGreeting />
+              <p>{t("overview.subtitle")}</p>
+              <div className="hero-actions">
+                <button type="button" className="glass-button" onClick={onOpenCases}>
+                  {t("overview.liveQueue")} <span>→</span>
+                </button>
+                <button type="button" className="glass-button" onClick={onOpenMatcher}>
+                  {t("overview.drishtiAction")} <span>→</span>
+                </button>
+              </div>
             </div>
-            <div className="bars">
-              {chartBars.map((height, index) => (
-                <i key={index} style={{ height: `${height}%` }} className={index > 8 ? "hot" : ""} />
-              ))}
-            </div>
-            <div className="chart-axis"><span>06:00</span><span>12:00</span><span>18:00</span><span>Now</span></div>
-          </div>
-        </article>
+            <aside className="hero-command" aria-label="Care command summary">
+              <div className="command-head">
+                <span>{t("overview.liveNetwork")}</span>
+                <b><i /> {t("overview.monitoring")}</b>
+              </div>
+              <strong>{t("overview.communities")}</strong>
+              <p>{t("overview.coverage")}</p>
+              <div className="command-metrics">
+                <span><b>{screenings.length || 47}</b> {t("overview.screened")}</span>
+                <span><b>{screenings.filter((s) => !s.synced).length || 14}</b> {t("overview.offline")}</span>
+                <span><b>{urgentScreenings.length || 1}</b> {t("common.urgent")}</span>
+              </div>
+              <div className="command-route" aria-hidden="true"><i /><span /><i /><span /><i /></div>
+            </aside>
+          </section>
 
-        <article className="urgent-card">
-          <header><span>{t("overview.urgentQueue")}</span><b>{urgentScreenings.length}</b></header>
-          {urgentCase ? (
-            <>
-              <div className="urgent-person">
-                <div className="avatar danger-avatar">{urgentCase.patient_ref.slice(0, 2)}</div>
-                <div>
-                  <h3>{urgentCase.patient_ref} ({urgentCase.age} yrs)</h3>
-                  <p>{urgentCase.village}</p>
+          <section className="signal-layout">
+            <article className="trend-card">
+              <div className="trend-copy">
+                <span className="alert-label">{t("overview.signals")}</span>
+                <h2>Symptoms are rising in North Ridge.</h2>
+                <p>{t("overview.risingDetail") || "Clusters of acute respiratory presentations reported over the last 12 hours."}</p>
+                <div className="trend-actions">
+                  <button type="button" className="dark-button" onClick={onOpenCases}>
+                    {t("overview.reviewLinked")}
+                  </button>
+                  <span>{t("overview.updated")}</span>
                 </div>
               </div>
-              <div className="urgent-reading">
-                <span>SpO₂</span><strong>{urgentCase.spo2}%</strong>
-                <em>{urgentCase.temperature}°C</em>
+              <div className="mini-chart" aria-label="Respiratory symptom reports across recent hours">
+                <div className="chart-meta">
+                  <span>{t("overview.reports2h")}</span>
+                  <strong>{screenings.length || 12} <small>{t("overview.activeScreenings")}</small></strong>
+                </div>
+                <div className="bars">
+                  {chartBars.map((height, index) => (
+                    <i key={index} style={{ height: `${height}%` }} className={index > 8 ? "hot" : ""} />
+                  ))}
+                </div>
+                <div className="chart-axis"><span>06:00</span><span>12:00</span><span>18:00</span><span>Now</span></div>
               </div>
-              <p className="urgent-note">{urgentCase.field_notes || urgentCase.symptoms.join(", ")}</p>
-            </>
-          ) : (
-            <>
-              <div className="urgent-person">
-                <div className="avatar danger-avatar">LM</div>
-                <div><h3>{t("overview.child6")}</h3><p>North Ridge · NR-1048</p></div>
+            </article>
+
+            <article className="urgent-card">
+              <header><span>{t("overview.urgentQueue")}</span><b>{urgentScreenings.length}</b></header>
+              {urgentCase ? (
+                <>
+                  <div className="urgent-person">
+                    <div className="avatar danger-avatar">{urgentCase.patient_ref.slice(0, 2)}</div>
+                    <div>
+                      <h3>{urgentCase.patient_ref} ({urgentCase.age} yrs)</h3>
+                      <p>{urgentCase.village}</p>
+                    </div>
+                  </div>
+                  <div className="urgent-reading">
+                    <span>SpO₂</span><strong>{urgentCase.spo2}%</strong>
+                    <em>{urgentCase.temperature}°C</em>
+                  </div>
+                  <p className="urgent-note">{urgentCase.field_notes || urgentCase.symptoms.join(", ")}</p>
+                </>
+              ) : (
+                <>
+                  <div className="urgent-person">
+                    <div className="avatar danger-avatar">LM</div>
+                    <div><h3>{t("overview.child6")}</h3><p>North Ridge · NR-1048</p></div>
+                  </div>
+                  <div className="urgent-reading"><span>SpO₂</span><strong>91%</strong><em>{t("overview.lowReading")}</em></div>
+                  <p className="urgent-note">{t("overview.urgentNote")}</p>
+                </>
+              )}
+              <button type="button" onClick={onOpenCases}>{t("overview.openBrief")} <span>→</span></button>
+            </article>
+          </section>
+
+          {/* Operational Field Metrics */}
+          <section className="metric-grid" aria-label="Field health metrics">
+            <Metric icon="🩺" value={`${screenings.length || 14}`} label="Screenings today" note="Offline capture is active." tone="mint" />
+            <Metric icon="⚠️" value={`${urgentScreenings.length || 3}`} label={t("overview.metricUrgentLabel")} note={t("overview.metricUrgentNote")} tone="sand" />
+            <Metric icon="📶" value="98%" label={t("overview.metricSyncLabel")} note={t("overview.metricSyncNote")} tone="blue" />
+            <Metric icon="🏥" value="5" label={t("overview.metricFacilitiesLabel")} note={t("overview.metricFacilitiesNote")} tone="rose" />
+          </section>
+
+          {/* Feature Navigation Quick Cards */}
+          <section className="metric-grid" aria-label="Key telehealth features">
+            <article className="metric-card" style={{ cursor: "pointer" }} onClick={onOpenLibrary}>
+              <span className="metric-icon mint">📖</span>
+              <div>
+                <strong>{t("nav.library")}</strong>
+                <h3>{t("overview.cardGyanTitle")}</h3>
+                <p>{t("overview.cardGyanDesc")}</p>
               </div>
-              <div className="urgent-reading"><span>SpO₂</span><strong>91%</strong><em>{t("overview.lowReading")}</em></div>
-              <p className="urgent-note">{t("overview.urgentNote")}</p>
-            </>
+            </article>
+            <article className="metric-card" style={{ cursor: "pointer" }} onClick={onOpenPrescriptions}>
+              <span className="metric-icon blue">💊</span>
+              <div>
+                <strong>{t("nav.prescriptions")}</strong>
+                <h3>{t("overview.cardRxTitle")}</h3>
+                <p>{t("overview.cardRxDesc")}</p>
+              </div>
+            </article>
+            <article className="metric-card" style={{ cursor: "pointer" }} onClick={onOpenMatcher}>
+              <span className="metric-icon sand">📷</span>
+              <div>
+                <strong>{t("nav.matcher")}</strong>
+                <h3>{t("overview.cardDrishtiTitle")}</h3>
+                <p>{t("overview.cardDrishtiDesc")}</p>
+              </div>
+            </article>
+            <article className="metric-card" style={{ cursor: "pointer" }} onClick={onOpenNearby}>
+              <span className="metric-icon rose">⌖</span>
+              <div>
+                <strong>{t("nav.nearby")}</strong>
+                <h3>{t("overview.cardNearbyTitle")}</h3>
+                <p>{t("overview.cardNearbyDesc")}</p>
+              </div>
+            </article>
+          </section>
+
+          {/* Switch to Patient Mode button */}
+          {onSwitchMode && (
+            <div style={{ textAlign: "center", margin: "16px 0 8px" }}>
+              <button
+                type="button"
+                onClick={() => onSwitchMode("patient")}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "var(--muted)",
+                  fontSize: "13px",
+                  cursor: "pointer",
+                  textDecoration: "underline",
+                }}
+              >
+                👤 {t("mode.switchPatient")}
+              </button>
+            </div>
           )}
-          <button type="button" onClick={onOpenCases}>{t("overview.openBrief")} <span>→</span></button>
-        </article>
-      </section>
-
-      {/* Operational Field Metrics */}
-      <section className="metric-grid" aria-label="Field health metrics">
-        <Metric icon="🩺" value={`${screenings.length || 14}`} label="Screenings today" note="Offline capture is active." tone="mint" />
-        <Metric icon="⚠️" value={`${urgentScreenings.length || 3}`} label="Urgent follow-ups" note="Require prompt review." tone="sand" />
-        <Metric icon="📶" value="98%" label="Sync health" note="Local queue ready." tone="blue" />
-        <Metric icon="🏥" value="5" label="Facilities nearby" note="Jan Aushadhi & CHC." tone="rose" />
-      </section>
-
-      {/* Feature Navigation Quick Cards */}
-      <section className="metric-grid" aria-label="Key telehealth features">
-        <article className="metric-card" style={{ cursor: "pointer" }} onClick={onOpenLibrary}>
-          <span className="metric-icon mint">📖</span>
-          <div>
-            <strong>Arogya Gyan</strong>
-            <h3>Predefined Disease Library</h3>
-            <p>10+ conditions, symptoms & safe home remedies</p>
-          </div>
-        </article>
-        <article className="metric-card" style={{ cursor: "pointer" }} onClick={onOpenPrescriptions}>
-          <span className="metric-icon blue">💊</span>
-          <div>
-            <strong>Rx Reminders</strong>
-            <h3>Prescription & Push Alarms</h3>
-            <p>Doctor prescription intake & Web Push schedule</p>
-          </div>
-        </article>
-        <article className="metric-card" style={{ cursor: "pointer" }} onClick={onOpenMatcher}>
-          <span className="metric-icon sand">📷</span>
-          <div>
-            <strong>Drishti AI</strong>
-            <h3>Visual Disease Photo Matcher</h3>
-            <p>Snap photo of skin/eye/rash for guidance</p>
-          </div>
-        </article>
-        <article className="metric-card" style={{ cursor: "pointer" }} onClick={onOpenNearby}>
-          <span className="metric-icon rose">⌖</span>
-          <div>
-            <strong>Nearby Care</strong>
-            <h3>Hospitals & Jan Aushadhi</h3>
-            <p>Live OpenStreetMap medicine shops & camps</p>
-          </div>
-        </article>
-      </section>
+        </>
+      )}
 
       <section className="lower-grid" style={{ gridTemplateColumns: "1fr" }}>
         <article className="panel cases-panel">
@@ -1319,7 +1619,12 @@ function AlertRow({
   expanded?: boolean;
 }) {
   const tone = record.urgency_tier === "emergency" ? "danger" : record.urgency_tier === "urgent" ? "warning" : "routine";
-  const priority = record.urgency_tier === "emergency" ? "Emergency" : record.urgency_tier === "urgent" ? "Urgent" : "Routine";
+  const priority =
+    record.urgency_tier === "emergency"
+      ? t("priority.emergency")
+      : record.urgency_tier === "urgent"
+      ? t("priority.urgent")
+      : t("priority.routine");
 
   return (
     <div className="case-row">
@@ -1404,8 +1709,8 @@ function CaseQueue({ screenings, onDoctorEvaluate, onOpenHealthPass }: CaseQueue
       <div className="queue-summary">
         <span><strong>{urgentCount}</strong> {t("common.urgent")}</span>
         <span><strong>{reviewCount}</strong> {t("common.review")}</span>
-        <span><strong>{evaluatedCount}</strong> Evaluated</span>
-        <span><strong>{screenings.length}</strong> Total Screenings</span>
+        <span><strong>{evaluatedCount}</strong> {t("cases.evaluatedCount")}</span>
+        <span><strong>{screenings.length}</strong> {t("cases.totalScreenings")}</span>
       </div>
       <article className="panel cases-panel full-table">
         <div className="table-tools">
@@ -1451,7 +1756,7 @@ function CaseQueue({ screenings, onDoctorEvaluate, onOpenHealthPass }: CaseQueue
               aria-pressed={filter === "evaluated"}
               onClick={() => setFilter("evaluated")}
             >
-              ✓ Evaluated
+              {t("cases.filterEvaluated")}
             </button>
           </div>
         </div>
@@ -1491,7 +1796,7 @@ function CaseQueue({ screenings, onDoctorEvaluate, onOpenHealthPass }: CaseQueue
                   onClick={() => onOpenHealthPass(selectedRecord)}
                   style={{ display: "flex", alignItems: "center", gap: "6px" }}
                 >
-                  <span>🪪</span> Patient Health Pass
+                  <span>🪪</span> {t("cases.patientHealthPass")}
                 </button>
                 <button type="button" className="secondary-button" onClick={() => setSelectedId(null)}>
                   {t("common.close")}
@@ -1500,14 +1805,14 @@ function CaseQueue({ screenings, onDoctorEvaluate, onOpenHealthPass }: CaseQueue
             </div>
 
             <dl>
-              <div><dt>Age</dt><dd>{selectedRecord.age} yrs</dd></div>
-              <div><dt>Vitals</dt><dd>SpO₂ {selectedRecord.spo2}% · {selectedRecord.temperature}°C</dd></div>
-              <div><dt>Symptoms</dt><dd>{selectedRecord.symptoms.join(", ")}</dd></div>
-              <div><dt>Field Notes</dt><dd>{selectedRecord.field_notes || "None"}</dd></div>
-              <div><dt>Attested By</dt><dd>{selectedRecord.screener_name || "Field Health Worker"} ({selectedRecord.screener_id || "HW-01"})</dd></div>
+              <div><dt>{t("cases.age")}</dt><dd>{selectedRecord.age} {t("screen.years")}</dd></div>
+              <div><dt>{t("cases.vitals")}</dt><dd>SpO₂ {selectedRecord.spo2}% · {selectedRecord.temperature}°C</dd></div>
+              <div><dt>{t("cases.symptoms")}</dt><dd>{selectedRecord.symptoms.join(", ")}</dd></div>
+              <div><dt>{t("cases.fieldNotes")}</dt><dd>{selectedRecord.field_notes || "None"}</dd></div>
+              <div><dt>{t("cases.attestedBy")}</dt><dd>{selectedRecord.screener_name || "Field Health Worker"} ({selectedRecord.screener_id || "HW-01"})</dd></div>
               {selectedRecord.image_url && (
                 <div>
-                  <dt>Clinical Photo</dt>
+                  <dt>{t("cases.clinicalPhoto")}</dt>
                   <dd>
                     <a href={selectedRecord.image_url} target="_blank" rel="noreferrer">
                       <img src={selectedRecord.image_url} alt="Attached lesion" style={{ width: "64px", height: "64px", objectFit: "cover", borderRadius: "8px", border: "1.5px solid #94a3b8", marginTop: "4px" }} />
@@ -1515,7 +1820,7 @@ function CaseQueue({ screenings, onDoctorEvaluate, onOpenHealthPass }: CaseQueue
                   </dd>
                 </div>
               )}
-              <div><dt>Status</dt><dd>{selectedRecord.status === "doctor_evaluated" ? "Evaluated by Doctor" : "Awaiting Doctor"}</dd></div>
+              <div><dt>{t("cases.status")}</dt><dd>{selectedRecord.status === "doctor_evaluated" ? t("cases.evalDoctor") : t("cases.awaitingDoctor")}</dd></div>
             </dl>
 
             {selectedRecord.status === "doctor_evaluated" ? (
@@ -1531,7 +1836,7 @@ function CaseQueue({ screenings, onDoctorEvaluate, onOpenHealthPass }: CaseQueue
               <form className="case-brief-doctor" onSubmit={handleEvalSubmit} style={{ marginTop: "16px" }}>
                 <h3>👨‍⚕️ Doctor / Clinician Evaluation</h3>
                 <label style={{ display: "block", marginTop: "10px" }}>
-                  <span style={{ fontSize: "11px", fontWeight: 700, color: "#234d3f" }}>Clinical Diagnosis & Notes:</span>
+                  <span style={{ fontSize: "11px", fontWeight: 700, color: "#234d3f" }}>{t("cases.doctorNotesLabel")}</span>
                   <textarea
                     required
                     rows={2}
@@ -1542,7 +1847,7 @@ function CaseQueue({ screenings, onDoctorEvaluate, onOpenHealthPass }: CaseQueue
                   />
                 </label>
                 <label style={{ display: "block", marginTop: "10px" }}>
-                  <span style={{ fontSize: "11px", fontWeight: 700, color: "#234d3f" }}>Prescription & Patient Advice:</span>
+                  <span style={{ fontSize: "11px", fontWeight: 700, color: "#234d3f" }}>{t("cases.prescriptionAdviceLabel")}</span>
                   <textarea
                     required
                     rows={2}
@@ -1554,7 +1859,7 @@ function CaseQueue({ screenings, onDoctorEvaluate, onOpenHealthPass }: CaseQueue
                 </label>
                 <div className="case-brief-actions" style={{ marginTop: "12px" }}>
                   <button type="submit" className="primary-button" disabled={submittingEval}>
-                    {submittingEval ? "Saving..." : "Approve & Send to Health Worker →"}
+                    {submittingEval ? t("cases.saving") : t("cases.approveBtn")}
                   </button>
                 </div>
               </form>

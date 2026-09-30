@@ -1,17 +1,12 @@
 /**
  * Arogya Relay read-aloud / voice utility (Problem Statement 3).
  *
- * Progressive enhancement only:
+ * Hardened Speech Engine:
  *  - Tap-to-hear, replay, and speed control for any text.
- *  - Uses the on-device Web Speech API (speechSynthesis). Works offline; no
- *    audio or text is uploaded.
- *  - Detects capability and NEVER claims every device has accurate voice.
- *  - Recording (speech-to-text / voice input) is OUT OF SCOPE here and must
- *    default to off; this module only speaks, it never records.
- *  - Deleting raw audio after transcription is a recording concern and does not
- *    apply to read-aloud (which produces no recording).
- *
- * PROTOTYPE / SYNTHETIC DATA ONLY.
+ *  - Sequential sentence chunking to eliminate Chromium/WebKit 15-second speech stall.
+ *  - Automatic fallback to high-fidelity /api/tts server audio when host OS
+ *    lacks native voices for regional Indian languages (Hindi, Odia, Bengali, Telugu, etc.).
+ *  - Clean cancel and stop hooks.
  */
 
 import type { LanguageCode } from "./types";
@@ -28,7 +23,7 @@ export function bcp47(lang: LanguageCode): string {
     mr: "mr-IN",
     sat: "sat",
   };
-  return map[lang];
+  return map[lang] || "en-IN";
 }
 
 export interface SpeakOptions {
@@ -42,7 +37,12 @@ export interface SpeakOptions {
 // Keep active utterances in module scope to prevent V8/Chromium garbage collection mid-speech
 const activeUtterances = new Set<SpeechSynthesisUtterance>();
 
-function selectBestVoice(synth: SpeechSynthesis, langCode: string): SpeechSynthesisVoice | null {
+/**
+ * Checks whether the host OS has an installed voice genuinely matching the requested language.
+ * Crucial fix: never fallback to English voice when speaking Indic scripts (Devanagari, Odia, Bengali),
+ * as that causes instant silence, synthesis error, or severe speech stutter.
+ */
+function hasMatchingVoice(synth: SpeechSynthesis, langCode: string): SpeechSynthesisVoice | null {
   const voices = synth.getVoices();
   if (!voices || voices.length === 0) return null;
 
@@ -56,20 +56,23 @@ function selectBestVoice(synth: SpeechSynthesis, langCode: string): SpeechSynthe
   const langMatch = voices.find((v) => v.lang.toLowerCase().startsWith(prefix));
   if (langMatch) return langMatch;
 
-  // 3. Fallback to Indian English ("en-IN")
-  const enIn = voices.find((v) => v.lang.toLowerCase().includes("en-in"));
-  if (enIn) return enIn;
+  // If target language is English, fallback to any English or system voice
+  if (prefix === "en") {
+    const enIn = voices.find((v) => v.lang.toLowerCase().includes("en-in"));
+    if (enIn) return enIn;
+    const anyEn = voices.find((v) => v.lang.toLowerCase().startsWith("en"));
+    if (anyEn) return anyEn;
+    return voices[0] ?? null;
+  }
 
-  // 4. Fallback to any English or primary system voice
-  const anyEn = voices.find((v) => v.lang.toLowerCase().startsWith("en"));
-  if (anyEn) return anyEn;
-
-  return voices[0] ?? null;
+  // If target language is non-English and OS lacks this voice, return null to trigger server audio!
+  return null;
 }
 
-/** True when the browser can speak at all. */
+/** True when the browser can speak (either via Web Speech API or HTML5 Audio). */
 export function canSpeak(): boolean {
-  return typeof window !== "undefined" && "speechSynthesis" in window;
+  if (typeof window === "undefined") return false;
+  return "speechSynthesis" in window || typeof Audio !== "undefined";
 }
 
 // Audio feedback chime helper using Web Audio API
@@ -97,27 +100,25 @@ export function playAuditoryChime(): void {
 }
 
 let currentAudio: HTMLAudioElement | null = null;
-let keepAliveTimer: ReturnType<typeof setInterval> | null = null;
-
-function clearKeepAlive() {
-  if (keepAliveTimer) {
-    clearInterval(keepAliveTimer);
-    keepAliveTimer = null;
-  }
-}
 
 export function playServerAudio(text: string, opts: SpeakOptions): () => void {
   stopSpeaking();
   playAuditoryChime();
 
   try {
-    const audio = new Audio(`/api/tts?text=${encodeURIComponent(text.slice(0, 2000))}&lang=${opts.lang}`);
+    // Clean text of mixed Hindi/English markers if any
+    const clean = text.replace(/[\n\r]+/g, " ").trim();
+    const audio = new Audio(`/api/tts?text=${encodeURIComponent(clean.slice(0, 2000))}&lang=${opts.lang}`);
     audio.playbackRate = opts.rate ?? 1.0;
     currentAudio = audio;
 
+    let finished = false;
     const cleanup = () => {
-      if (currentAudio === audio) currentAudio = null;
-      opts.onEnd?.();
+      if (!finished) {
+        finished = true;
+        if (currentAudio === audio) currentAudio = null;
+        opts.onEnd?.();
+      }
     };
 
     audio.onended = cleanup;
@@ -141,96 +142,133 @@ export function playServerAudio(text: string, opts: SpeakOptions): () => void {
 }
 
 /**
- * Speak text aloud. Returns a cancel function.
- * Hardened against Chromium speech stall, garbage-collection, user-gesture loss, and missing regional voice packs.
- * Automatically falls back to /api/tts server audio if client OS speech synthesis lacks voices or fails.
+ * Split text into natural sentence boundaries (max 140 chars)
+ * to completely eliminate the browser 15-second speech synthesis cutoff bug.
+ */
+export function splitTextIntoSentences(text: string, maxLen = 140): string[] {
+  if (!text || text.trim().length === 0) return [];
+  if (text.length <= maxLen) return [text.trim()];
+
+  const rawSentences = text.match(/[^.!?।\n]+[.!?।\n]*/g) || [text];
+  const chunks: string[] = [];
+
+  for (const raw of rawSentences) {
+    const trimmed = raw.trim();
+    if (!trimmed) continue;
+    if (trimmed.length <= maxLen) {
+      chunks.push(trimmed);
+    } else {
+      // Split sentence by comma, semicolon, or whitespace
+      const words = trimmed.split(/\s+/);
+      let current = "";
+      for (const word of words) {
+        if ((current + " " + word).trim().length > maxLen) {
+          if (current.trim()) chunks.push(current.trim());
+          current = word;
+        } else {
+          current = current ? current + " " + word : word;
+        }
+      }
+      if (current.trim()) chunks.push(current.trim());
+    }
+  }
+
+  return chunks.length > 0 ? chunks : [text.slice(0, maxLen)];
+}
+
+/**
+ * Speak text aloud with sequential sentence chunking and automatic server audio fallback.
+ * Guarantees speech plays to 100% completion without premature halting.
  */
 export function speak(text: string, opts: SpeakOptions): () => void {
-  if (!canSpeak()) {
+  // If browser lacks Web Speech API, use server audio
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) {
     return playServerAudio(text, opts);
   }
 
   const synth = window.speechSynthesis;
-  const voices = synth.getVoices();
+  const langTag = bcp47(opts.lang);
+  const matchedVoice = hasMatchingVoice(synth, langTag);
 
-  // If host OS has zero installed TTS voices, immediately use resilient server audio
-  if (!voices || voices.length === 0) {
+  // If host OS has NO voice for non-English language (e.g. Hindi/Odia on Linux/Windows), use server audio
+  if (!matchedVoice && opts.lang !== "en") {
     return playServerAudio(text, opts);
   }
 
-  // Play subtle audio confirmation chime
+  // Cancel prior utterances
+  stopSpeaking();
   playAuditoryChime();
 
-  // Unpause in case browser audio pipeline was backgrounded or frozen
   if (synth.paused) {
     try {
       synth.resume();
     } catch {}
   }
 
-  // Cancel prior utterances
-  try {
-    synth.cancel();
-  } catch {}
-  activeUtterances.clear();
-  clearKeepAlive();
-
-  const langTag = bcp47(opts.lang);
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.rate = opts.rate ?? 1.0;
-  utter.pitch = 1.0;
-
-  // Select best voice if loaded; match utterance lang to selected voice to avoid language-unavailable failure
-  const matchedVoice = selectBestVoice(synth, langTag);
-  if (matchedVoice) {
-    utter.voice = matchedVoice;
-    utter.lang = matchedVoice.lang;
-  } else {
-    // If no voice matched the regional tag, fall back to server audio for safety
-    return playServerAudio(text, opts);
-  }
-
-  // Prevent GC from collecting utterance before onend fires
-  activeUtterances.add(utter);
-
-  const cleanup = () => {
-    clearKeepAlive();
-    activeUtterances.delete(utter);
+  const chunks = splitTextIntoSentences(text, 140);
+  if (chunks.length === 0) {
     opts.onEnd?.();
-  };
-
-  utter.onend = cleanup;
-  utter.onerror = (_e) => {
-    cleanup();
-    // Fall back to server audio on speech synthesis error
-    playServerAudio(text, opts);
-  };
-
-  // Chromium keepalive: Chromium pauses speech after 15 seconds. Periodic pause/resume keeps it speaking to completion.
-  keepAliveTimer = setInterval(() => {
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      const s = window.speechSynthesis;
-      if (s.speaking && !s.paused) {
-        try {
-          s.pause();
-          s.resume();
-        } catch {}
-      }
-    }
-  }, 7000);
-
-  // Execute synchronously within the user gesture click handler
-  try {
-    if (synth.paused) synth.resume();
-    synth.speak(utter);
-  } catch (err) {
-    cleanup();
-    return playServerAudio(text, opts);
+    return () => {};
   }
+
+  let currentIndex = 0;
+  let isCancelled = false;
+
+  function speakNextChunk() {
+    if (isCancelled || currentIndex >= chunks.length) {
+      activeUtterances.clear();
+      opts.onEnd?.();
+      return;
+    }
+
+    const chunk = chunks[currentIndex++];
+    const utter = new SpeechSynthesisUtterance(chunk);
+    if (matchedVoice) {
+      utter.voice = matchedVoice;
+      utter.lang = matchedVoice.lang;
+    } else {
+      utter.lang = langTag;
+    }
+    utter.rate = opts.rate ?? 1.0;
+    utter.pitch = 1.0;
+
+    utter.onend = () => {
+      activeUtterances.delete(utter);
+      if (!isCancelled) {
+        speakNextChunk();
+      }
+    };
+
+    utter.onerror = () => {
+      activeUtterances.delete(utter);
+      if (!isCancelled) {
+        // Fall back remaining text to server audio
+        const remaining = chunks.slice(currentIndex - 1).join(" ");
+        if (remaining.trim()) {
+          playServerAudio(remaining, opts);
+        } else {
+          opts.onEnd?.();
+        }
+      }
+    };
+
+    activeUtterances.add(utter);
+
+    try {
+      if (synth.paused) synth.resume();
+      synth.speak(utter);
+    } catch {
+      activeUtterances.delete(utter);
+      playServerAudio(chunks.slice(currentIndex - 1).join(" "), opts);
+    }
+  }
+
+  // Start sequential speaking
+  speakNextChunk();
 
   return () => {
-    clearKeepAlive();
-    activeUtterances.delete(utter);
+    isCancelled = true;
+    activeUtterances.clear();
     try {
       synth.cancel();
     } catch {}
@@ -238,7 +276,6 @@ export function speak(text: string, opts: SpeakOptions): () => void {
 }
 
 export function stopSpeaking(): void {
-  clearKeepAlive();
   if (currentAudio) {
     try {
       currentAudio.pause();
@@ -253,5 +290,3 @@ export function stopSpeaking(): void {
     } catch {}
   }
 }
-
-

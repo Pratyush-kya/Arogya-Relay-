@@ -4,12 +4,14 @@ import { useState } from "react";
 import { getLocalPrescriptions, saveLocalPrescription } from "@/lib/prescriptions/storage";
 import { settleChemistEscrow } from "@/lib/payments/escrow-engine";
 import { createClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/lib/i18n/provider";
 
 interface ChemistDispensaryProps {
   onBackToDashboard: () => void;
 }
 
 export function ChemistDispensary({ onBackToDashboard }: ChemistDispensaryProps) {
+  const { t } = useLanguage();
   const [tokenInput, setTokenInput] = useState("");
   const [scannedRx, setScannedRx] = useState<any | null>(null);
   const [statusMessage, setStatusMessage] = useState<{ tone: "good" | "error" | "warn" | "idle"; text: string }>({
@@ -157,14 +159,14 @@ export function ChemistDispensary({ onBackToDashboard }: ChemistDispensaryProps)
           onClick={onBackToDashboard}
           style={{ background: "#0f172a", color: "#fff", border: "none", padding: "8px 16px", borderRadius: "8px", cursor: "pointer" }}
         >
-          ← Back to Dashboard
+          ← {t("library.backDashboard")}
         </button>
         <div style={{ marginLeft: "16px" }}>
           <h1 style={{ fontSize: "1.25rem", fontWeight: "700", color: "#0f172a", margin: 0 }}>
-            🏪 Pradhan Mantri Jan Aushadhi &amp; Chemist Fulfillment Workstation
+            🏪 {t("chemist.title")}
           </h1>
           <p style={{ margin: "4px 0 0", color: "#64748b", fontSize: "0.85rem" }}>
-            Single-Use Prescription Verification · Generic INN Substitution · Zero-Loss Counter Settlement
+            {t("chemist.subtitle")}
           </p>
         </div>
       </header>
@@ -172,7 +174,7 @@ export function ChemistDispensary({ onBackToDashboard }: ChemistDispensaryProps)
       <main style={{ maxWidth: "900px", margin: "24px auto", padding: "0 16px" }}>
         {/* Token Input Card */}
         <div style={{ background: "#ffffff", borderRadius: "12px", padding: "20px", boxShadow: "0 1px 3px rgba(0,0,0,0.08)", marginBottom: "20px" }}>
-          <h2 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "8px" }}>Scan or Enter Prescription QR / Patient Token</h2>
+          <h2 style={{ fontSize: "1rem", fontWeight: "600", marginBottom: "8px" }}>{t("chemist.verifyPrompt")}</h2>
           <p style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "16px" }}>
             Point your barcode scanner at the patient&apos;s digital health pass or enter the token ID below.
           </p>
@@ -204,7 +206,7 @@ export function ChemistDispensary({ onBackToDashboard }: ChemistDispensaryProps)
                 cursor: "pointer",
               }}
             >
-              🔍 Verify Token
+              🔍 {t("chemist.verifyBtn")}
             </button>
           </div>
 
@@ -348,7 +350,7 @@ export function ChemistDispensary({ onBackToDashboard }: ChemistDispensaryProps)
                   cursor: isAlreadyDispensed ? "not-allowed" : "pointer",
                 }}
               >
-                {dispensing ? "Burning Token..." : isAlreadyDispensed ? "Already Dispensed (Locked)" : "✓ Confirm & Dispense Medicines"}
+                {dispensing ? "Burning Token..." : isAlreadyDispensed ? "Already Dispensed (Locked)" : t("chemist.dispenseBtn")}
               </button>
             </div>
           </div>

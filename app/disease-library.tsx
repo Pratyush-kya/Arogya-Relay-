@@ -11,20 +11,26 @@ interface DiseaseLibraryProps {
 }
 
 export default function DiseaseLibrary({ onTransferToScreening, onClose }: DiseaseLibraryProps) {
-  const { effectiveLang } = useLanguage();
+  const { effectiveLang, t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"quick" | "clinical">("quick");
 
   const categories = [
-    { id: "all", label: "All Conditions", labelHi: "सभी रोग", icon: "🌐" },
-    { id: "fever", label: "Fever & Chills", labelHi: "बुखार", icon: "🌡️" },
-    { id: "stomach", label: "Stomach & Loose Motion", labelHi: "पेट व दस्त", icon: "🤢" },
-    { id: "respiratory", label: "Cough & Cold", labelHi: "खांसी व जुकाम", icon: "🤧" },
-    { id: "skin", label: "Skin, Rash & Eyes", labelHi: "त्वचा व दाद", icon: "🩹" },
-    { id: "first_aid", label: "First Aid & Urgent", labelHi: "प्राथमिक चिकित्सा", icon: "🚑" },
+    { id: "all", label: "All Conditions", labelHi: "सभी रोग", labelOr: "ସମସ୍ତ ରୋଗ", icon: "🌐" },
+    { id: "fever", label: "Fever & Chills", labelHi: "बुखार", labelOr: "ଜ୍ୱର", icon: "🌡️" },
+    { id: "stomach", label: "Stomach & Loose Motion", labelHi: "पेट व दस्त", labelOr: "ପେଟ ଓ ଝାଡ଼ା", icon: "🤢" },
+    { id: "respiratory", label: "Cough & Cold", labelHi: "खांसी व जुकाम", labelOr: "କାଶ ଓ ଥଣ୍ଡା", icon: "🤧" },
+    { id: "skin", label: "Skin, Rash & Eyes", labelHi: "त्वचा व दाद", labelOr: "ଚର୍ମ ଓ ଦାଦ", icon: "🩹" },
+    { id: "first_aid", label: "First Aid & Urgent", labelHi: "प्राथमिक चिकित्सा", labelOr: "ପ୍ରାଥମିକ ଚିକିତ୍ସା", icon: "🚑" },
   ];
+
+  const getCategoryLabel = (cat: typeof categories[0]) => {
+    if (effectiveLang === "hi") return cat.labelHi;
+    if (effectiveLang === "or") return cat.labelOr;
+    return cat.label;
+  };
 
   const filteredDiseases = useMemo(() => {
     return DISEASE_CATALOG.filter((item) => {
@@ -55,14 +61,14 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
         }}
       >
         <div>
-          <span className="eyebrow">AROGYA GYAN · PREDEFINED HEALTH LIBRARY</span>
+          <span className="eyebrow">{t("nav.library").toUpperCase()} · AROGYA GYAN</span>
           <h1 style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-            <span>Common Diseases &amp; Home Remedies Library</span>
+            <span>{t("library.heading")}</span>
           </h1>
           <p>
             {viewMode === "quick"
-              ? "Simple, easy-to-understand health guides with safe home remedies, medicine dosages, and warning signs."
-              : "Offline-accessible clinical guide for primary health workers with OTC protocols and red flags."}
+              ? t("library.quickSubtitle")
+              : t("library.clinicalSubtitle")}
           </p>
         </div>
 
@@ -79,7 +85,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
               }}
               style={{ fontWeight: 600, fontSize: "12px" }}
             >
-              💡 Quick Idea (Easy)
+              {t("library.quickMode")}
             </button>
             <button
               type="button"
@@ -88,7 +94,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
               onClick={() => setViewMode("clinical")}
               style={{ fontWeight: 600, fontSize: "12px" }}
             >
-              📋 Clinical Details
+              {t("library.clinicalMode")}
             </button>
           </div>
 
@@ -108,10 +114,10 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                 background: "var(--surface)",
                 border: "1px solid var(--line)",
               }}
-              title="Return to main dashboard overview"
+              title={t("library.backDashboard")}
             >
               <span>✕</span>
-              <span>Back to Dashboard</span>
+              <span>{t("library.backDashboard")}</span>
             </button>
           )}
         </div>
@@ -272,7 +278,10 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
               : "#10b981";
 
           // Full narration text that completely reads the entire disease advice without stopping
-          const fullAudioGuide = `${item.name}. ${item.hindiName}. Overview: ${item.narrationText}. Safe home remedies: ${item.remedies.join(". ")}. Warning signs: ${item.redFlags.join(". ")}. Standard medicine protocol: ${item.otcGuidance.join(". ")}.`;
+          const fullAudioGuide =
+            language === "hi"
+              ? `${item.hindiName}। सारांश: ${item.narrationText}। सुरक्षित घरेलू उपाय: ${item.remedies.join("। ")}। खतरे के संकेत: ${item.redFlags.join("। ")}। दवा और खुराक: ${item.otcGuidance.join("। ")}।`
+              : `${item.name}. Overview: ${item.narrationText}. Safe home remedies: ${item.remedies.join(". ")}. Warning signs: ${item.redFlags.join(". ")}. Standard medicine protocol: ${item.otcGuidance.join(". ")}.`;
 
           if (viewMode === "quick") {
             // 💡 QUICK IDEA MODE
@@ -300,10 +309,10 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                     <span style={{ fontSize: "36px", lineHeight: 1 }}>{item.icon}</span>
                     <div>
                       <h3 style={{ margin: 0, fontSize: "17px", fontWeight: "800", color: "var(--foreground)" }}>
-                        {item.name}
+                        {language === "hi" ? item.hindiName : item.name}
                       </h3>
                       <span style={{ fontSize: "14px", color: "var(--primary)", fontWeight: "600" }}>
-                        {item.hindiName}
+                        {language === "hi" ? item.name : item.hindiName}
                       </span>
                     </div>
                   </div>
@@ -320,7 +329,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                         border: "1px solid #a7f3d0",
                       }}
                     >
-                      💡 Quick Idea
+                      {t("library.quickMode")}
                     </span>
                     {isExpanded && (
                       <button
@@ -338,7 +347,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                         }}
                         title="Close / Collapse this card"
                       >
-                        ✕ Close
+                        ✕ {t("library.closeDetails")}
                       </button>
                     )}
                   </div>
@@ -355,7 +364,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                     <span style={{ fontSize: "12px", fontWeight: "700", color: "#065f46" }}>
-                      📢 In Simple Words:
+                      {t("library.inSimpleWords")}
                     </span>
                     <ReadAloud text={item.narrationText} />
                   </div>
@@ -374,7 +383,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                   }}
                 >
                   <strong style={{ fontSize: "13px", color: "#065f46", display: "flex", alignItems: "center", gap: "6px", marginBottom: "6px" }}>
-                    🏡 Safe Things To Do Right Now:
+                    {t("library.safeHomeCare")}
                   </strong>
                   <ul style={{ margin: 0, paddingLeft: "18px", fontSize: "13px", lineHeight: "1.5", color: "var(--foreground)" }}>
                     {item.remedies.slice(0, 3).map((rem, idx) => (
@@ -395,7 +404,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                   }}
                 >
                   <strong style={{ fontSize: "12.5px", color: "#991b1b", display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
-                    🚨 See Doctor If:
+                    {t("library.seeDoctorIf")}
                   </strong>
                   <p style={{ margin: 0, fontSize: "12.5px", lineHeight: "1.4", color: "#7f1d1d" }}>
                     {item.redFlags[0] ?? "Symptoms do not improve after 48 hours or breathing becomes difficult."}
@@ -417,7 +426,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                     {/* Expanded Header with Close Option */}
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <strong style={{ fontSize: "13px", color: "#166534", display: "flex", alignItems: "center", gap: "6px" }}>
-                        <span>📋 Complete Medical &amp; Care Details</span>
+                        <span>{t("library.fullDetails")}</span>
                       </strong>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                         <ReadAloud text={fullAudioGuide} />
@@ -435,7 +444,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                             cursor: "pointer",
                           }}
                         >
-                          ✕ Close Details
+                          {t("library.closeDetails")}
                         </button>
                       </div>
                     </div>
@@ -443,7 +452,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                     {/* All Recognized Symptoms */}
                     <div>
                       <span style={{ fontSize: "11.5px", fontWeight: 700, color: "#374151", display: "block", marginBottom: "4px" }}>
-                        🩺 Recognized Symptoms:
+                        {t("library.recognizedSymptoms")}
                       </span>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
                         {item.symptoms.map((s, idx) => (
@@ -466,7 +475,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                     {/* Standard OTC Medication Protocols & Dosages */}
                     <div style={{ background: "#ffffff", padding: "10px 12px", borderRadius: "8px", border: "1px solid #bbf7d0" }}>
                       <strong style={{ fontSize: "12px", color: "#1e40af", display: "block", marginBottom: "4px" }}>
-                        💊 Over-the-Counter (OTC) Medicines &amp; Dosages:
+                        {t("library.otcGuidance")}
                       </strong>
                       <ul style={{ margin: 0, paddingLeft: "16px", fontSize: "12px", lineHeight: "1.45", color: "#1e293b" }}>
                         {item.otcGuidance.map((otc, idx) => (
@@ -480,7 +489,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                     {/* Full Hospital Referral Criteria */}
                     <div style={{ background: "#ffffff", padding: "10px 12px", borderRadius: "8px", border: "1px solid #fecaca" }}>
                       <strong style={{ fontSize: "12px", color: "#991b1b", display: "block", marginBottom: "4px" }}>
-                        🚨 When to Immediately Visit a Hospital/CHC:
+                        {t("library.hospitalReferral")}
                       </strong>
                       <ul style={{ margin: 0, paddingLeft: "16px", fontSize: "12px", lineHeight: "1.4", color: "#991b1b" }}>
                         {item.redFlags.map((rf, idx) => (
@@ -494,7 +503,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                     {/* Full Supportive Care Regimen */}
                     <div style={{ background: "#ffffff", padding: "10px 12px", borderRadius: "8px", border: "1px solid #bbf7d0" }}>
                       <strong style={{ fontSize: "12px", color: "#166534", display: "block", marginBottom: "4px" }}>
-                        🌿 All Supportive Home Care Tips:
+                        {t("library.allHomeCare")}
                       </strong>
                       <ul style={{ margin: 0, paddingLeft: "16px", fontSize: "12px", lineHeight: "1.4", color: "#1e293b" }}>
                         {item.remedies.map((rem, idx) => (
@@ -524,7 +533,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                         gap: "6px",
                       }}
                     >
-                      <span>▲ Close / Collapse Details</span>
+                      <span>▲ {t("library.closeDetails")}</span>
                     </button>
                   </div>
                 )}
@@ -558,7 +567,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                       gap: "4px",
                     }}
                   >
-                    <span>{isExpanded ? "▲ Close Details" : "📋 View Medicine Dosages & Details ▼"}</span>
+                    <span>{isExpanded ? `▲ ${t("library.closeDetails")}` : t("library.viewDosages")}</span>
                   </button>
 
                   {onTransferToScreening && (
@@ -573,7 +582,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                       className="primary-button"
                       style={{ fontSize: "12px", padding: "6px 12px" }}
                     >
-                      ✚ Start Screening
+                      {t("library.startScreening")}
                     </button>
                   )}
                 </div>
@@ -602,9 +611,11 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                   <span style={{ fontSize: "32px", lineHeight: 1 }}>{item.icon}</span>
                   <div>
-                    <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "700" }}>{item.name}</h3>
+                    <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "700" }}>
+                      {language === "hi" ? item.hindiName : item.name}
+                    </h3>
                     <span style={{ fontSize: "12px", color: "var(--muted)" }}>
-                      {item.hindiName} · Category: <span style={{ textTransform: "capitalize" }}>{item.category.replace("_", " ")}</span>
+                      {language === "hi" ? item.name : item.hindiName} · {getCategoryLabel(item.category)}
                     </span>
                   </div>
                 </div>
@@ -641,7 +652,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                       }}
                       title="Collapse details"
                     >
-                      ✕ Close
+                      ✕ {t("library.closeDetails")}
                     </button>
                   )}
                 </div>
@@ -650,7 +661,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
               {/* Clinical Case Audio & Brief */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--surface-muted)", padding: "8px 12px", borderRadius: "8px" }}>
                 <span style={{ fontSize: "12px", fontWeight: "600", color: "var(--muted)" }}>
-                  Clinical Case Narration:
+                  {t("library.inSimpleWords")}
                 </span>
                 <ReadAloud text={fullAudioGuide} />
               </div>
@@ -658,7 +669,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
               {/* Symptoms Checklist */}
               <div>
                 <strong style={{ fontSize: "12px", color: "var(--foreground)", display: "block", marginBottom: "4px" }}>
-                  🩺 Recognized Clinical Symptoms:
+                  {t("library.recognizedSymptoms")}
                 </strong>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
                   {item.symptoms.map((s, idx) => (
@@ -681,7 +692,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
               {/* Standard Regimen & OTC Medication Protocols */}
               <div style={{ background: "rgba(59, 130, 246, 0.08)", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(59, 130, 246, 0.25)" }}>
                 <strong style={{ fontSize: "12px", color: "#1e40af", display: "block", marginBottom: "4px" }}>
-                  💊 Standard OTC Protocol &amp; Dosages:
+                  {t("library.otcGuidance")}
                 </strong>
                 <ul style={{ margin: 0, paddingLeft: "16px", fontSize: "12px", lineHeight: "1.45" }}>
                   {item.otcGuidance.map((otc, idx) => (
@@ -695,7 +706,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
               {/* Comprehensive Red Flags */}
               <div style={{ background: "rgba(239, 68, 68, 0.08)", padding: "10px 12px", borderRadius: "8px", border: "1px solid rgba(239, 68, 68, 0.25)" }}>
                 <strong style={{ fontSize: "12px", color: "#991b1b", display: "block", marginBottom: "4px" }}>
-                  🚨 Triage Exclusion &amp; Hospital Referral Criteria:
+                  {t("library.hospitalReferral")}
                 </strong>
                 <ul style={{ margin: 0, paddingLeft: "16px", fontSize: "12px", lineHeight: "1.4", color: "#7f1d1d" }}>
                   {item.redFlags.map((rf, idx) => (
@@ -711,7 +722,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                 <div style={{ background: "rgba(16, 185, 129, 0.08)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(16, 185, 129, 0.2)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                     <strong style={{ fontSize: "12px", color: "#065f46" }}>
-                      🌿 Supportive Clinical Regimen:
+                      {t("library.allHomeCare")}
                     </strong>
                     <button
                       type="button"
@@ -727,7 +738,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                         cursor: "pointer",
                       }}
                     >
-                      ✕ Close
+                      ✕ {t("library.closeDetails")}
                     </button>
                   </div>
                   <ul style={{ margin: 0, paddingLeft: "16px", fontSize: "12px", lineHeight: "1.4" }}>
@@ -767,7 +778,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                       borderRadius: "6px",
                     }}
                   >
-                    {isExpanded ? "▲ Close Supportive Regimen" : "▼ Supportive Regimen"}
+                    {isExpanded ? `▲ ${t("library.closeDetails")}` : t("library.viewDosages")}
                   </button>
                   <button
                     type="button"
@@ -784,7 +795,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                       textDecoration: "underline",
                     }}
                   >
-                    ← Back to Quick Idea
+                    ← {t("library.quickMode")}
                   </button>
                 </div>
 
@@ -800,7 +811,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                     className="secondary-button"
                     style={{ fontSize: "12px", padding: "4px 10px" }}
                   >
-                    ✚ Send to Doctor
+                    {t("library.startScreening")}
                   </button>
                 )}
               </div>
