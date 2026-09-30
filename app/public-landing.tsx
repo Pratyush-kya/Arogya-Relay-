@@ -1,23 +1,154 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { LanguageSwitcher } from "./language-switcher";
+import { createClient, ADMIN_EMAIL, isAdminEmail, type Profile } from "@/lib/supabase/client";
 
 export interface PublicLandingProps {
-  onSignIn: (preferredRole?: "patient" | "doctor" | "health_worker" | "chemist") => void;
-  onSignUp: (preferredRole?: "patient" | "doctor" | "health_worker" | "chemist") => void;
-  onOpenAdmin: () => void;
+  onSignIn?: (preferredRole?: "patient" | "doctor" | "health_worker" | "chemist") => void;
+  onSignUp?: (preferredRole?: "patient" | "doctor" | "health_worker" | "chemist") => void;
+  onOpenAdmin?: () => void;
 }
 
 export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin }: PublicLandingProps) {
+  const supabase = createClient();
+
+  // Embedded Hero Auth Card State
+  const [authTab, setAuthTab] = useState<"signin" | "signup">("signin");
+  const [role, setRole] = useState<"patient" | "doctor" | "health_worker" | "chemist">("patient");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [status, setStatus] = useState<{ tone: "idle" | "busy" | "error" | "good"; msg: string }>({
+    tone: "idle",
+    msg: "",
+  });
+
+  // Doctor credentials
+  const [docNmcNumber, setDocNmcNumber] = useState("");
+  const [docCouncil, setDocCouncil] = useState("National Medical Commission");
+
+  // Chemist credentials
+  const [chemistStoreName, setChemistStoreName] = useState("PMBJP Jan Aushadhi Kendra");
+
+  // Scroll to and configure hero auth card
+  function selectRoleAndFocus(selectedRole: "patient" | "doctor" | "health_worker" | "chemist") {
+    setRole(selectedRole);
+    setAuthTab("signup");
+    const el = document.getElementById("hero-auth-card");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }
+
+  // Handle Embedded Hero Sign In
+  async function handleHeroSignIn(e: React.FormEvent) {
+    e.preventDefault();
+    setStatus({ tone: "busy", msg: "Authenticating credentials with national health relay..." });
+
+    try {
+      const cleanEmail = email.trim().toLowerCase();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password,
+      });
+
+      if (error) throw error;
+      if (!data?.user) throw new Error("Authentication failed. Please verify your credentials.");
+
+      setStatus({ tone: "good", msg: "✓ Authentication successful! Loading your authorized workspace..." });
+      // Reload / onAuthStateChange will automatically switch to the user's role interface
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    } catch (err: any) {
+      setStatus({ tone: "error", msg: err.message || "Invalid email or password. Please try again." });
+    }
+  }
+
+  // Handle Embedded Hero Sign Up
+  async function handleHeroSignUp(e: React.FormEvent) {
+    e.preventDefault();
+    setStatus({ tone: "busy", msg: "Registering new account and configuring role profile..." });
+
+    try {
+      const cleanEmail = email.trim().toLowerCase();
+      const pseudoId =
+        role === "doctor"
+          ? `DOC-${Math.floor(1000 + Math.random() * 9000)}`
+          : role === "health_worker"
+          ? `HW-${Math.floor(1000 + Math.random() * 9000)}`
+          : role === "chemist"
+          ? `CHM-${Math.floor(1000 + Math.random() * 9000)}`
+          : `PAT-${Math.floor(1000 + Math.random() * 9000)}`;
+
+      const { data, error } = await supabase.auth.signUp({
+        email: cleanEmail,
+        password,
+        options: {
+          data: {
+            display_name: displayName || cleanEmail.split("@")[0],
+            role,
+            phone,
+            pseudo_id: pseudoId,
+          },
+        },
+      });
+
+      if (error) throw error;
+      if (!data?.user) throw new Error("Account creation failed. Please try again.");
+
+      // Ensure profile is inserted into public.profiles
+      try {
+        await supabase.from("profiles").upsert(
+          {
+            id: data.user.id,
+            email: cleanEmail,
+            role,
+            display_name: displayName || cleanEmail.split("@")[0],
+            phone: phone || null,
+            pseudo_id: pseudoId,
+            medical_reg_no: role === "doctor" ? docNmcNumber : null,
+            council_name: role === "doctor" ? docCouncil : null,
+            facility_name: role === "chemist" ? chemistStoreName : null,
+            verification_status: role === "doctor" ? "pending_verification" : "verified",
+          },
+          { onConflict: "id" }
+        );
+      } catch (profErr) {
+        console.warn("Profile upsert notice:", profErr);
+      }
+
+      setStatus({
+        tone: "good",
+        msg: "✓ Account registered successfully! Entering your personalized portal...",
+      });
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    } catch (err: any) {
+      setStatus({ tone: "error", msg: err.message || "Could not register account. Please check your inputs." });
+    }
+  }
+
   return (
-    <div className="public-landing-container" style={{ minHeight: "100vh", background: "var(--bg, #f8fafc)", color: "var(--ink, #0f172a)", fontFamily: "var(--font-sans, system-ui, sans-serif)" }}>
-      {/* Top Announcement & Emergency Banner */}
+    <div
+      className="public-landing-container"
+      style={{
+        minHeight: "100vh",
+        background: "var(--bg, #f8fafc)",
+        color: "var(--ink, #0f172a)",
+        fontFamily: "var(--font-sans, system-ui, sans-serif)",
+      }}
+    >
+      {/* Top 24/7 Emergency Helplines Announcement Bar (No Admin link) */}
       <div
         style={{
           background: "linear-gradient(90deg, #064e3b 0%, #065f46 100%)",
           color: "#ecfdf5",
-          padding: "7px 16px",
+          padding: "7px 20px",
           fontSize: "12px",
           display: "flex",
           justifyContent: "space-between",
@@ -28,38 +159,47 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin }: PublicLanding
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-          <span style={{ fontWeight: 700, background: "#047857", padding: "2px 8px", borderRadius: "10px", fontSize: "11px", letterSpacing: "0.4px" }}>
+          <span
+            style={{
+              fontWeight: 700,
+              background: "#047857",
+              padding: "2px 8px",
+              borderRadius: "10px",
+              fontSize: "11px",
+              letterSpacing: "0.4px",
+            }}
+          >
             🇮🇳 NATIONAL DIGITAL HEALTH RELAY
           </span>
-          <span>Emergency Assistance:</span>
-          <a href="tel:112" style={{ color: "#a7f3d0", fontWeight: 700, textDecoration: "none" }}>🚨 112 (All India Emergency)</a>
+          <span>Emergency Services:</span>
+          <a href="tel:112" style={{ color: "#a7f3d0", fontWeight: 700, textDecoration: "none" }}>
+            🚨 112 (Emergency)
+          </a>
           <span style={{ opacity: 0.5 }}>|</span>
-          <a href="tel:108" style={{ color: "#a7f3d0", fontWeight: 700, textDecoration: "none" }}>🚑 108 (Ambulance)</a>
+          <a href="tel:108" style={{ color: "#a7f3d0", fontWeight: 700, textDecoration: "none" }}>
+            🚑 108 (Ambulance)
+          </a>
           <span style={{ opacity: 0.5 }}>|</span>
-          <a href="tel:104" style={{ color: "#a7f3d0", fontWeight: 700, textDecoration: "none" }}>📞 104 (Health Helpline)</a>
+          <a href="tel:104" style={{ color: "#a7f3d0", fontWeight: 700, textDecoration: "none" }}>
+            📞 104 (Health Help)
+          </a>
+          <span style={{ opacity: 0.5 }}>|</span>
+          <a href="tel:14416" style={{ color: "#a7f3d0", fontWeight: 700, textDecoration: "none" }}>
+            🩺 14416 (Tele-MANAS)
+          </a>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <span style={{ fontSize: "11px", color: "#6ee7b7" }}>● 100% Offline-Resilient Node</span>
-          <a
-            href="/admin"
-            onClick={(e) => {
-              e.preventDefault();
-              onOpenAdmin();
-            }}
-            style={{ color: "#d1fae5", fontSize: "11px", textDecoration: "underline", opacity: 0.85 }}
-          >
-            Admin Portal
-          </a>
+          <span style={{ fontSize: "11px", color: "#6ee7b7" }}>● 100% Offline-Resilient Network Node</span>
         </div>
       </div>
 
-      {/* Main Navigation Bar */}
+      {/* Main Navigation Bar (Clean & Focused) */}
       <header
         style={{
           background: "rgba(255, 255, 255, 0.96)",
           backdropFilter: "blur(12px)",
           borderBottom: "1px solid var(--line, #e2e8f0)",
-          padding: "12px 24px",
+          padding: "12px 28px",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -71,24 +211,44 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin }: PublicLanding
         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
           <div
             style={{
-              width: "42px",
-              height: "42px",
+              width: "40px",
+              height: "40px",
               borderRadius: "10px",
               background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               color: "#ffffff",
-              fontSize: "22px",
+              fontSize: "20px",
               boxShadow: "0 2px 8px rgba(5, 150, 105, 0.25)",
             }}
           >
             🌿
           </div>
           <div>
-            <h1 style={{ margin: 0, fontSize: "19px", fontWeight: 800, color: "var(--ink, #0f172a)", letterSpacing: "-0.3px", display: "flex", alignItems: "center", gap: "8px" }}>
+            <h1
+              style={{
+                margin: 0,
+                fontSize: "19px",
+                fontWeight: 800,
+                color: "var(--ink, #0f172a)",
+                letterSpacing: "-0.3px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
               Arogya Relay
-              <span style={{ fontSize: "11px", fontWeight: 700, color: "#059669", background: "#d1fae5", padding: "2px 8px", borderRadius: "12px" }}>
+              <span
+                style={{
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  color: "#059669",
+                  background: "#d1fae5",
+                  padding: "2px 8px",
+                  borderRadius: "12px",
+                }}
+              >
                 ABDM Verified
               </span>
             </h1>
@@ -98,200 +258,597 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin }: PublicLanding
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
           <LanguageSwitcher />
-
-          <button
-            type="button"
-            onClick={() => onSignIn()}
-            style={{
-              padding: "7px 16px",
-              borderRadius: "8px",
-              border: "1px solid var(--line, #cbd5e1)",
-              background: "#ffffff",
-              color: "var(--ink, #0f172a)",
-              fontWeight: 600,
-              fontSize: "13px",
-              cursor: "pointer",
-              transition: "all 0.15s ease",
-            }}
-          >
-            Sign In
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onSignUp()}
-            style={{
-              padding: "7px 18px",
-              borderRadius: "8px",
-              border: "none",
-              background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
-              color: "#ffffff",
-              fontWeight: 700,
-              fontSize: "13px",
-              cursor: "pointer",
-              boxShadow: "0 2px 8px rgba(5, 150, 105, 0.3)",
-              transition: "all 0.15s ease",
-            }}
-          >
-            Create Account (Sign Up)
-          </button>
         </div>
       </header>
 
-      {/* Hero Section */}
+      {/* Hero Section with Split Layout: Left Platform Mission + Right Integrated Auth Card */}
       <section
         style={{
-          maxWidth: "1160px",
+          maxWidth: "1200px",
           margin: "0 auto",
-          padding: "54px 20px 36px",
-          textAlign: "center",
+          padding: "48px 24px 36px",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+          gap: "36px",
+          alignItems: "start",
         }}
       >
-        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#dcfce7", color: "#15803d", padding: "4px 14px", borderRadius: "20px", fontSize: "12px", fontWeight: 700, marginBottom: "16px" }}>
-          <span>🛡️</span> Zero-Loss Clinical Relay · 2G &amp; Offline Resilient
-        </div>
-
-        <h2
-          style={{
-            fontSize: "clamp(28px, 4.5vw, 44px)",
-            fontWeight: 800,
-            letterSpacing: "-0.03em",
-            color: "var(--ink, #0f172a)",
-            lineHeight: 1.18,
-            maxWidth: "840px",
-            margin: "0 auto 16px",
-          }}
-        >
-          Institutional Health Access for Bharat, Connected or Disconnected.
-        </h2>
-
-        <p
-          style={{
-            fontSize: "clamp(15px, 2vw, 17px)",
-            color: "#475569",
-            maxWidth: "720px",
-            margin: "0 auto 28px",
-            lineHeight: 1.55,
-          }}
-        >
-          Dedicated portals for Citizens, Doctors, ASHA Community Health Workers, and PMBJP Jan Aushadhi Chemists. Sign in to your authorized workstation to access your specific tools.
-        </p>
-
-        {/* Primary Action Buttons */}
-        <div style={{ display: "flex", justifyContent: "center", gap: "14px", flexWrap: "wrap", marginBottom: "40px" }}>
-          <button
-            type="button"
-            onClick={() => onSignIn()}
+        {/* Left Column (Mid Page): Platform Introduction */}
+        <div>
+          <div
             style={{
-              padding: "12px 28px",
-              borderRadius: "10px",
-              background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
-              color: "#ffffff",
-              fontSize: "15px",
-              fontWeight: 700,
-              border: "none",
-              cursor: "pointer",
-              boxShadow: "0 4px 14px rgba(5, 150, 105, 0.35)",
               display: "inline-flex",
               alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <span>🔐</span> Sign In to Your Portal
-          </button>
-
-          <button
-            type="button"
-            onClick={() => onSignUp()}
-            style={{
-              padding: "12px 28px",
-              borderRadius: "10px",
-              background: "#ffffff",
-              color: "#065f46",
-              fontSize: "15px",
+              gap: "6px",
+              background: "#dcfce7",
+              color: "#15803d",
+              padding: "4px 14px",
+              borderRadius: "20px",
+              fontSize: "12px",
               fontWeight: 700,
-              border: "1.5px solid #a7f3d0",
-              cursor: "pointer",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
+              marginBottom: "16px",
             }}
           >
-            <span>✍️</span> Create New Account / Sign Up
-          </button>
+            <span>🛡️</span> Zero-Loss Clinical Relay · 2G &amp; Offline Resilient
+          </div>
+
+          <h2
+            style={{
+              fontSize: "clamp(28px, 4vw, 42px)",
+              fontWeight: 800,
+              letterSpacing: "-0.03em",
+              color: "var(--ink, #0f172a)",
+              lineHeight: 1.18,
+              margin: "0 0 16px",
+            }}
+          >
+            Institutional Health Access for Bharat, Connected or Disconnected.
+          </h2>
+
+          <p
+            style={{
+              fontSize: "15.5px",
+              color: "#475569",
+              lineHeight: 1.6,
+              margin: "0 0 24px",
+            }}
+          >
+            A unified, decentralized health platform bridging citizens, verified doctors, ASHA community field workers,
+            and Jan Aushadhi generic pharmacies. Sign in or create an account in the portal on the right to access your
+            authorized tools.
+          </p>
+
+          {/* Quick Pillars */}
+          <div style={{ display: "grid", gap: "12px", marginTop: "16px" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "12px",
+                background: "#ffffff",
+                padding: "12px 16px",
+                borderRadius: "10px",
+                border: "1px solid #e2e8f0",
+              }}
+            >
+              <span style={{ fontSize: "20px" }}>👤</span>
+              <div>
+                <strong style={{ fontSize: "13.5px", color: "#0f172a", display: "block" }}>Citizen Health Pass</strong>
+                <span style={{ fontSize: "12.5px", color: "#64748b" }}>
+                  ABHA-linked health records, doctor bookings, and Jan Aushadhi medicine savings.
+                </span>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "12px",
+                background: "#ffffff",
+                padding: "12px 16px",
+                borderRadius: "10px",
+                border: "1px solid #e2e8f0",
+              }}
+            >
+              <span style={{ fontSize: "20px" }}>🩺</span>
+              <div>
+                <strong style={{ fontSize: "13.5px", color: "#0f172a", display: "block" }}>Medical Doctor Workstation</strong>
+                <span style={{ fontSize: "12.5px", color: "#64748b" }}>
+                  NMC-verified clinical queue, tele-consultations, and signed digital e-prescriptions.
+                </span>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "12px",
+                background: "#ffffff",
+                padding: "12px 16px",
+                borderRadius: "10px",
+                border: "1px solid #e2e8f0",
+              }}
+            >
+              <span style={{ fontSize: "20px" }}>👩‍⚕️</span>
+              <div>
+                <strong style={{ fontSize: "13.5px", color: "#0f172a", display: "block" }}>ASHA Community Field Unit</strong>
+                <span style={{ fontSize: "12.5px", color: "#64748b" }}>
+                  Door-to-door screenings, voice vitals dictation in Hindi &amp; English, and local offline sync.
+                </span>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "12px",
+                background: "#ffffff",
+                padding: "12px 16px",
+                borderRadius: "10px",
+                border: "1px solid #e2e8f0",
+              }}
+            >
+              <span style={{ fontSize: "20px" }}>🏪</span>
+              <div>
+                <strong style={{ fontSize: "13.5px", color: "#0f172a", display: "block" }}>Chemist &amp; Dispensary</strong>
+                <span style={{ fontSize: "12.5px", color: "#64748b" }}>
+                  QR verification with single-use cryptographic token burn to prevent duplicate dispensing.
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Four Dedicated Role Cards */}
+        {/* Right Column (Right Page): Unified Interactive Auth Card */}
+        <div
+          id="hero-auth-card"
+          style={{
+            background: "#ffffff",
+            borderRadius: "18px",
+            border: "1.5px solid #cbd5e1",
+            boxShadow: "0 12px 36px rgba(0,0,0,0.07)",
+            padding: "26px",
+          }}
+        >
+          {/* Card Header & Tab Switcher */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              background: "#f1f5f9",
+              borderRadius: "10px",
+              padding: "4px",
+              marginBottom: "20px",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                setAuthTab("signin");
+                setStatus({ tone: "idle", msg: "" });
+              }}
+              style={{
+                padding: "10px",
+                borderRadius: "8px",
+                border: "none",
+                fontWeight: 700,
+                fontSize: "13.5px",
+                cursor: "pointer",
+                background: authTab === "signin" ? "#ffffff" : "transparent",
+                color: authTab === "signin" ? "#0f172a" : "#64748b",
+                boxShadow: authTab === "signin" ? "0 2px 6px rgba(0,0,0,0.08)" : "none",
+                transition: "all 0.15s ease",
+              }}
+            >
+              🔐 Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAuthTab("signup");
+                setStatus({ tone: "idle", msg: "" });
+              }}
+              style={{
+                padding: "10px",
+                borderRadius: "8px",
+                border: "none",
+                fontWeight: 700,
+                fontSize: "13.5px",
+                cursor: "pointer",
+                background: authTab === "signup" ? "#ffffff" : "transparent",
+                color: authTab === "signup" ? "#059669" : "#64748b",
+                boxShadow: authTab === "signup" ? "0 2px 6px rgba(0,0,0,0.08)" : "none",
+                transition: "all 0.15s ease",
+              }}
+            >
+              ✍️ Sign Up (Register)
+            </button>
+          </div>
+
+          {/* Feedback Status Alert */}
+          {status.msg && (
+            <div
+              style={{
+                padding: "10px 14px",
+                borderRadius: "8px",
+                marginBottom: "16px",
+                fontSize: "12.5px",
+                lineHeight: 1.4,
+                background:
+                  status.tone === "error"
+                    ? "#fef2f2"
+                    : status.tone === "good"
+                    ? "#ecfdf5"
+                    : "#f0fdf4",
+                color:
+                  status.tone === "error"
+                    ? "#b91c1c"
+                    : status.tone === "good"
+                    ? "#065f46"
+                    : "#15803d",
+                border: `1px solid ${
+                  status.tone === "error"
+                    ? "#fecaca"
+                    : status.tone === "good"
+                    ? "#a7f3d0"
+                    : "#bbf7d0"
+                }`,
+              }}
+            >
+              {status.msg}
+            </div>
+          )}
+
+          {/* TAB 1: SIGN IN FORM */}
+          {authTab === "signin" && (
+            <form onSubmit={handleHeroSignIn} style={{ display: "grid", gap: "14px" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "5px" }}>
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="e.g. name@hospital.in or user@gmail.com"
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    borderRadius: "8px",
+                    border: "1px solid #cbd5e1",
+                    fontSize: "13.5px",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "5px" }}>
+                  Password
+                </label>
+                <div style={{ position: "relative" }}>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••••••"
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      paddingRight: "60px",
+                      borderRadius: "8px",
+                      border: "1px solid #cbd5e1",
+                      fontSize: "13.5px",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: "absolute",
+                      right: "8px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      background: "none",
+                      border: "none",
+                      fontSize: "11px",
+                      fontWeight: 700,
+                      color: "#64748b",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {showPassword ? "HIDE" : "SHOW"}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={status.tone === "busy"}
+                style={{
+                  padding: "12px",
+                  borderRadius: "8px",
+                  border: "none",
+                  background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
+                  color: "#ffffff",
+                  fontWeight: 700,
+                  fontSize: "14px",
+                  cursor: status.tone === "busy" ? "wait" : "pointer",
+                  boxShadow: "0 3px 10px rgba(5, 150, 105, 0.3)",
+                  marginTop: "6px",
+                  transition: "opacity 0.15s ease",
+                }}
+              >
+                {status.tone === "busy" ? "Signing In..." : "Sign In to Your Health Portal →"}
+              </button>
+
+              <p style={{ margin: "4px 0 0", fontSize: "11.5px", color: "#64748b", textAlign: "center" }}>
+                Don't have an account?{" "}
+                <button
+                  type="button"
+                  onClick={() => setAuthTab("signup")}
+                  style={{ background: "none", border: "none", color: "#059669", fontWeight: 700, cursor: "pointer", padding: 0 }}
+                >
+                  Create New Account
+                </button>
+              </p>
+            </form>
+          )}
+
+          {/* TAB 2: SIGN UP FORM */}
+          {authTab === "signup" && (
+            <form onSubmit={handleHeroSignUp} style={{ display: "grid", gap: "12px" }}>
+              {/* Role Selection */}
+              <div>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "6px" }}>
+                  Select Your Account Role
+                </label>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
+                  {[
+                    { id: "patient", icon: "👤", label: "Citizen / Patient" },
+                    { id: "doctor", icon: "🩺", label: "Doctor" },
+                    { id: "health_worker", icon: "👩‍⚕️", label: "ASHA Worker" },
+                    { id: "chemist", icon: "🏪", label: "Chemist" },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setRole(item.id as any)}
+                      style={{
+                        padding: "7px 10px",
+                        borderRadius: "8px",
+                        border: role === item.id ? "2px solid #059669" : "1px solid #cbd5e1",
+                        background: role === item.id ? "#ecfdf5" : "#ffffff",
+                        color: role === item.id ? "#065f46" : "#475569",
+                        fontWeight: role === item.id ? 700 : 500,
+                        fontSize: "12px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        justifyContent: "flex-start",
+                      }}
+                    >
+                      <span>{item.icon}</span>
+                      <span>{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "4px" }}>
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="e.g. Ramesh Soren / Dr. Ananya Sharma"
+                  style={{
+                    width: "100%",
+                    padding: "9px 12px",
+                    borderRadius: "8px",
+                    border: "1px solid #cbd5e1",
+                    fontSize: "13px",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "4px" }}>
+                    Email ID
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="user@gmail.com"
+                    style={{
+                      width: "100%",
+                      padding: "9px 12px",
+                      borderRadius: "8px",
+                      border: "1px solid #cbd5e1",
+                      fontSize: "13px",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "4px" }}>
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Min 6 characters"
+                    style={{
+                      width: "100%",
+                      padding: "9px 12px",
+                      borderRadius: "8px",
+                      border: "1px solid #cbd5e1",
+                      fontSize: "13px",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Conditional Doctor Details */}
+              {role === "doctor" && (
+                <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "10px", borderRadius: "8px", display: "grid", gap: "8px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "#166534", marginBottom: "3px" }}>
+                      NMC Registration Number
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={docNmcNumber}
+                      onChange={(e) => setDocNmcNumber(e.target.value)}
+                      placeholder="e.g. NMC-2022-84920"
+                      style={{ width: "100%", padding: "7px 10px", borderRadius: "6px", border: "1px solid #86efac", fontSize: "12px", boxSizing: "border-box" }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "#166534", marginBottom: "3px" }}>
+                      State Medical Council
+                    </label>
+                    <input
+                      type="text"
+                      value={docCouncil}
+                      onChange={(e) => setDocCouncil(e.target.value)}
+                      placeholder="e.g. Delhi Medical Council"
+                      style={{ width: "100%", padding: "7px 10px", borderRadius: "6px", border: "1px solid #86efac", fontSize: "12px", boxSizing: "border-box" }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Conditional Chemist Details */}
+              {role === "chemist" && (
+                <div style={{ background: "#faf5ff", border: "1px solid #e9d5ff", padding: "10px", borderRadius: "8px" }}>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "#7e22ce", marginBottom: "3px" }}>
+                    Jan Aushadhi Kendra Store Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={chemistStoreName}
+                    onChange={(e) => setChemistStoreName(e.target.value)}
+                    placeholder="e.g. PMBJP Kendra North Ridge #108"
+                    style={{ width: "100%", padding: "7px 10px", borderRadius: "6px", border: "1px solid #d8b4fe", fontSize: "12px", boxSizing: "border-box" }}
+                  />
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={status.tone === "busy"}
+                style={{
+                  padding: "12px",
+                  borderRadius: "8px",
+                  border: "none",
+                  background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
+                  color: "#ffffff",
+                  fontWeight: 700,
+                  fontSize: "14px",
+                  cursor: status.tone === "busy" ? "wait" : "pointer",
+                  boxShadow: "0 3px 10px rgba(5, 150, 105, 0.3)",
+                  marginTop: "4px",
+                }}
+              >
+                {status.tone === "busy" ? "Registering..." : `Create Account (${role.toUpperCase()}) →`}
+              </button>
+
+              <p style={{ margin: "2px 0 0", fontSize: "11.5px", color: "#64748b", textAlign: "center" }}>
+                Already registered?{" "}
+                <button
+                  type="button"
+                  onClick={() => setAuthTab("signin")}
+                  style={{ background: "none", border: "none", color: "#059669", fontWeight: 700, cursor: "pointer", padding: 0 }}
+                >
+                  Sign In
+                </button>
+              </p>
+            </form>
+          )}
+        </div>
+      </section>
+
+      {/* Role Overview Cards (Below Hero - Single action to select role in Hero) */}
+      <section
+        style={{
+          maxWidth: "1200px",
+          margin: "0 auto",
+          padding: "20px 24px 44px",
+        }}
+      >
+        <div style={{ textAlign: "center", marginBottom: "24px" }}>
+          <h3 style={{ margin: 0, fontSize: "22px", fontWeight: 800, color: "#0f172a" }}>
+            Four Dedicated Role Interfaces
+          </h3>
+          <p style={{ margin: "4px 0 0", fontSize: "14px", color: "#64748b" }}>
+            Each persona receives a strictly isolated workstation customized to their specific clinical responsibility.
+          </p>
+        </div>
+
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
             gap: "20px",
-            textAlign: "left",
-            marginTop: "16px",
           }}
         >
-          {/* Card 1: Citizen & Patient */}
+          {/* Card 1: Citizen */}
           <div
             style={{
               background: "#ffffff",
               borderRadius: "14px",
               border: "1px solid #e2e8f0",
-              padding: "24px 20px",
+              padding: "22px",
               display: "flex",
               flexDirection: "column",
-              boxShadow: "0 3px 10px rgba(0,0,0,0.03)",
-              transition: "transform 0.15s ease, border-color 0.15s ease",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-              <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "#e0f2fe", color: "#0284c7", fontSize: "18px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                👤
-              </div>
-              <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>Citizen &amp; Patient</h3>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
+              <span style={{ fontSize: "24px" }}>👤</span>
+              <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>Citizen &amp; Patient</h4>
             </div>
             <p style={{ margin: "0 0 16px", fontSize: "13px", color: "#64748b", lineHeight: 1.5, flex: 1 }}>
-              Universal ABHA health pass, consultation bookings, Arogya Gyan evidence-based home remedies, verified prescriptions, and PMBJP generic medicine finder.
+              Universal ABHA health pass, doctor consultation bookings, Arogya Gyan evidence-based home remedies, and PMBJP generic drug cost comparisons.
             </p>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                type="button"
-                onClick={() => onSignIn("patient")}
-                style={{
-                  flex: 1,
-                  padding: "8px",
-                  borderRadius: "6px",
-                  border: "1px solid #bae6fd",
-                  background: "#f0f9ff",
-                  color: "#0369a1",
-                  fontSize: "12px",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                Sign In
-              </button>
-              <button
-                type="button"
-                onClick={() => onSignUp("patient")}
-                style={{
-                  flex: 1,
-                  padding: "8px",
-                  borderRadius: "6px",
-                  border: "none",
-                  background: "#0284c7",
-                  color: "#ffffff",
-                  fontSize: "12px",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                Sign Up
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => selectRoleAndFocus("patient")}
+              style={{
+                padding: "8px 12px",
+                borderRadius: "6px",
+                border: "1px solid #bae6fd",
+                background: "#f0f9ff",
+                color: "#0369a1",
+                fontSize: "12.5px",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Select Citizen Role ↑
+            </button>
           </div>
 
           {/* Card 2: Doctor */}
@@ -300,116 +857,72 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin }: PublicLanding
               background: "#ffffff",
               borderRadius: "14px",
               border: "1px solid #e2e8f0",
-              padding: "24px 20px",
+              padding: "22px",
               display: "flex",
               flexDirection: "column",
-              boxShadow: "0 3px 10px rgba(0,0,0,0.03)",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-              <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "#ecfdf5", color: "#059669", fontSize: "18px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                🩺
-              </div>
-              <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>Medical Doctor</h3>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
+              <span style={{ fontSize: "24px" }}>🩺</span>
+              <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>Medical Doctor</h4>
             </div>
             <p style={{ margin: "0 0 16px", fontSize: "13px", color: "#64748b", lineHeight: 1.5, flex: 1 }}>
-              NMC-verified clinical triage workstation, tele-consultation queue, deterministic clinical triage guidance, and digitally signed e-prescriptions.
+              NMC-verified clinical triage workstation, pending consultation queue, deterministic clinical diagnostic guidance, and digital e-prescriptions.
             </p>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                type="button"
-                onClick={() => onSignIn("doctor")}
-                style={{
-                  flex: 1,
-                  padding: "8px",
-                  borderRadius: "6px",
-                  border: "1px solid #a7f3d0",
-                  background: "#ecfdf5",
-                  color: "#065f46",
-                  fontSize: "12px",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                Sign In
-              </button>
-              <button
-                type="button"
-                onClick={() => onSignUp("doctor")}
-                style={{
-                  flex: 1,
-                  padding: "8px",
-                  borderRadius: "6px",
-                  border: "none",
-                  background: "#059669",
-                  color: "#ffffff",
-                  fontSize: "12px",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                Sign Up (NMC)
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => selectRoleAndFocus("doctor")}
+              style={{
+                padding: "8px 12px",
+                borderRadius: "6px",
+                border: "1px solid #a7f3d0",
+                background: "#ecfdf5",
+                color: "#065f46",
+                fontSize: "12.5px",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Select Doctor Role ↑
+            </button>
           </div>
 
-          {/* Card 3: Health Worker (ASHA) */}
+          {/* Card 3: Health Worker */}
           <div
             style={{
               background: "#ffffff",
               borderRadius: "14px",
               border: "1px solid #e2e8f0",
-              padding: "24px 20px",
+              padding: "22px",
               display: "flex",
               flexDirection: "column",
-              boxShadow: "0 3px 10px rgba(0,0,0,0.03)",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-              <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "#fef3c7", color: "#d97706", fontSize: "18px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                👩‍⚕️
-              </div>
-              <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>ASHA Health Worker</h3>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
+              <span style={{ fontSize: "24px" }}>👩‍⚕️</span>
+              <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>ASHA Health Worker</h4>
             </div>
             <p style={{ margin: "0 0 16px", fontSize: "13px", color: "#64748b", lineHeight: 1.5, flex: 1 }}>
-              Door-to-door community health screening with offline storage, voice vitals dictation in Hindi &amp; English, fever cluster tracking, and hospital referrals.
+              Door-to-door community screening, offline local storage, voice vitals dictation in Hindi &amp; English, fever cluster tracking, and hospital referrals.
             </p>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                type="button"
-                onClick={() => onSignIn("health_worker")}
-                style={{
-                  flex: 1,
-                  padding: "8px",
-                  borderRadius: "6px",
-                  border: "1px solid #fde68a",
-                  background: "#fffbeb",
-                  color: "#b45309",
-                  fontSize: "12px",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                Sign In
-              </button>
-              <button
-                type="button"
-                onClick={() => onSignUp("health_worker")}
-                style={{
-                  flex: 1,
-                  padding: "8px",
-                  borderRadius: "6px",
-                  border: "none",
-                  background: "#d97706",
-                  color: "#ffffff",
-                  fontSize: "12px",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                Sign Up
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => selectRoleAndFocus("health_worker")}
+              style={{
+                padding: "8px 12px",
+                borderRadius: "6px",
+                border: "1px solid #fde68a",
+                background: "#fffbeb",
+                color: "#b45309",
+                fontSize: "12.5px",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Select ASHA Worker Role ↑
+            </button>
           </div>
 
           {/* Card 4: Chemist */}
@@ -418,164 +931,55 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin }: PublicLanding
               background: "#ffffff",
               borderRadius: "14px",
               border: "1px solid #e2e8f0",
-              padding: "24px 20px",
+              padding: "22px",
               display: "flex",
               flexDirection: "column",
-              boxShadow: "0 3px 10px rgba(0,0,0,0.03)",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-              <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "#f3e8ff", color: "#9333ea", fontSize: "18px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                🏪
-              </div>
-              <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>Chemist &amp; Dispensary</h3>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
+              <span style={{ fontSize: "24px" }}>🏪</span>
+              <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>Chemist &amp; Dispensary</h4>
             </div>
             <p style={{ margin: "0 0 16px", fontSize: "13px", color: "#64748b", lineHeight: 1.5, flex: 1 }}>
-              Prescription QR scanner with single-use cryptographic token burn to prevent double dispensing, and PMBJP generic drug alternative inventory.
+              Prescription QR scanner with single-use cryptographic token burn to prevent duplicate dispensing, and PMBJP generic drug alternative inventory.
             </p>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                type="button"
-                onClick={() => onSignIn("chemist")}
-                style={{
-                  flex: 1,
-                  padding: "8px",
-                  borderRadius: "6px",
-                  border: "1px solid #e9d5ff",
-                  background: "#faf5ff",
-                  color: "#7e22ce",
-                  fontSize: "12px",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                Sign In
-              </button>
-              <button
-                type="button"
-                onClick={() => onSignUp("chemist")}
-                style={{
-                  flex: 1,
-                  padding: "8px",
-                  borderRadius: "6px",
-                  border: "none",
-                  background: "#9333ea",
-                  color: "#ffffff",
-                  fontSize: "12px",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                Sign Up
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => selectRoleAndFocus("chemist")}
+              style={{
+                padding: "8px 12px",
+                borderRadius: "6px",
+                border: "1px solid #e9d5ff",
+                background: "#faf5ff",
+                color: "#7e22ce",
+                fontSize: "12.5px",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Select Chemist Role ↑
+            </button>
           </div>
         </div>
       </section>
 
-      {/* Trust & Architecture Matrix */}
-      <section
-        style={{
-          background: "#ffffff",
-          borderTop: "1px solid #e2e8f0",
-          borderBottom: "1px solid #e2e8f0",
-          padding: "44px 20px",
-          marginTop: "40px",
-        }}
-      >
-        <div style={{ maxWidth: "1160px", margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "32px" }}>
-            <span style={{ fontSize: "12px", fontWeight: 700, color: "#059669", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-              Engineered for Real Bharat Conditions
-            </span>
-            <h3 style={{ margin: "6px 0 0", fontSize: "24px", fontWeight: 800, color: "#0f172a" }}>
-              Why Arogya Relay is Different
-            </h3>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "24px" }}>
-            <div style={{ padding: "16px", borderRadius: "10px", background: "#f8fafc" }}>
-              <div style={{ fontSize: "22px", marginBottom: "8px" }}>📡</div>
-              <h4 style={{ margin: "0 0 6px", fontSize: "15px", fontWeight: 700 }}>100% Offline Capability</h4>
-              <p style={{ margin: 0, fontSize: "13px", color: "#64748b", lineHeight: 1.5 }}>
-                Local IndexedDB and PWA service workers ensure screenings, symptoms, and voice dictations are stored safely even when cellular network drops to zero.
-              </p>
-            </div>
-
-            <div style={{ padding: "16px", borderRadius: "10px", background: "#f8fafc" }}>
-              <div style={{ fontSize: "22px", marginBottom: "8px" }}>🔐</div>
-              <h4 style={{ margin: "0 0 6px", fontSize: "15px", fontWeight: 700 }}>Single-Use Burn Tokens</h4>
-              <p style={{ margin: 0, fontSize: "13px", color: "#64748b", lineHeight: 1.5 }}>
-                Prescription QR codes carry a cryptographic burn token verified at Jan Aushadhi pharmacies, preventing dangerous double-dispensing and medicine fraud.
-              </p>
-            </div>
-
-            <div style={{ padding: "16px", borderRadius: "10px", background: "#f8fafc" }}>
-              <div style={{ fontSize: "22px", marginBottom: "8px" }}>🩺</div>
-              <h4 style={{ margin: "0 0 6px", fontSize: "15px", fontWeight: 700 }}>Verified Doctor Network</h4>
-              <p style={{ margin: 0, fontSize: "13px", color: "#64748b", lineHeight: 1.5 }}>
-                Doctors register with their National Medical Commission (NMC) registration number and state medical council certificates, approved before entering clinical queues.
-              </p>
-            </div>
-
-            <div style={{ padding: "16px", borderRadius: "10px", background: "#f8fafc" }}>
-              <div style={{ fontSize: "22px", marginBottom: "8px" }}>🇮🇳</div>
-              <h4 style={{ margin: "0 0 6px", fontSize: "15px", fontWeight: 700 }}>Multilingual Support</h4>
-              <p style={{ margin: 0, fontSize: "13px", color: "#64748b", lineHeight: 1.5 }}>
-                Available in 8 Indian languages (Hindi, English, Odia, Santali, Bengali, Marathi, Tamil, Telugu) with offline voice vitals recognition.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
+      {/* Footer without any Admin links */}
       <footer
         style={{
-          maxWidth: "1160px",
-          margin: "0 auto",
-          padding: "36px 20px 48px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "16px",
+          borderTop: "1px solid #e2e8f0",
+          background: "#ffffff",
+          padding: "28px 24px",
           fontSize: "12px",
           color: "#64748b",
+          textAlign: "center",
         }}
       >
-        <div>
+        <div style={{ maxWidth: "800px", margin: "0 auto" }}>
           <strong style={{ color: "#0f172a" }}>Arogya Relay</strong> · Ayushman Bharat Digital Mission aligned clinical relay.
-          <p style={{ margin: "4px 0 0" }}>Not a diagnostic medical device. Clinical triage decisions must be confirmed by qualified medical officers.</p>
-        </div>
-
-        <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-          <button
-            type="button"
-            onClick={() => onSignIn()}
-            style={{ background: "none", border: "none", color: "#059669", fontWeight: 600, cursor: "pointer", fontSize: "12px" }}
-          >
-            Sign In
-          </button>
-          <span>·</span>
-          <button
-            type="button"
-            onClick={() => onSignUp()}
-            style={{ background: "none", border: "none", color: "#059669", fontWeight: 600, cursor: "pointer", fontSize: "12px" }}
-          >
-            Sign Up
-          </button>
-          <span>·</span>
-          <a
-            href="/admin"
-            onClick={(e) => {
-              e.preventDefault();
-              onOpenAdmin();
-            }}
-            style={{ color: "#b45309", fontWeight: 700, textDecoration: "none" }}
-          >
-            🛡️ Administrative Console
-          </a>
+          <p style={{ margin: "6px 0 0" }}>
+            Not a diagnostic medical device. Clinical triage decisions must be confirmed by qualified medical officers.
+          </p>
         </div>
       </footer>
     </div>

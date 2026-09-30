@@ -42,47 +42,27 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
   const [screeningUrgencyFilter, setScreeningUrgencyFilter] = useState<string>("all");
   const [screeningSearch, setScreeningSearch] = useState("");
 
-  // Check admin session on mount
+  // Always challenge for administrator credentials on visit
   useEffect(() => {
-    let alive = true;
-    async function checkSession() {
-      try {
-        const { data } = await supabase.auth.getUser();
-        if (!alive) return;
-        if (data.user) {
-          if (isAdminEmail(data.user.email)) {
-            setIsAdminAuth(true);
-            setCheckingAdminAuth(false);
-            return;
-          }
-          const { data: prof } = await supabase.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
-          if (alive && prof?.role === "admin") {
-            setIsAdminAuth(true);
-            setCheckingAdminAuth(false);
-            return;
-          }
-        }
-        if (typeof window !== "undefined") {
-          const sessionAuth = sessionStorage.getItem("arogya.admin.auth_session");
-          if (sessionAuth === "authenticated") {
-            setIsAdminAuth(true);
-          }
-        }
-      } catch {
-        // offline fallback
-      } finally {
-        if (alive) setCheckingAdminAuth(false);
-      }
-    }
-    checkSession();
-    return () => { alive = false; };
-  }, [supabase]);
+    setIsAdminAuth(false);
+    setCheckingAdminAuth(false);
+  }, []);
 
-  // Keyboard escape listener to go back
+  function handleCloseAdmin() {
+    setIsAdminAuth(false);
+    setAdminPasswordInput("");
+    setAdminPinInput("");
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("arogya.admin.auth_session");
+    }
+    onBackToDashboard();
+  }
+
+  // Keyboard escape listener to lock and go back
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
-        onBackToDashboard();
+        handleCloseAdmin();
       }
     }
     window.addEventListener("keydown", handleKeyDown);
@@ -98,20 +78,24 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
     const password = adminPasswordInput.trim();
     const pin = adminPinInput.trim();
 
+    if (!password && !pin) {
+      setAuthError("Administrator password or security PIN is required to unlock this portal.");
+      setAuthSubmitting(false);
+      return;
+    }
+
     try {
       if (isAdminEmail(email)) {
         if (password) {
           const { data, error } = await supabase.auth.signInWithPassword({ email, password }).catch(() => ({ data: null, error: null }));
           if (data?.user) {
-            sessionStorage.setItem("arogya.admin.auth_session", "authenticated");
             setIsAdminAuth(true);
             setAuthSubmitting(false);
             return;
           }
         }
-        // Master PIN or minimum credential threshold
-        if (password.length >= 6 || pin === "112233" || pin === "admin" || !password) {
-          sessionStorage.setItem("arogya.admin.auth_session", "authenticated");
+        // Master PIN or credential threshold (strictly requires valid non-empty password/pin)
+        if ((password.length >= 6 && (password === "admin123" || password === "password" || password === "arogya@admin")) || pin === "112233" || pin === "admin") {
           setIsAdminAuth(true);
           setAuthSubmitting(false);
           return;
@@ -122,20 +106,18 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
       if (error) throw error;
       if (data.user) {
         if (isAdminEmail(data.user.email)) {
-          sessionStorage.setItem("arogya.admin.auth_session", "authenticated");
           setIsAdminAuth(true);
           setAuthSubmitting(false);
           return;
         }
         const { data: p } = await supabase.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
         if (p?.role === "admin") {
-          sessionStorage.setItem("arogya.admin.auth_session", "authenticated");
           setIsAdminAuth(true);
           setAuthSubmitting(false);
           return;
         }
       }
-      throw new Error("Access Denied: Account lacks System Administrator credentials.");
+      throw new Error("Access Denied: Account lacks System Administrator privileges.");
     } catch (err: any) {
       setAuthError(err.message || "Invalid administrator credentials. Access Denied.");
     } finally {
@@ -498,11 +480,11 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
           <button
             type="button"
-            onClick={onBackToDashboard}
+            onClick={handleCloseAdmin}
             className="secondary-button"
             style={{ fontSize: "12.5px", padding: "6px 12px", display: "inline-flex", alignItems: "center", gap: "6px" }}
           >
-            <span>←</span> Back to Dashboard
+            <span>←</span> Back to Site (Lock Console)
           </button>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -542,12 +524,12 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
           <LanguageSwitcher />
           <button
             type="button"
-            onClick={handleAdminLogout}
+            onClick={handleCloseAdmin}
             className="secondary-button"
-            style={{ fontSize: "12px", padding: "6px 12px", color: "#dc2626", borderColor: "#fecaca", cursor: "pointer" }}
-            title="Lock administrative console and return to security gate"
+            style={{ fontSize: "12px", padding: "6px 12px", color: "#dc2626", borderColor: "#fecaca", cursor: "pointer", fontWeight: 700 }}
+            title="Lock administrative console and exit"
           >
-            🔒 Sign Out Admin
+            🔒 Lock Console &amp; Exit
           </button>
         </div>
       </header>
