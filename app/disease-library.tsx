@@ -24,6 +24,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
     { id: "respiratory", label: "Cough & Cold", labelHi: "खांसी व जुकाम", labelOr: "କାଶ ଓ ଥଣ୍ଡା", icon: "🤧" },
     { id: "skin", label: "Skin, Rash & Eyes", labelHi: "त्वचा व दाद", labelOr: "ଚର୍ମ ଓ ଦାଦ", icon: "🩹" },
     { id: "first_aid", label: "First Aid & Urgent", labelHi: "प्राथमिक चिकित्सा", labelOr: "ପ୍ରାଥମିକ ଚିକିତ୍ସା", icon: "🚑" },
+    { id: "maternal_child", label: "Maternal & Child", labelHi: "मातृ एवं शिशु", labelOr: "ମାତୃ ଓ ଶିଶୁ", icon: "👶" },
   ];
 
   const getCategoryLabel = (categoryOrId: string | (typeof categories)[0]) => {

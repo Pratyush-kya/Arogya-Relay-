@@ -339,16 +339,16 @@ function IntakeForm(props: {
         <p className="cg-symptom-help">{t("care.chooseEvery")}</p>
         <div className="symptom-grid" aria-label="Main symptoms">
           {SYMPTOM_CHIPS.map(({ conceptId, label, icon: Icon, urgent }) => {
-            const checked = selected.includes(label);
+            const checked = selected.includes(conceptId);
             const displayLabel = conceptLabel(findConcept(conceptId)!, effectiveLang);
             return (
               <button
-                key={label}
+                key={conceptId}
                 type="button"
                 role="checkbox"
                 aria-checked={checked}
                 className={checked ? "cg-symptom selected" : "cg-symptom"}
-                onClick={() => onToggle(label)}
+                onClick={() => onToggle(conceptId)}
               >
                 <span className="cg-symptom-icon" aria-hidden="true"><Icon size={21} strokeWidth={1.9} /></span>
                 <span className="cg-symptom-label">{displayLabel}</span>
@@ -428,6 +428,14 @@ function ResultPanel(props: {
   const { t } = useLanguage();
   const { guidance, showWhy, onToggleWhy, onSave, saveMsg, onReset, liveRef } = props;
   const tone = URGENCY_TONE[guidance.urgency];
+  const urgencyMeta = URGENCY_PLAIN[guidance.urgency] || {
+    label: guidance.urgency.toUpperCase(),
+    description: "Clinical evaluation complete.",
+  };
+
+  const audioSummary = `${urgencyMeta.label}. Recommended action: ${guidance.primaryAction}. ${
+    guidance.clinicalRationale?.length ? `Rationale: ${guidance.clinicalRationale.join(". ")}.` : ""
+  }`;
 
   return (
     <div className="cg-result" aria-live="polite" ref={liveRef}>
@@ -437,9 +445,11 @@ function ResultPanel(props: {
             <span className="cg-pulse" aria-hidden="true" />
             <strong>{t("care.emergencyAct")}</strong>
           </div>
-          <p className="cg-immediate">{guidance.immediateAction}</p>
+          <p className="cg-immediate">{guidance.primaryAction}</p>
           <div className="cg-emergency-actions">
-            <a className="cg-call" href={`tel:${guidance.emergencyNumber}`}>Call {guidance.emergencyNumber}</a>
+            <a className="cg-call" href={`tel:${guidance.emergencyNumber || "112"}`}>
+              Call {guidance.emergencyNumber || "112"}
+            </a>
             {guidance.emergencyFacility && <span className="cg-facility">Nearest: {guidance.emergencyFacility}</span>}
           </div>
         </div>
@@ -448,24 +458,58 @@ function ResultPanel(props: {
       <article className={`cg-card cg-tone-${tone}`}>
         <header className="cg-result-head">
           <div>
-            <span className="eyebrow">{KNOWLEDGE_LABEL[guidance.knowledgeMode]}</span>
-            <h2>{URGENCY_PLAIN[guidance.urgency]}</h2>
+            <span className="eyebrow">{KNOWLEDGE_LABEL[guidance.knowledgeMode] || guidance.knowledgeMode}</span>
+            <h2>{urgencyMeta.label}</h2>
           </div>
           <span className={`cg-badge ${tone}`}>{guidance.urgency.replace(/_/g, " ")}</span>
         </header>
 
-        <p className="cg-explain">{guidance.explanation}</p>
-        <div className="cg-voice"><ReadAloud text={guidance.explanation} /></div>
+        <p className="cg-explain">{urgencyMeta.description}</p>
+        <div className="cg-voice"><ReadAloud text={audioSummary} /></div>
 
-        {guidance.urgency !== "emergency" && (
-          <div className="cg-immediate-box">
-            <strong>{t("care.next")}</strong> {guidance.immediateAction}
+        <div className="cg-immediate-box">
+          <strong>{t("care.next")}</strong> {guidance.primaryAction}
+        </div>
+
+        {/* Clinical Rationale */}
+        {guidance.clinicalRationale && guidance.clinicalRationale.length > 0 && (
+          <div style={{ margin: "14px 0", background: "var(--surface-muted)", padding: "12px 14px", borderRadius: "10px" }}>
+            <strong style={{ fontSize: "12.5px", color: "var(--foreground)", display: "block", marginBottom: "6px" }}>
+              Clinical Evaluation Rationale:
+            </strong>
+            <ul style={{ margin: 0, paddingLeft: "18px", fontSize: "13px", lineHeight: "1.5", color: "var(--foreground)" }}>
+              {guidance.clinicalRationale.map((reason, i) => (
+                <li key={i}>{reason}</li>
+              ))}
+            </ul>
           </div>
         )}
 
-        <div className="cg-followup"><span>{t("care.followupLabel")}</span> {guidance.followUpWindow}</div>
+        {/* Danger Signs & Red Flags */}
+        {guidance.dangerSigns && guidance.dangerSigns.length > 0 && (
+          <div className="cg-warnings">
+            <strong>{t("care.watchFor")}</strong>
+            <ul>
+              {guidance.dangerSigns.map((w, i) => (
+                <li key={i}><b>⚠️ Warning:</b> {w}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
-        <div className="cg-medicine"><span>{t("care.medicinesLabel")}</span> {guidance.medicineStatus}</div>
+        {/* Supportive Home Care Guidance */}
+        {guidance.homeCareAdvice && guidance.homeCareAdvice.length > 0 && (
+          <div style={{ background: "rgba(16, 185, 129, 0.08)", border: "1px solid rgba(16, 185, 129, 0.25)", borderRadius: "10px", padding: "12px", margin: "12px 0" }}>
+            <strong style={{ fontSize: "13px", color: "#065f46", display: "block", marginBottom: "6px" }}>
+              Supportive Home Care Advice:
+            </strong>
+            <ul style={{ margin: 0, paddingLeft: "18px", fontSize: "12.5px", lineHeight: "1.5", color: "var(--foreground)" }}>
+              {guidance.homeCareAdvice.map((advice, i) => (
+                <li key={i}>{advice}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Relatable Visual Action Guidance Cards */}
         <div className="cg-visual-guidance-grid" style={{ margin: "16px 0", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "10px" }}>
@@ -510,64 +554,48 @@ function ResultPanel(props: {
           </div>
         </div>
 
-        {guidance.warningSigns.length > 0 && (
-          <div className="cg-warnings">
-            <strong>{t("care.watchFor")}</strong>
-            <ul>
-              {guidance.warningSigns.map((w, i) => (
-                <li key={i}><b>{w.label}</b> — {w.action}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {guidance.citations.length > 0 && (
-          <details className="cg-citations">
-            <summary>Sources &amp; dates ({guidance.citations.length})</summary>
-            <ul>
+        {/* Citations & Evidence */}
+        {guidance.citations && guidance.citations.length > 0 && (
+          <details className="cg-citations" style={{ marginTop: "12px" }}>
+            <summary style={{ cursor: "pointer", fontWeight: 700, fontSize: "12.5px" }}>
+              Sources &amp; Evidence ({guidance.citations.length})
+            </summary>
+            <ul style={{ marginTop: "8px" }}>
               {guidance.citations.map((c, i) => (
-                <li key={i}>
-                  <a href={c.canonicalUrl} target="_blank" rel="noopener noreferrer">{c.title}</a>
-                  <span className="cg-src-meta">{c.publisher} · {c.reviewDate ?? c.publicationDate ?? "n.d."} · v{c.version}{c.section ? ` · ${c.section}` : ""}</span>
+                <li key={i} style={{ marginBottom: "6px" }}>
+                  <a href={c.canonicalUrl} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 600 }}>
+                    {c.title}
+                  </a>
+                  {c.quote && (
+                    <span className="cg-src-meta" style={{ display: "block", marginTop: "2px", opacity: 0.85 }}>
+                      &ldquo;{c.quote}&rdquo;
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>
-            <p className="cg-coverage">Retrieval coverage: {(guidance.retrievalCoverage * 100).toFixed(0)}% — this measures how well the knowledge pack addressed your question, not a clinical probability.</p>
           </details>
         )}
 
-        <div className="cg-clinical-state">
-          Clinician review: <b>{guidance.clinicianReviewState.replace(/_/g, " ")}</b>
-        </div>
-
-        {guidance.questionsStillNeeded.length > 0 && (
-          <div className="cg-questions">
-            <strong>{t("care.saferAnswer")}</strong>
-            <ul>{guidance.questionsStillNeeded.map((q, i) => <li key={i}>{q}</li>)}</ul>
-          </div>
-        )}
-
-        <button type="button" className="cg-why" aria-expanded={showWhy} onClick={onToggleWhy}>
+        <button type="button" className="cg-why" aria-expanded={showWhy} onClick={onToggleWhy} style={{ marginTop: "12px" }}>
           {t("care.why")}
         </button>
         {showWhy && (
-          <div className="cg-why-body">
-            {guidance.triggeredRules.length > 0 ? (
+          <div className="cg-why-body" style={{ marginTop: "8px" }}>
+            <p>
+              This guidance was generated using the clinician-reviewed knowledge pack and deterministic safety rules. It does not replace a doctor&apos;s physical examination.
+            </p>
+            {guidance.clinicalRationale && (
               <ul>
-                {guidance.triggeredRules.map((r) => (
-                  <li key={r.ruleId}>
-                    Rule <code>{r.ruleId}</code> v{r.version} → {r.label} (requires RMP validation). Trigger: {r.triggerFacts.join(", ")}.
-                  </li>
+                {guidance.clinicalRationale.map((r, i) => (
+                  <li key={i}>{r}</li>
                 ))}
               </ul>
-            ) : (
-              <p>No red-flag rule fired. This guidance uses the curated knowledge pack and a conservative default. It is not a diagnosis.</p>
             )}
-            <p className="cg-limit">{guidance.limitation}</p>
           </div>
         )}
 
-        <div className="cg-actions">
+        <div className="cg-actions" style={{ marginTop: "16px" }}>
           <button type="button" className="secondary-button" onClick={onSave}>{t("care.saveOffline")}</button>
           <button type="button" className="primary-button" onClick={onReset}>{t("care.newCheck")}</button>
         </div>

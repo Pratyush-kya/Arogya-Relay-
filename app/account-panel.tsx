@@ -90,9 +90,11 @@ export { AuthScreen } from "./auth-screen";
 export function TopRightUserNav({
   onOpenAuthScreen,
   onOpenSupabase,
+  onOpenAdmin,
 }: {
   onOpenAuthScreen?: (mode: "signin" | "signup" | "admin" | "profile") => void;
   onOpenSupabase?: () => void;
+  onOpenAdmin?: () => void;
 } = {}) {
   const supabase = useMemo(() => createClient(), []);
   const [user, setUser] = useState<User | null>(null);
@@ -626,7 +628,9 @@ export function TopRightUserNav({
               }}
               onClick={() => {
                 setPopoverOpen(false);
-                if (onOpenAuthScreen) {
+                if (onOpenAdmin) {
+                  onOpenAdmin();
+                } else if (onOpenAuthScreen) {
                   onOpenAuthScreen("admin");
                 } else {
                   loadDoctorsForAdmin();
@@ -634,7 +638,7 @@ export function TopRightUserNav({
                 }
               }}
             >
-              <span>🛡️</span> Doctor Verification Console
+              <span>🛡️</span> System Admin &amp; Doctor Verification
             </button>
           )}
 

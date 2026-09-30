@@ -53,6 +53,10 @@ export function assembleGuidance(
     })
     .filter((c): c is NonNullable<typeof c> => c !== null);
 
+  const onlineCitations = Array.isArray(opts?.onlineEvidence)
+    ? (opts.onlineEvidence as Array<{ sourceId: string; title: string; canonicalUrl: string; quote?: string }>)
+    : [];
+
   return {
     urgency: evaluation.urgency,
     primaryAction: evaluation.actions[0] || "Seek clinical advice.",
@@ -60,7 +64,7 @@ export function assembleGuidance(
     dangerSigns: evaluation.dangerSigns,
     homeCareAdvice: evaluation.homeCare,
     emergencyNumber: evaluation.urgency === "emergency" ? "112" : undefined,
-    citations,
+    citations: [...citations, ...onlineCitations],
     knowledgeMode: opts?.knowledgeMode || "offline",
     generatedAt: new Date().toISOString(),
   };
