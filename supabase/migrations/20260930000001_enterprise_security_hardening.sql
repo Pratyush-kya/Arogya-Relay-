@@ -95,6 +95,10 @@ UPDATE storage.buckets
 SET public = false
 WHERE id IN ('doctor-credentials', 'patient-records');
 
+UPDATE storage.buckets
+SET public = true
+WHERE id IN ('screenings', 'prescriptions');
+
 -- 4. Doctor On-Demand Availability & Case Lock Table
 CREATE TABLE IF NOT EXISTS public.doctor_active_sessions (
   doctor_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -107,6 +111,9 @@ CREATE TABLE IF NOT EXISTS public.doctor_active_sessions (
 );
 
 ALTER TABLE public.doctor_active_sessions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can view available doctors" ON public.doctor_active_sessions;
+DROP POLICY IF EXISTS "Doctors manage their own availability" ON public.doctor_active_sessions;
 
 CREATE POLICY "Anyone can view available doctors"
 ON public.doctor_active_sessions
@@ -121,7 +128,7 @@ TO authenticated
 USING (auth.uid() = doctor_id)
 WITH CHECK (auth.uid() = doctor_id);
 
--- 5. Atomic Claim Patient Case RPC with 90s TTL
+-- 5. Atomic Claim Patient Case RPC with 90s TTL & Search Path Hardening
 CREATE OR REPLACE FUNCTION public.claim_patient_case(
   p_case_id TEXT,
   p_doctor_id UUID
@@ -129,6 +136,7 @@ CREATE OR REPLACE FUNCTION public.claim_patient_case(
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 DECLARE
   v_case RECORD;
@@ -167,7 +175,7 @@ BEGIN
 END;
 $$;
 
--- 6. Single-Use Chemist Burn Token RPC
+-- 6. Single-Use Chemist Burn Token RPC with Search Path Hardening
 CREATE OR REPLACE FUNCTION public.mark_prescription_dispensed(
   p_prescription_id TEXT,
   p_chemist_id TEXT,
@@ -176,6 +184,7 @@ CREATE OR REPLACE FUNCTION public.mark_prescription_dispensed(
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 DECLARE
   v_rx RECORD;
@@ -214,5 +223,13 @@ BEGIN
   );
 END;
 $$;
+
+-- 7. High-Performance Database Indexes
+CREATE INDEX IF NOT EXISTS idx_screenings_status_urgency ON public.screenings(status, urgency_tier);
+CREATE INDEX IF NOT EXISTS idx_screenings_created_at ON public.screenings(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_screenings_village ON public.screenings(village);
+CREATE INDEX IF NOT EXISTS idx_prescriptions_patient_ref ON public.prescriptions(patient_ref);
+CREATE INDEX IF NOT EXISTS idx_prescriptions_created_at ON public.prescriptions(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_doctor_active_sessions_free ON public.doctor_active_sessions(is_free_now, rating DESC);
 
 COMMIT;
