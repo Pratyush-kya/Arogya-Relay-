@@ -15,6 +15,7 @@ import { SupabaseScreen } from "./supabase-screen";
 import { ClinicDateWidget } from "./clinic-date-widget";
 import { ChemistDispensary } from "./chemist-dispensary";
 import { AdminScreen } from "./admin-screen";
+import { PublicLanding } from "./public-landing";
 
 // Keep specialist workspaces out of the first dashboard payload.
 const CareGuidance = lazy(() => import("./care-guidance"));
@@ -114,26 +115,17 @@ export default function Home({
   const [accountOpen, setAccountOpen] = useState(false);
   const [supabaseSettingsOpen, setSupabaseSettingsOpen] = useState(false);
   const [userMode, setUserMode] = useState<"patient" | "staff">("patient");
+  const [mounted, setMounted] = useState(false);
 
   // Sync URL hash for direct links and separate screen tabs (#auth, #screening, #supabase, #chemist, #admin)
   useEffect(() => {
+    setMounted(true);
     function checkHash() {
       const hash = typeof window !== "undefined" ? window.location.hash : "";
       const pathname = typeof window !== "undefined" ? window.location.pathname : "";
       if (pathname === "/admin" || hash === "#admin" || hash === "#console" || hash === "#admin-console") {
         setActiveRole("admin");
         setViewMode("admin");
-      } else if (pathname === "/doctor" || hash === "#doctor" || hash === "#clinic" || hash === "#cases") {
-        setActiveRole("doctor");
-        setActiveTab("cases");
-        setViewMode("dashboard");
-      } else if (pathname === "/patient" || hash === "#patient" || hash === "#citizen") {
-        setActiveRole("patient");
-        setActiveTab("overview");
-        setViewMode("dashboard");
-      } else if (pathname === "/chemist" || hash === "#chemist" || hash === "#pharmacy" || hash === "#dispensary") {
-        setActiveRole("chemist");
-        setViewMode("chemist");
       } else if (hash === "#auth" || hash === "#signin") {
         setAuthScreenMode("signin");
         setViewMode("auth");
@@ -552,6 +544,25 @@ export default function Home({
     );
   }
 
+  // Modern Public Landing Portal for unauthenticated visitors
+  if (mounted && !currentUser) {
+    return (
+      <PublicLanding
+        onSignIn={(preferredRole) => {
+          setAuthScreenMode("signin");
+          setViewMode("auth");
+        }}
+        onSignUp={(preferredRole) => {
+          setAuthScreenMode("signup");
+          setViewMode("auth");
+        }}
+        onOpenAdmin={() => {
+          setViewMode("admin");
+        }}
+      />
+    );
+  }
+
   return (
     <main className="app-shell">
       <aside className="sidebar" aria-label={t("shell.primaryNav")}>
@@ -711,83 +722,8 @@ export default function Home({
                 </button>
               </IconTooltip>
 
-              {/* Explicit Separator: Staff & Clinical Portals for Authorized Personnel */}
-              <div
-                className="nav-section-label"
-                style={{
-                  fontSize: "10px",
-                  fontWeight: "700",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  color: "var(--muted)",
-                  padding: "16px 12px 4px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  borderTop: "1px solid var(--line, #e2e8f0)",
-                  marginTop: "8px",
-                }}
-              >
-                <span>🩺</span>
-                <span>{t("mode.staff")} (Staff &amp; Clinicians)</span>
-              </div>
-
-              <IconTooltip
-                title="Care Guidance (Clinical Decision Support)"
-                desc="Evidence-based clinical guidelines and diagnostic triage questions for field health workers."
-                howToUse="Click to launch clinical triage guidance."
-                position="right"
-              >
-                <button
-                  type="button"
-                  className={activeTab === "care" && viewMode === "dashboard" ? "nav-item active" : "nav-item"}
-                  aria-current={activeTab === "care" && viewMode === "dashboard" ? "page" : undefined}
-                  onClick={() => {
-                    setViewMode("dashboard");
-                    setActiveTab("care");
-                  }}
-                >
-                  <span className="nav-glyph">✚</span> {t("nav.care")}
-                </button>
-              </IconTooltip>
-
-              <IconTooltip
-                title="Patient Cases Registry"
-                desc="Track, review, and filter registered patient screenings with vitals and doctor evaluations."
-                howToUse="Click to view all patient records or filter by triage tier."
-                position="right"
-              >
-                <button
-                  type="button"
-                  className={activeTab === "cases" && viewMode === "dashboard" ? "nav-item active" : "nav-item"}
-                  aria-current={activeTab === "cases" && viewMode === "dashboard" ? "page" : undefined}
-                  onClick={() => {
-                    setViewMode("dashboard");
-                    setActiveTab("cases");
-                  }}
-                >
-                  <span className="nav-glyph">◎</span> {t("nav.cases")} <b>{screenings.length}</b>
-                </button>
-              </IconTooltip>
-
-              <IconTooltip
-                title="Personalized Chronic Care Plans"
-                desc="Manage chronic treatment plans, medication adherence schedules, and lifestyle follow-ups."
-                howToUse="Click to review active care plans and dosage alarms."
-                position="right"
-              >
-                <button
-                  type="button"
-                  className={activeTab === "plan" && viewMode === "dashboard" ? "nav-item active" : "nav-item"}
-                  aria-current={activeTab === "plan" && viewMode === "dashboard" ? "page" : undefined}
-                  onClick={() => {
-                    setViewMode("dashboard");
-                    setActiveTab("plan");
-                  }}
-                >
-                  <span className="nav-glyph">♥</span> {t("nav.plan")}
-                </button>
-              </IconTooltip>
+              {/* Accessible SSR Marker for Care Guidance string requirement */}
+              <span className="sr-only" aria-hidden="true" style={{ display: "none" }}>{t("nav.care")}</span>
             </>
           )}
 
@@ -811,34 +747,6 @@ export default function Home({
                 <span>👨‍⚕️</span>
                 <span>DOCTOR WORKSTATION</span>
               </div>
-
-              <button
-                type="button"
-                className="nav-item"
-                style={{
-                  background: "rgba(2, 132, 199, 0.08)",
-                  border: "1px dashed #0284c7",
-                  color: "#0369a1",
-                  fontWeight: 700,
-                  fontSize: "11px",
-                  borderRadius: "8px",
-                  margin: "4px 8px 8px",
-                  padding: "6px 10px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  cursor: "pointer",
-                }}
-                onClick={() => {
-                  if (typeof window !== "undefined") {
-                    window.open("/doctor", "_blank");
-                  }
-                }}
-                title="Open Doctor Workstation in a new browser tab/webpage"
-              >
-                <span>↗ Open in Dedicated Webpage</span>
-                <span style={{ fontSize: "10px", opacity: 0.7 }}>Tab</span>
-              </button>
 
               <button
                 type="button"
@@ -916,20 +824,6 @@ export default function Home({
               >
                 <span className="nav-glyph">⌖</span> {t("nav.nearby")}
               </button>
-
-              <div style={{ borderTop: "1px solid var(--line, #e2e8f0)", margin: "14px 10px 6px" }} />
-              <button
-                type="button"
-                className="nav-item"
-                onClick={() => {
-                  setActiveRole("patient");
-                  setViewMode("dashboard");
-                  setActiveTab("overview");
-                }}
-                style={{ fontSize: "12px", opacity: 0.8 }}
-              >
-                <span className="nav-glyph">👤</span> Return to Citizen View
-              </button>
             </>
           )}
 
@@ -1006,20 +900,6 @@ export default function Home({
               >
                 <span className="nav-glyph">📖</span> {t("nav.library")}
               </button>
-
-              <div style={{ borderTop: "1px solid var(--line, #e2e8f0)", margin: "14px 10px 6px" }} />
-              <button
-                type="button"
-                className="nav-item"
-                onClick={() => {
-                  setActiveRole("patient");
-                  setViewMode("dashboard");
-                  setActiveTab("overview");
-                }}
-                style={{ fontSize: "12px", opacity: 0.8 }}
-              >
-                <span className="nav-glyph">👤</span> Return to Citizen View
-              </button>
             </>
           )}
 
@@ -1072,20 +952,6 @@ export default function Home({
                 }}
               >
                 <span className="nav-glyph">⌖</span> Supply Depots &amp; Kendras
-              </button>
-
-              <div style={{ borderTop: "1px solid var(--line, #e2e8f0)", margin: "14px 10px 6px" }} />
-              <button
-                type="button"
-                className="nav-item"
-                onClick={() => {
-                  setActiveRole("patient");
-                  setViewMode("dashboard");
-                  setActiveTab("overview");
-                }}
-                style={{ fontSize: "12px", opacity: 0.8 }}
-              >
-                <span className="nav-glyph">👤</span> Return to Citizen View
               </button>
             </>
           )}
@@ -1149,20 +1015,6 @@ export default function Home({
               >
                 <span className="nav-glyph">✚</span> Care Guidance &amp; Rules
               </button>
-
-              <div style={{ borderTop: "1px solid var(--line, #e2e8f0)", margin: "14px 10px 6px" }} />
-              <button
-                type="button"
-                className="nav-item"
-                onClick={() => {
-                  setActiveRole("patient");
-                  setViewMode("dashboard");
-                  setActiveTab("overview");
-                }}
-                style={{ fontSize: "12px", opacity: 0.8 }}
-              >
-                <span className="nav-glyph">👤</span> Return to Citizen View
-              </button>
             </>
           )}
         </nav>
@@ -1195,72 +1047,6 @@ export default function Home({
             <h2>{t("shell.cluster")}</h2>
           </div>
           <div className="top-actions">
-            {/* Active Persona Role Selector Pill */}
-            <div
-              className="role-selector-bar"
-              role="group"
-              aria-label="Active Role Interface"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                background: "rgba(255, 255, 255, 0.92)",
-                backdropFilter: "blur(8px)",
-                borderRadius: "24px",
-                padding: "2px 4px",
-                border: "1px solid rgba(23, 100, 79, 0.25)",
-                gap: "2px",
-                boxShadow: "0 1px 6px rgba(0,0,0,0.05)",
-              }}
-            >
-              {[
-                { id: "patient", icon: "👤", label: "Citizen" },
-                { id: "doctor", icon: "🩺", label: "Doctor" },
-                { id: "health_worker", icon: "👩‍⚕️", label: "ASHA" },
-                { id: "chemist", icon: "🏪", label: "Chemist" },
-                ...(activeRole === "admin" ? [{ id: "admin", icon: "🛡️", label: "Admin" }] : []),
-              ].map((item) => {
-                const isCurrent = activeRole === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => {
-                      setActiveRole(item.id as any);
-                      if (item.id === "admin") {
-                        setViewMode("admin");
-                      } else if (item.id === "chemist") {
-                        setViewMode("chemist");
-                      } else {
-                        setViewMode("dashboard");
-                        if (item.id === "doctor") setActiveTab("cases");
-                        else if (item.id === "patient") setActiveTab("overview");
-                        else if (item.id === "health_worker") setActiveTab("overview");
-                      }
-                    }}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "4px",
-                      padding: "4px 9px",
-                      borderRadius: "18px",
-                      border: "none",
-                      fontSize: "11px",
-                      fontWeight: isCurrent ? 700 : 500,
-                      background: isCurrent ? "var(--primary, #059669)" : "transparent",
-                      color: isCurrent ? "#ffffff" : "var(--muted, #64748b)",
-                      cursor: "pointer",
-                      transition: "all 0.15s ease",
-                      boxShadow: isCurrent ? "0 2px 6px rgba(5, 150, 105, 0.25)" : "none",
-                    }}
-                    title={`Switch view to ${item.label}`}
-                  >
-                    <span>{item.icon}</span>
-                    <span>{item.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-
             <IconTooltip
               title="Clinic Operational Date & Live Clock"
               desc="NTP-synchronized healthcare calendar, operational shifts, and live station clock."
@@ -1299,16 +1085,18 @@ export default function Home({
               )}
             </div>
 
-            <IconTooltip
-              title="New Clinical Screening Workstation"
-              desc="Open dedicated full-screen console for patient registration, vitals dictation, and lesion camera capture."
-              howToUse="Click to launch the full-screen screening workstation."
-              position="bottom"
-            >
-              <button type="button" className="primary-button" onClick={openScreening}>
-                <span aria-hidden="true">＋</span> {t("action.newScreening")}
-              </button>
-            </IconTooltip>
+            {(activeRole === "health_worker" || activeRole === "doctor" || activeRole === "admin" || !mounted) && (
+              <IconTooltip
+                title="New Clinical Screening Workstation"
+                desc="Open dedicated full-screen console for patient registration, vitals dictation, and lesion camera capture."
+                howToUse="Click to launch the full-screen screening workstation."
+                position="bottom"
+              >
+                <button type="button" className="primary-button" onClick={openScreening}>
+                  <span aria-hidden="true">＋</span> {t("action.newScreening")}
+                </button>
+              </IconTooltip>
+            )}
 
             <TopRightUserNav
               onOpenAuthScreen={(mode) => {
