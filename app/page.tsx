@@ -13,6 +13,7 @@ import { AuthScreen } from "./auth-screen";
 import { ScreeningScreen } from "./screening-screen";
 import { SupabaseScreen } from "./supabase-screen";
 import { ClinicDateWidget } from "./clinic-date-widget";
+import { ChemistDispensary } from "./chemist-dispensary";
 
 // Keep specialist workspaces out of the first dashboard payload.
 const CareGuidance = lazy(() => import("./care-guidance"));
@@ -94,7 +95,7 @@ function WorkspaceLoading() {
 export default function Home() {
   const { t, effectiveLang } = useLanguage();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
-  const [viewMode, setViewMode] = useState<"dashboard" | "auth" | "screening" | "supabase">("dashboard");
+  const [viewMode, setViewMode] = useState<"dashboard" | "auth" | "screening" | "supabase" | "chemist">("dashboard");
   const [authScreenMode, setAuthScreenMode] = useState<"signin" | "signup" | "admin" | "profile">("signin");
   const [screeningOpen, setScreeningOpen] = useState(false);
   const [syncState, setSyncState] = useState<SyncState>("ready");
@@ -103,7 +104,7 @@ export default function Home() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [supabaseSettingsOpen, setSupabaseSettingsOpen] = useState(false);
 
-  // Sync URL hash for direct links and separate screen tabs (#auth, #screening, #supabase)
+  // Sync URL hash for direct links and separate screen tabs (#auth, #screening, #supabase, #chemist)
   useEffect(() => {
     function checkHash() {
       const hash = window.location.hash;
@@ -120,6 +121,8 @@ export default function Home() {
         setViewMode("screening");
       } else if (hash === "#supabase" || hash === "#database" || hash === "#cloud") {
         setViewMode("supabase");
+      } else if (hash === "#chemist" || hash === "#pharmacy" || hash === "#dispensary") {
+        setViewMode("chemist");
       }
     }
     checkHash();
@@ -448,6 +451,20 @@ export default function Home() {
     );
   }
 
+  // DEDICATED SEPARATE FULL-SCREEN: Chemist & Jan Aushadhi Dispensary Workstation
+  if (viewMode === "chemist") {
+    return (
+      <ChemistDispensary
+        onBackToDashboard={() => {
+          setViewMode("dashboard");
+          if (typeof window !== "undefined" && (window.location.hash.startsWith("#chem") || window.location.hash.startsWith("#pharm") || window.location.hash.startsWith("#disp"))) {
+            window.history.pushState("", document.title, window.location.pathname + window.location.search);
+          }
+        }}
+      />
+    );
+  }
+
   return (
     <main className="app-shell">
       <aside className="sidebar" aria-label={t("shell.primaryNav")}>
@@ -569,6 +586,21 @@ export default function Home() {
               onClick={() => setActiveTab("nearby")}
             >
               <span className="nav-glyph">⌖</span> {t("nav.nearby")}
+            </button>
+          </IconTooltip>
+
+          <IconTooltip
+            title="Chemist & Pharmacy Fulfillment"
+            desc="Verify single-use digital prescriptions, view Jan Aushadhi generic equivalents, and dispense medicines."
+            howToUse="Click to open the Chemist & Jan Aushadhi Workstation."
+            position="right"
+          >
+            <button
+              type="button"
+              className={viewMode === "chemist" ? "nav-item active" : "nav-item"}
+              onClick={() => setViewMode("chemist")}
+            >
+              <span className="nav-glyph">🏪</span> Chemist Hub
             </button>
           </IconTooltip>
 

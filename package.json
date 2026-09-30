@@ -10,7 +10,7 @@
     "build": "node build/run-vinext.mjs build",
     "vercel-build": "next build",
     "start": "node build/run-vinext.mjs start",
-    "test": "npm run build && node --experimental-strip-types --test tests/rendered-html.test.mjs tests/security.test.mts tests/clinical-engine.test.mts tests/nearby-care.test.mts tests/i18n.test.mts tests/care-plan.test.mts",
+    "test": "npm run build && node --experimental-strip-types --test tests/rendered-html.test.mjs tests/security.test.mts tests/clinical-engine.test.mts tests/nearby-care.test.mts tests/i18n.test.mts tests/care-plan.test.mts tests/telemedicine-pipeline.test.mts",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "check": "npm run lint && npm test",
     "audit:prod": "npm audit --omit=dev --audit-level=high",

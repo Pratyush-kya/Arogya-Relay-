@@ -1,8 +1,6 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 export const ADMIN_EMAIL = "pratyushkiranrath4@gmail.com";
-export const DEFAULT_ADMIN_PASSWORD = "Pratyush@3130";
-
 export const SUPABASE_ORG_ID = "ufohydwnepbmjoigycfj";
 export const SUPABASE_PROJECT_REF = "tinwzrwomldbbbrwnazn";
 export const SUPABASE_ORG_URL = "https://supabase.com/dashboard/org/ufohydwnepbmjoigycfj";
@@ -13,11 +11,6 @@ export const S3_STORAGE_ENDPOINT = "https://tinwzrwomldbbbrwnazn.supabase.co/sto
 
 export function isAdminEmail(email: string | null | undefined): boolean {
   return email?.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase();
-}
-
-export function isAdminPassword(pass: string | null | undefined): boolean {
-  if (!pass) return false;
-  return pass === "Pratyush@3130" || pass === "Pratyush@#3130";
 }
 
 export type StorageBucket = "screenings" | "prescriptions" | "doctor-credentials" | "patient-records";
@@ -69,8 +62,18 @@ export function getActiveSupabaseConfig() {
 
 export function setCustomSupabaseConfig(url: string, key: string) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_URL_KEY, url.trim());
-  localStorage.setItem(STORAGE_KEY_KEY, key.trim());
+  const trimmedUrl = url.trim();
+  const trimmedKey = key.trim();
+  try {
+    const parsed = new URL(trimmedUrl);
+    if (parsed.protocol !== "https:" && parsed.hostname !== "localhost" && parsed.hostname !== "127.0.0.1") {
+      throw new Error("Supabase URL must use HTTPS.");
+    }
+  } catch (err) {
+    throw new Error(`Invalid Supabase URL: ${err instanceof Error ? err.message : String(err)}`);
+  }
+  localStorage.setItem(STORAGE_URL_KEY, trimmedUrl);
+  localStorage.setItem(STORAGE_KEY_KEY, trimmedKey);
   browserClient = null; // force re-creation
 }
 
@@ -128,9 +131,9 @@ function saveLocalStoredFile(item: StoredFileInfo) {
 }
 
 /**
- * Robust S3/Supabase storage uploader with offline Data-URL fallback.
- * Guarantees zero data-loss: if the network or Supabase bucket is unreachable,
- * converts the file to base64 Data-URL for local offline usage.
+ * Robust S3/Supabase storage uploader with offline IndexedDB fallback.
+ * Automatically downscales images on the client to ~150KB before upload,
+ * conserving rural cellular bandwidth and preventing localStorage quota overflow.
  */
 export async function uploadToStorage(
   bucket: StorageBucket,
@@ -139,12 +142,21 @@ export async function uploadToStorage(
 ): Promise<{ url: string; source: "supabase_storage" | "local_cache"; name: string }> {
   const cleanPath = `${Date.now()}-${fileName.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
 
+  let uploadPayload: Blob = file;
+  try {
+    const { downscaleImage } = await import("../storage/offline-db.ts");
+    uploadPayload = await downscaleImage(file);
+  } catch {
+    // Proceed with original file if downscaling module is unavailable
+  }
+
   try {
     const supabase = createClient();
 
-    const { data, error } = await supabase.storage.from(bucket).upload(cleanPath, file, {
+    const { data, error } = await supabase.storage.from(bucket).upload(cleanPath, uploadPayload, {
       cacheControl: "3600",
       upsert: true,
+      contentType: uploadPayload.type || "image/jpeg",
     });
 
     if (!error && data?.path) {
@@ -155,7 +167,7 @@ export async function uploadToStorage(
           url: publicUrlData.publicUrl,
           source: "supabase_storage",
           bucket,
-          size: file.size,
+          size: uploadPayload.size,
           created_at: new Date().toISOString(),
         };
         saveLocalStoredFile(item);
@@ -163,30 +175,23 @@ export async function uploadToStorage(
       }
     }
   } catch (err) {
-    console.warn("Storage upload failed or offline; using local data URL fallback", err);
+    console.warn("Storage upload failed or offline; using local IndexedDB fallback", err);
   }
 
-  // Fallback to local Data URL
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const dataUrl = reader.result as string;
-      const item: StoredFileInfo = {
-        name: cleanPath,
-        url: dataUrl,
-        source: "local_cache",
-        bucket,
-        size: file.size,
-        created_at: new Date().toISOString(),
-      };
-      saveLocalStoredFile(item);
-      resolve({ url: dataUrl, source: "local_cache", name: cleanPath });
-    };
-    reader.onerror = () => {
-      resolve({ url: "", source: "local_cache", name: cleanPath });
-    };
-    reader.readAsDataURL(file);
-  });
+  // Robust Offline Fallback: save blob into IndexedDB
+  try {
+    const { saveOfflineFile } = await import("../storage/offline-db.ts");
+    const blobUrl = await saveOfflineFile(cleanPath, fileName, bucket, uploadPayload);
+    if (blobUrl) {
+      return { url: blobUrl, source: "local_cache", name: cleanPath };
+    }
+  } catch (idbErr) {
+    console.warn("IndexedDB offline fallback error", idbErr);
+  }
+
+  // Final fallback to memory object URL
+  const objectUrl = typeof window !== "undefined" ? URL.createObjectURL(uploadPayload) : "";
+  return { url: objectUrl, source: "local_cache", name: cleanPath };
 }
 
 export async function listStorageFiles(bucket: StorageBucket): Promise<StoredFileInfo[]> {

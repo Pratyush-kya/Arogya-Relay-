@@ -5,7 +5,7 @@
  * from real field screening records. Generates GeoJSON for MapLibre layers.
  */
 
-import type { ScreeningRecord } from "@/lib/supabase/screenings";
+import type { ScreeningRecord } from "../supabase/screenings.ts";
 
 export interface VillageCluster {
   village: string;

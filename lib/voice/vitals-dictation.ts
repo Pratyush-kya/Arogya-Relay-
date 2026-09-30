@@ -138,6 +138,11 @@ export function startVitalsListening(
     return () => {};
   }
 
+  if (typeof navigator !== "undefined" && navigator.onLine === false) {
+    onError?.("Voice dictation requires network connectivity on this browser. Please enter vitals using the manual touch sliders.");
+    return () => {};
+  }
+
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const SpeechClass = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;

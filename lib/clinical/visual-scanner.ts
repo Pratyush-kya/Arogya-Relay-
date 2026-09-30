@@ -175,21 +175,28 @@ export async function scanLesionImage(
             annularScore: parseFloat(annularScore.toFixed(2)),
           },
           safetyDisclaimer:
-            "Clinical screening support only. Photographic assessment cannot replace in-person dermatoscopic evaluation or microbiological culture by a qualified physician.",
+            "Clinical screening support only. Photographic assessment cannot replace in-person dermatoscopic evaluation. ADVISORY: Automated optical erythema detection is uncalibrated for darker skin phototypes (Fitzpatrick IV–VI) where inflammation may present as violaceous or hyperpigmented patches rather than bright erythema.",
         });
       } catch (err) {
         reject(err);
+      } finally {
+        if (createdUrl) {
+          URL.revokeObjectURL(createdUrl);
+        }
       }
     };
 
     img.onerror = () => {
+      if (createdUrl) URL.revokeObjectURL(createdUrl);
       reject(new Error("Failed to load image for visual analysis."));
     };
 
+    let createdUrl: string | null = null;
     if (typeof imageSource === "string") {
       img.src = imageSource;
     } else {
-      img.src = URL.createObjectURL(imageSource);
+      createdUrl = URL.createObjectURL(imageSource);
+      img.src = createdUrl;
     }
   });
 }

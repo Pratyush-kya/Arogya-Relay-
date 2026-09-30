@@ -11,6 +11,8 @@ import { LanguageSwitcher } from "./language-switcher";
 import { IconTooltip } from "./icon-tooltip";
 import { DiseaseLibraryModal } from "./disease-library-modal";
 import { scanLesionImage, type VisualScanResult } from "@/lib/clinical/visual-scanner";
+import { routeCaseToAvailableDoctor } from "@/lib/telemedicine/doctor-pool";
+import { createConsultationEscrow } from "@/lib/payments/escrow-engine";
 
 export interface ScreeningScreenProps {
   onBackToDashboard: () => void;
@@ -199,6 +201,21 @@ export function ScreeningScreen({
         image_url: lesionPhotoUrl || undefined,
         clinical_notes: clinicalNotes.trim() || undefined,
       });
+
+      // On-demand "Free Now" Doctor matching with 90-second acceptance TTL
+      try {
+        const routeResult = await routeCaseToAvailableDoctor(record.id, record.patient_ref, record.urgency_tier);
+        if (routeResult.assignedDoctor) {
+          createConsultationEscrow({
+            caseId: record.id,
+            patientRef: record.patient_ref,
+            doctorId: routeResult.assignedDoctor.doctorId,
+            doctorFeeInr: routeResult.assignedDoctor.consultationFeeInr,
+          });
+        }
+      } catch (routingErr) {
+        console.warn("Doctor routing notice:", routingErr);
+      }
 
       onSaveSuccess(record);
     } catch (err: any) {

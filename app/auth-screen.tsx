@@ -2,13 +2,11 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
-import { createClient, type Profile, ADMIN_EMAIL, isAdminEmail, isAdminPassword, uploadToStorage } from "@/lib/supabase/client";
+import { createClient, type Profile, ADMIN_EMAIL, isAdminEmail, uploadToStorage } from "@/lib/supabase/client";
 import { LanguageSwitcher } from "./language-switcher";
 import { IconTooltip } from "./icon-tooltip";
 
 type StatusTone = "idle" | "good" | "error" | "warn";
-
-const DEFAULT_ADMIN_PASS = "Pratyush@3130";
 
 export interface AuthScreenProps {
   initialMode?: "signin" | "signup" | "admin" | "profile";
@@ -188,10 +186,10 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
 
   async function fillAdminPreset() {
     setEmail(ADMIN_EMAIL);
-    setPassword(DEFAULT_ADMIN_PASS);
+    setPassword("");
     setStatus({
       tone: "good",
-      text: "⚡ Admin credentials loaded for pratyushkiranrath4@gmail.com! Click 'Sign In' below.",
+      text: `⚡ Admin email ${ADMIN_EMAIL} filled. Please enter your administrator password.`,
     });
   }
 
@@ -212,32 +210,6 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
       });
 
       if (error) {
-        // If user doesn't exist yet and it's the admin email with correct password, auto-create
-        if (isAdminEmail(email) && isAdminPassword(password)) {
-          const signUpRes = await supabase.auth.signUp({
-            email: ADMIN_EMAIL,
-            password: password.trim(),
-            options: {
-              data: {
-                display_name: "Pratyush Kiran Rath",
-                role: "admin",
-              },
-            },
-          });
-
-          if (signUpRes.error) {
-            throw signUpRes.error;
-          }
-
-          if (signUpRes.data.user) {
-            setUser(signUpRes.data.user);
-            await loadProfile(signUpRes.data.user);
-            setStatus({ tone: "good", text: "✓ System Administrator registered and authenticated!" });
-            setBusy(false);
-            if (onSuccess) onSuccess();
-            return;
-          }
-        }
         throw error;
       }
 

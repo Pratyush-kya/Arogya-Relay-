@@ -2,11 +2,9 @@
 
 import { FormEvent, useEffect, useMemo, useState, useRef } from "react";
 import type { User } from "@supabase/supabase-js";
-import { createClient, type Profile, ADMIN_EMAIL, isAdminEmail, isAdminPassword, uploadToStorage } from "@/lib/supabase/client";
+import { createClient, type Profile, ADMIN_EMAIL, isAdminEmail, uploadToStorage } from "@/lib/supabase/client";
 
 type StatusTone = "idle" | "good" | "error" | "warn";
-
-const DEFAULT_ADMIN_PASS = "Pratyush@3130";
 
 const ROLES = [
   { id: "health_worker", label: "Health Worker / ASHA", icon: "🩺", desc: "Frontline screening & referrals" },
@@ -299,22 +297,6 @@ export function TopRightUserNav({
     try {
       const res = await supabase.auth.signInWithPassword({ email, password });
       if (res.error) {
-        // If demo admin password match
-        if (isAdminEmail(email) && password === DEFAULT_ADMIN_PASS) {
-          setProfile({
-            id: "admin-pratyush-id",
-            email: ADMIN_EMAIL,
-            role: "admin",
-            display_name: "Pratyush Kiran Rath (Admin)",
-            pseudo_id: "ADM-PRATYUSH",
-            verification_status: "verified",
-          });
-          setUser({ id: "admin-pratyush-id", email: ADMIN_EMAIL } as User);
-          setStatus({ tone: "good", text: "Admin authenticated." });
-          setAuthModalOpen(false);
-          setBusy(false);
-          return;
-        }
         setStatus({ tone: "error", text: res.error.message });
         setBusy(false);
         return;
@@ -322,89 +304,16 @@ export function TopRightUserNav({
       setStatus({ tone: "good", text: "Signed in successfully." });
       setAuthModalOpen(false);
     } catch (err: any) {
-      if (isAdminEmail(email) && password === DEFAULT_ADMIN_PASS) {
-        setProfile({
-          id: "admin-pratyush-id",
-          email: ADMIN_EMAIL,
-          role: "admin",
-          display_name: "Pratyush Kiran Rath (Admin)",
-          pseudo_id: "ADM-PRATYUSH",
-          verification_status: "verified",
-        });
-        setUser({ id: "admin-pratyush-id", email: ADMIN_EMAIL } as User);
-        setStatus({ tone: "good", text: "Admin authenticated." });
-        setAuthModalOpen(false);
-      } else {
-        setStatus({ tone: "error", text: err.message || "Sign in failed." });
-      }
+      setStatus({ tone: "error", text: err.message || "Sign in failed." });
     } finally {
       setBusy(false);
     }
   }
 
   async function handleAdminQuickLogin() {
-    setBusy(true);
-    setStatus({ tone: "idle", text: "" });
-
-    try {
-      const res = await supabase.auth.signInWithPassword({
-        email: ADMIN_EMAIL,
-        password: DEFAULT_ADMIN_PASS,
-      });
-
-      if (res.error) {
-        // If not registered yet on remote supabase, attempt quick signup
-        const upRes = await supabase.auth.signUp({
-          email: ADMIN_EMAIL,
-          password: DEFAULT_ADMIN_PASS,
-          options: {
-            data: {
-              display_name: "Pratyush Kiran Rath (Admin)",
-              role: "admin",
-              pseudo_id: "ADM-PRATYUSH",
-            },
-          },
-        });
-
-        if (upRes.data.user) {
-          setUser(upRes.data.user);
-          setProfile({
-            id: upRes.data.user.id,
-            email: ADMIN_EMAIL,
-            role: "admin",
-            display_name: "Pratyush Kiran Rath (Admin)",
-            pseudo_id: "ADM-PRATYUSH",
-            verification_status: "verified",
-          });
-        } else {
-          // Offline fallback
-          setUser({ id: "admin-pratyush-local", email: ADMIN_EMAIL } as User);
-          setProfile({
-            id: "admin-pratyush-local",
-            email: ADMIN_EMAIL,
-            role: "admin",
-            display_name: "Pratyush Kiran Rath (Admin)",
-            pseudo_id: "ADM-PRATYUSH",
-            verification_status: "verified",
-          });
-        }
-      }
-      setStatus({ tone: "good", text: "Authenticated as System Admin." });
-      setAuthModalOpen(false);
-    } catch {
-      setUser({ id: "admin-pratyush-local", email: ADMIN_EMAIL } as User);
-      setProfile({
-        id: "admin-pratyush-local",
-        email: ADMIN_EMAIL,
-        role: "admin",
-        display_name: "Pratyush Kiran Rath (Admin)",
-        pseudo_id: "ADM-PRATYUSH",
-        verification_status: "verified",
-      });
-      setAuthModalOpen(false);
-    } finally {
-      setBusy(false);
-    }
+    setAuthMode("signin");
+    setAuthModalOpen(true);
+    setStatus({ tone: "idle", text: `Please sign in with administrator credentials for ${ADMIN_EMAIL}` });
   }
 
   async function handleSignUp(e: FormEvent<HTMLFormElement>) {
@@ -980,7 +889,6 @@ export function TopRightUserNav({
                     id="auth-password"
                     type={showPassword ? "text" : "password"}
                     name="password"
-                    defaultValue={DEFAULT_ADMIN_PASS}
                     placeholder="••••••••"
                     autoComplete="current-password"
                     required

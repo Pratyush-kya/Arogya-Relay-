@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 
 export const API_RESPONSE_HEADERS = {
   "Content-Type": "application/json",

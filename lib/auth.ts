@@ -8,7 +8,7 @@
  * medication orders) and the audit trail. Never treat this as production auth.
  */
 
-import { constantTimeEqual } from "@/lib/http-security";
+import { constantTimeEqual } from "./http-security.ts";
 
 export type Role = "admin" | "doctor" | "health_worker" | "reviewer" | "anon";
 
@@ -41,6 +41,12 @@ export function resolveActor(request: Request): ResolvedActor {
 
 /** RBAC gate: true if the actor may perform an action requiring `required`. */
 export function hasRole(actor: ResolvedActor, required: Role): boolean {
+  if (required === "doctor") {
+    return actor.role === "doctor";
+  }
+  if (required === "admin") {
+    return actor.role === "admin";
+  }
   const rank: Record<Role, number> = {
     anon: 0,
     health_worker: 1,

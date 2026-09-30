@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient } from "./client";
+import { settleDoctorEscrow } from "../payments/escrow-engine.ts";
 
 export type UrgencyTier = "emergency" | "urgent" | "review" | "cleared";
 export type CaseStatus = "pending_doctor_review" | "doctor_evaluated" | "completed";
@@ -66,14 +67,34 @@ export async function fetchAllScreenings(): Promise<ScreeningRecord[]> {
       return local;
     }
 
-    // Merge remote and local (local unsynced takes precedence)
+    // Merge remote and local with clinical conflict resolution
     const remoteMap = new Map<string, ScreeningRecord>();
     for (const item of (data as any[])) {
       remoteMap.set(item.id, { ...item, synced: true });
     }
     for (const item of local) {
-      if (!item.synced) {
+      const remote = remoteMap.get(item.id);
+      if (!remote) {
         remoteMap.set(item.id, item);
+      } else if (!item.synced) {
+        // Clinical safeguard: if remote has been evaluated by a doctor, preserve the doctor's review
+        if (remote.status === "doctor_evaluated" && item.status !== "doctor_evaluated") {
+          remoteMap.set(item.id, {
+            ...item,
+            status: remote.status,
+            doctor_notes: remote.doctor_notes,
+            prescription_advice: remote.prescription_advice,
+            evaluated_by: remote.evaluated_by,
+            updated_at: remote.updated_at,
+            synced: true,
+          });
+        } else {
+          const localTime = new Date(item.updated_at || item.created_at).getTime();
+          const remoteTime = new Date(remote.updated_at || remote.created_at).getTime();
+          if (localTime >= remoteTime) {
+            remoteMap.set(item.id, item);
+          }
+        }
       }
     }
     return Array.from(remoteMap.values());
@@ -139,6 +160,13 @@ export async function submitDoctorEvaluation(
     record.updated_at = new Date().toISOString();
     record.synced = false;
     saveLocalScreening(record);
+  }
+
+  // Settle doctor consultation fee from escrow
+  try {
+    settleDoctorEscrow(id);
+  } catch {
+    // Escrow ledger local fallback
   }
 
   try {
