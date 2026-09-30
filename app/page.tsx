@@ -110,15 +110,17 @@ export default function Home() {
   // Sync URL hash for direct links and separate screen tabs (#auth, #screening, #supabase, #chemist, #admin)
   useEffect(() => {
     function checkHash() {
-      const hash = window.location.hash;
-      if (hash === "#auth" || hash === "#signin") {
+      const hash = typeof window !== "undefined" ? window.location.hash : "";
+      const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+      if (pathname === "/admin" || hash === "#admin" || hash === "#console" || hash === "#admin-console") {
+        setActiveRole("admin");
+        setViewMode("admin");
+      } else if (hash === "#auth" || hash === "#signin") {
         setAuthScreenMode("signin");
         setViewMode("auth");
       } else if (hash === "#signup" || hash === "#doctor-signup") {
         setAuthScreenMode("signup");
         setViewMode("auth");
-      } else if (hash === "#admin" || hash === "#console" || hash === "#admin-console") {
-        setViewMode("admin");
       } else if (hash === "#admin-auth" || hash === "#admin-signin") {
         setAuthScreenMode("admin");
         setViewMode("auth");
@@ -1140,7 +1142,7 @@ export default function Home() {
                 { id: "doctor", icon: "🩺", label: "Doctor" },
                 { id: "health_worker", icon: "👩‍⚕️", label: "ASHA" },
                 { id: "chemist", icon: "🏪", label: "Chemist" },
-                { id: "admin", icon: "🛡️", label: "Admin" },
+                ...(activeRole === "admin" ? [{ id: "admin", icon: "🛡️", label: "Admin" }] : []),
               ].map((item) => {
                 const isCurrent = activeRole === item.id;
                 return (

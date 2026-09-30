@@ -9,7 +9,6 @@ type StatusTone = "idle" | "good" | "error" | "warn";
 const ROLES = [
   { id: "health_worker", label: "Health Worker / ASHA", icon: "🩺", desc: "Frontline screening & referrals" },
   { id: "doctor", label: "Medical Doctor / Clinician", icon: "👨‍⚕️", desc: "Requires NMC council verification" },
-  { id: "admin", label: "System Administrator", icon: "🛡️", desc: "Full governance & clinical approvals" },
   { id: "reviewer", label: "Clinical Reviewer", icon: "📋", desc: "Evidence & guideline audit" },
 ] as const;
 
