@@ -37,6 +37,63 @@ export type Profile = {
   verified_by?: string | null;
 };
 
+export const DEFAULT_DEMO_USERS: Profile[] = [
+  {
+    id: "doc-demo-1",
+    email: "dr.ananya@health.gov.in",
+    display_name: "Dr. Ananya Sharma, MD",
+    role: "doctor",
+    pseudo_id: "DOC-ANANYA",
+    medical_reg_no: "NMC-2022-84920",
+    council_name: "Delhi Medical Council",
+    specialization: "General Physician / Internal Medicine",
+    facility_name: "Pynursla CHC",
+    verification_status: "pending_verification",
+    verification_notes: "NMC license proof uploaded. Awaiting admin approval.",
+    license_document_url: "https://tinwzrwomldbbbrwnazn.supabase.co/storage/v1/object/public/doctor-credentials/nmc-sample-license.pdf",
+  },
+  {
+    id: "doc-demo-2",
+    email: "dr.patel@ruralhealth.org",
+    display_name: "Dr. Rajesh Patel, MBBS",
+    role: "doctor",
+    pseudo_id: "DOC-RAJESH",
+    medical_reg_no: "GMC-1998-11024",
+    council_name: "Gujarat Medical Council",
+    specialization: "Paediatrics & Neonatal Care",
+    facility_name: "Mawlynnong District Hospital",
+    verification_status: "verified",
+    verified_by: ADMIN_EMAIL,
+    verified_at: "2026-09-30T10:00:00.000Z",
+  },
+  {
+    id: "hw-demo-1",
+    email: "asha.priya@field.arogya.org",
+    display_name: "Priya Devi (ASHA Facilitator)",
+    role: "health_worker",
+    pseudo_id: "HW-PRIYA-04",
+    facility_name: "Mawlynnong Community Sub-Center",
+    phone: "+91 98765 43210",
+  },
+  {
+    id: "chem-demo-1",
+    email: "jan.aushadhi.kendra@pharma.org",
+    display_name: "Jan Aushadhi Kendra #1084",
+    role: "chemist",
+    pseudo_id: "PHARM-1084",
+    facility_name: "Kendra Dispensary - North Ridge",
+    address: "Market Complex, Sector 4",
+  },
+  {
+    id: "pat-demo-1",
+    email: "citizen.ramesh@gmail.com",
+    display_name: "Ramesh Soren",
+    role: "patient",
+    pseudo_id: "PAT-SOREN-92",
+    address: "North Ridge Hamlet #12",
+  },
+];
+
 let browserClient: ReturnType<typeof createSupabaseClient> | null = null;
 
 const STORAGE_URL_KEY = "arogya.supabase.url";

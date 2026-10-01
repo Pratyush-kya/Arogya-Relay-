@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { LanguageSwitcher } from "./language-switcher";
-import { createClient, ADMIN_EMAIL, isAdminEmail, type Profile } from "@/lib/supabase/client";
+import { createClient, ADMIN_EMAIL, isAdminEmail, type Profile, DEFAULT_DEMO_USERS } from "@/lib/supabase/client";
 
 export interface PublicLandingProps {
   onSignIn?: (preferredRole?: "patient" | "doctor" | "health_worker" | "chemist") => void;
@@ -107,7 +107,8 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
       // Resilient Local Authentication Fallback
       if (typeof window !== "undefined") {
         const cachedUsers = JSON.parse(localStorage.getItem("arogya.admin.users") || "[]");
-        const found = cachedUsers.find((u: any) => u.email?.toLowerCase() === cleanEmail);
+        const allKnownUsers: Profile[] = [...DEFAULT_DEMO_USERS, ...cachedUsers];
+        const found = allKnownUsers.find((u: any) => u.email?.toLowerCase() === cleanEmail);
         if (found) {
           const localUserObj = {
             id: found.id,
@@ -116,7 +117,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
           };
           localStorage.setItem("arogya.local_user", JSON.stringify(localUserObj));
           localStorage.setItem("arogya.local_profile", JSON.stringify(found));
-          setStatus({ tone: "good", msg: "✓ Signed in via Resilient Local Mode! Loading workspace..." });
+          setStatus({ tone: "good", msg: `✓ Signed in as ${found.display_name || found.email} (${found.role.toUpperCase()})! Loading workspace...` });
           setTimeout(() => {
             window.location.reload();
           }, 500);
@@ -821,6 +822,128 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                   Create New Account
                 </button>
               </p>
+
+              {/* Quick Demo Role Auto-fill Presets */}
+              <div
+                style={{
+                  marginTop: "10px",
+                  paddingTop: "12px",
+                  borderTop: "1px dashed #cbd5e1",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <span style={{ fontSize: "11px", fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    ⚡ Quick Demo Accounts (Pass: demo123)
+                  </span>
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmail("dr.patel@ruralhealth.org");
+                      setPassword("demo123");
+                      setStatus({ tone: "good", msg: "Selected Dr. Rajesh Patel (Verified Doctor) · Click Sign In" });
+                    }}
+                    style={{
+                      background: "#f0f9ff",
+                      color: "#0369a1",
+                      border: "1px solid #bae6fd",
+                      borderRadius: "6px",
+                      padding: "4px 8px",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                    title="Paediatrics & Neonatal Care - Verified Doctor"
+                  >
+                    👨‍⚕️ Dr. Patel (Doctor)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmail("dr.ananya@health.gov.in");
+                      setPassword("demo123");
+                      setStatus({ tone: "good", msg: "Selected Dr. Ananya Sharma (Pending NMC Verification) · Click Sign In" });
+                    }}
+                    style={{
+                      background: "#fef3c7",
+                      color: "#92400e",
+                      border: "1px solid #fde68a",
+                      borderRadius: "6px",
+                      padding: "4px 8px",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                    title="General Physician - Pending Verification"
+                  >
+                    👩‍⚕️ Dr. Ananya (Doctor)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmail("asha.priya@field.arogya.org");
+                      setPassword("demo123");
+                      setStatus({ tone: "good", msg: "Selected Priya Devi (ASHA Worker) · Click Sign In" });
+                    }}
+                    style={{
+                      background: "#f0fdf4",
+                      color: "#166534",
+                      border: "1px solid #bbf7d0",
+                      borderRadius: "6px",
+                      padding: "4px 8px",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                    title="Mawlynnong Community Sub-Center - ASHA Worker"
+                  >
+                    🧑‍🌾 ASHA Priya (Worker)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmail("jan.aushadhi.kendra@pharma.org");
+                      setPassword("demo123");
+                      setStatus({ tone: "good", msg: "Selected Jan Aushadhi Kendra (Chemist) · Click Sign In" });
+                    }}
+                    style={{
+                      background: "#faf5ff",
+                      color: "#7e22ce",
+                      border: "1px solid #e9d5ff",
+                      borderRadius: "6px",
+                      padding: "4px 8px",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                    title="Jan Aushadhi Dispensary - Chemist"
+                  >
+                    🏪 Kendra #1084 (Chemist)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmail("citizen.ramesh@gmail.com");
+                      setPassword("demo123");
+                      setStatus({ tone: "good", msg: "Selected Ramesh Soren (Citizen / Patient) · Click Sign In" });
+                    }}
+                    style={{
+                      background: "#f8fafc",
+                      color: "#334155",
+                      border: "1px solid #cbd5e1",
+                      borderRadius: "6px",
+                      padding: "4px 8px",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                    title="Citizen / Patient"
+                  >
+                    👤 Ramesh Soren (Patient)
+                  </button>
+                </div>
+              </div>
             </form>
           )}
 

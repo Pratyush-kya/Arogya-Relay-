@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
-import { createClient, type Profile, ADMIN_EMAIL, isAdminEmail, uploadToStorage } from "@/lib/supabase/client";
+import { createClient, type Profile, ADMIN_EMAIL, isAdminEmail, uploadToStorage, DEFAULT_DEMO_USERS } from "@/lib/supabase/client";
 import { LanguageSwitcher } from "./language-switcher";
 import { IconTooltip } from "./icon-tooltip";
 
@@ -241,7 +241,8 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
       if (typeof window !== "undefined") {
         const cleanEmail = email.trim().toLowerCase();
         const cachedUsers = JSON.parse(localStorage.getItem("arogya.admin.users") || "[]");
-        const found = cachedUsers.find((u: any) => u.email?.toLowerCase() === cleanEmail);
+        const allKnownUsers: Profile[] = [...DEFAULT_DEMO_USERS, ...cachedUsers];
+        const found = allKnownUsers.find((u: any) => u.email?.toLowerCase() === cleanEmail);
         if (found) {
           const localUserObj = {
             id: found.id,
@@ -252,7 +253,7 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
           localStorage.setItem("arogya.local_profile", JSON.stringify(found));
           setUser(localUserObj as any);
           setProfile(found);
-          setStatus({ tone: "good", text: "✓ Signed in via Resilient Local Mode! Welcome back." });
+          setStatus({ tone: "good", text: `✓ Signed in as ${found.display_name || found.email} (${found.role.toUpperCase()})!` });
           setTimeout(() => {
             if (onSuccess) onSuccess();
             onBackToDashboard();
