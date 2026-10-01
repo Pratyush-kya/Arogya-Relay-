@@ -440,10 +440,18 @@ export function TopRightUserNav({
   async function signOut() {
     setBusy(true);
     await supabase.auth.signOut().catch(() => null);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("arogya.local_user");
+      localStorage.removeItem("arogya.local_profile");
+      sessionStorage.removeItem("arogya.admin.auth_session");
+    }
     setUser(null);
     setProfile(null);
     setPopoverOpen(false);
     setBusy(false);
+    if (typeof window !== "undefined") {
+      window.location.reload();
+    }
   }
 
   const roleTheme = {

@@ -187,8 +187,8 @@ export default function Home({
       const supabase = createClient();
       supabase.auth.getUser().then(({ data }) => {
         if (!alive) return;
-        setCurrentUser(data.user);
-        if (data.user) {
+        if (data?.user) {
+          setCurrentUser(data.user);
           supabase.from("profiles").select("*").eq("id", data.user.id).maybeSingle<Profile>().then(({ data: p }) => {
             if (alive) {
               if (p) setCurrentProfile(p);
@@ -214,6 +214,67 @@ export default function Home({
               }
             }
           });
+        } else {
+          // Check Resilient Local Offline Session
+          if (typeof window !== "undefined") {
+            const savedLocalUser = localStorage.getItem("arogya.local_user");
+            const savedLocalProfile = localStorage.getItem("arogya.local_profile");
+            if (savedLocalUser && savedLocalProfile) {
+              try {
+                const u = JSON.parse(savedLocalUser);
+                const p = JSON.parse(savedLocalProfile);
+                setCurrentUser(u);
+                setCurrentProfile(p);
+                const r = p?.role || u?.user_metadata?.role || "patient";
+                if (r === "doctor" || r === "reviewer") {
+                  setActiveRole("doctor");
+                  setActiveTab("cases");
+                  setViewMode("dashboard");
+                } else if (r === "admin") {
+                  setActiveRole("admin");
+                  setViewMode("admin");
+                } else if (r === "health_worker") {
+                  setActiveRole("health_worker");
+                  setActiveTab("overview");
+                  setViewMode("dashboard");
+                } else if (r === "chemist") {
+                  setActiveRole("chemist");
+                  setViewMode("chemist");
+                } else {
+                  setActiveRole("patient");
+                  setActiveTab("overview");
+                  setViewMode("dashboard");
+                }
+              } catch (e) {
+                console.warn("Local session notice:", e);
+              }
+            }
+          }
+        }
+      }).catch(() => {
+        // Fallback on network failure
+        if (typeof window !== "undefined" && alive) {
+          const savedLocalUser = localStorage.getItem("arogya.local_user");
+          const savedLocalProfile = localStorage.getItem("arogya.local_profile");
+          if (savedLocalUser && savedLocalProfile) {
+            try {
+              const u = JSON.parse(savedLocalUser);
+              const p = JSON.parse(savedLocalProfile);
+              setCurrentUser(u);
+              setCurrentProfile(p);
+              const r = p?.role || "patient";
+              if (r === "doctor") {
+                setActiveRole("doctor");
+                setActiveTab("cases");
+              } else if (r === "chemist") {
+                setActiveRole("chemist");
+                setViewMode("chemist");
+              } else if (r === "admin") {
+                setActiveRole("admin");
+                setViewMode("admin");
+              }
+            } catch {}
+          }
         }
       });
 
