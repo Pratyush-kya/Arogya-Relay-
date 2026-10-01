@@ -134,17 +134,23 @@ export { AuthScreen } from "./auth-screen";
  * access, authentication, doctor verification alerts, and admin console launch.
  */
 export function TopRightUserNav({
+  currentUser,
+  currentProfile,
   onOpenAuthScreen,
   onOpenSupabase,
   onOpenAdmin,
+  onSignOut,
 }: {
+  currentUser?: User | null;
+  currentProfile?: Profile | null;
   onOpenAuthScreen?: (mode: "signin" | "signup" | "admin" | "profile") => void;
   onOpenSupabase?: () => void;
   onOpenAdmin?: () => void;
+  onSignOut?: () => void;
 } = {}) {
   const supabase = useMemo(() => createClient(), []);
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [user, setUser] = useState<User | null>(currentUser ?? null);
+  const [profile, setProfile] = useState<Profile | null>(currentProfile ?? null);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
@@ -154,6 +160,19 @@ export function TopRightUserNav({
   const [showPassword, setShowPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState<"patient" | "doctor" | "health_worker" | "chemist">("patient");
   const popoverRef = useRef<HTMLDivElement>(null);
+
+  // Sync props if provided
+  useEffect(() => {
+    if (currentUser !== undefined) {
+      setUser(currentUser);
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (currentProfile !== undefined) {
+      setProfile(currentProfile);
+    }
+  }, [currentProfile]);
 
   // Doctor Verification Form State
   const [docNmcNumber, setDocNmcNumber] = useState("");
@@ -178,15 +197,36 @@ export function TopRightUserNav({
   useEffect(() => {
     let alive = true;
     async function initUser() {
+      // 1. Try Supabase Cloud session
       try {
         const { data } = await supabase.auth.getUser();
         if (!alive) return;
-        setUser(data.user);
-        if (data.user) {
+        if (data?.user) {
+          setUser(data.user);
           loadProfile(data.user);
+          return;
         }
-      } catch {
-        if (alive) setUser(null);
+      } catch {}
+
+      // 2. Fallback to Local Offline Session
+      if (typeof window !== "undefined" && alive) {
+        const savedUser = localStorage.getItem("arogya.local_user");
+        const savedProfile = localStorage.getItem("arogya.local_profile");
+        if (savedUser) {
+          try {
+            const u = JSON.parse(savedUser);
+            setUser(u);
+            if (savedProfile) {
+              setProfile(JSON.parse(savedProfile));
+            } else {
+              loadProfile(u);
+            }
+            return;
+          } catch {}
+        }
+        if (!currentUser) {
+          setUser(null);
+        }
       }
     }
     initUser();
@@ -197,7 +237,10 @@ export function TopRightUserNav({
         loadProfile(session.user);
         setAuthModalOpen(false);
       } else {
-        setProfile(null);
+        // Only clear if local session is also absent
+        if (typeof window !== "undefined" && !localStorage.getItem("arogya.local_user")) {
+          setProfile(null);
+        }
       }
     });
 
@@ -205,7 +248,7 @@ export function TopRightUserNav({
       alive = false;
       sub.subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [supabase, currentUser]);
 
   async function loadProfile(currentUser: User) {
     if (isAdminEmail(currentUser.email)) {
@@ -484,6 +527,11 @@ export function TopRightUserNav({
   }
 
   async function signOut() {
+    if (onSignOut) {
+      onSignOut();
+      setPopoverOpen(false);
+      return;
+    }
     setBusy(true);
     await supabase.auth.signOut().catch(() => null);
     if (typeof window !== "undefined") {

@@ -5,12 +5,15 @@ import { getLocalPrescriptions, saveLocalPrescription } from "@/lib/prescription
 import { settleChemistEscrow } from "@/lib/payments/escrow-engine";
 import { createClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/lib/i18n/provider";
+import { LanguageSwitcher } from "./language-switcher";
 
 interface ChemistDispensaryProps {
-  onBackToDashboard: () => void;
+  onBackToDashboard?: () => void;
+  onSignOut?: () => void;
+  chemistName?: string;
 }
 
-export function ChemistDispensary({ onBackToDashboard }: ChemistDispensaryProps) {
+export function ChemistDispensary({ onBackToDashboard, onSignOut, chemistName }: ChemistDispensaryProps) {
   const { t } = useLanguage();
   const [tokenInput, setTokenInput] = useState("");
   const [scannedRx, setScannedRx] = useState<any | null>(null);
@@ -151,23 +154,86 @@ export function ChemistDispensary({ onBackToDashboard }: ChemistDispensaryProps)
   const isAlreadyDispensed = scannedRx?.diagnosis?.includes("[DISPENSED]");
 
   return (
-    <div className="fullscreen-console" role="main" style={{ background: "#f8fafc" }}>
-      <header className="fullscreen-header" style={{ borderBottom: "1px solid #e2e8f0", padding: "16px 24px" }}>
-        <button
-          type="button"
-          className="fullscreen-back-btn"
-          onClick={onBackToDashboard}
-          style={{ background: "#0f172a", color: "#fff", border: "none", padding: "8px 16px", borderRadius: "8px", cursor: "pointer" }}
-        >
-          ← {t("library.backDashboard")}
-        </button>
-        <div style={{ marginLeft: "16px" }}>
-          <h1 style={{ fontSize: "1.25rem", fontWeight: "700", color: "#0f172a", margin: 0 }}>
-            🏪 {t("chemist.title")}
-          </h1>
-          <p style={{ margin: "4px 0 0", color: "#64748b", fontSize: "0.85rem" }}>
-            {t("chemist.subtitle")}
-          </p>
+    <div className="fullscreen-console" role="main" style={{ background: "#f8fafc", minHeight: "100vh" }}>
+      <header
+        className="fullscreen-header"
+        style={{
+          borderBottom: "1px solid #e2e8f0",
+          padding: "14px 24px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          background: "#ffffff",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+          flexWrap: "wrap",
+          gap: "12px",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          {onBackToDashboard && (
+            <button
+              type="button"
+              className="fullscreen-back-btn"
+              onClick={onBackToDashboard}
+              style={{ background: "#f1f5f9", color: "#334155", border: "1px solid #cbd5e1", padding: "6px 12px", borderRadius: "8px", cursor: "pointer", fontSize: "12.5px", fontWeight: 600 }}
+            >
+              ← Back
+            </button>
+          )}
+          <div>
+            <h1 style={{ fontSize: "1.2rem", fontWeight: "800", color: "#0f172a", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+              <span>🏪</span> {t("chemist.title")}
+            </h1>
+            <p style={{ margin: "2px 0 0", color: "#64748b", fontSize: "0.8rem" }}>
+              {t("chemist.subtitle")}
+            </p>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div
+            style={{
+              background: "#eff6ff",
+              border: "1px solid #bfdbfe",
+              borderRadius: "20px",
+              padding: "5px 12px",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              fontSize: "12px",
+              fontWeight: 700,
+              color: "#1e40af",
+            }}
+          >
+            <span>🏪</span>
+            <span>{chemistName || "Jan Aushadhi Kendra #1084"}</span>
+          </div>
+
+          <LanguageSwitcher />
+
+          {onSignOut && (
+            <button
+              type="button"
+              onClick={onSignOut}
+              style={{
+                background: "#fee2e2",
+                color: "#b91c1c",
+                border: "1px solid #fca5a5",
+                padding: "6px 14px",
+                borderRadius: "8px",
+                fontSize: "12px",
+                fontWeight: 700,
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px",
+              }}
+              title="Log out of chemist workstation"
+            >
+              <span>🚪</span>
+              <span>Log Out</span>
+            </button>
+          )}
         </div>
       </header>
 

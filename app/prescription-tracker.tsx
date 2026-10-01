@@ -17,7 +17,11 @@ import { ReadAloud } from "./read-aloud";
 
 import { createClient, uploadToStorage, type Profile } from "@/lib/supabase/client";
 
-export default function PrescriptionTracker() {
+interface PrescriptionTrackerProps {
+  userRole?: "patient" | "doctor" | "health_worker" | "chemist" | "admin";
+}
+
+export default function PrescriptionTracker({ userRole }: PrescriptionTrackerProps = {}) {
   const { t } = useLanguage();
   const [prescriptions, setPrescriptions] = useState<PatientPrescription[]>([]);
   const [todayReminders, setTodayReminders] = useState<TodayReminderSlot[]>([]);
@@ -211,11 +215,14 @@ export default function PrescriptionTracker() {
       <header className="page-heading" style={{ marginBottom: "20px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
           <div>
-            <span className="eyebrow">PATIENT PRESCRIPTIONS &amp; DOSAGE ALARMS</span>
-            <h1>Prescription Tracker &amp; Push Notifications</h1>
+            <span className="eyebrow">
+              {userRole === "patient" ? "CITIZEN PRESCRIPTION WALLET & DOSAGE ALARMS" : "CLINICAL PRESCRIPTIONS & DOSAGE ENGINE"}
+            </span>
+            <h1>{userRole === "patient" ? "My Prescriptions & Reminder Alarms" : "Prescription Tracker & Push Notifications"}</h1>
             <p>
-              Submit doctor prescriptions, schedule automatic medication reminder alarms, track daily dose adherence,
-              and receive Web Push notifications.
+              {userRole === "patient"
+                ? "View your active doctor prescriptions, medication dosage times, daily alarms, and your digital QR pass for the pharmacy."
+                : "Submit doctor prescriptions, schedule automatic medication reminder alarms, track daily dose adherence, and receive Web Push notifications."}
             </p>
           </div>
 
@@ -234,24 +241,26 @@ export default function PrescriptionTracker() {
                 cursor: "pointer",
               }}
             >
-              ⏰ Today&apos;s Reminders ({todayReminders.length})
+              ⏰ {userRole === "patient" ? "My Daily Medication Alarms" : "Today's Reminders"} ({todayReminders.length})
             </button>
-            <button
-              type="button"
-              onClick={() => setActiveSubTab("add")}
-              style={{
-                padding: "8px 16px",
-                borderRadius: "8px",
-                border: "1px solid var(--line)",
-                background: activeSubTab === "add" ? "var(--primary)" : "var(--surface)",
-                color: activeSubTab === "add" ? "#ffffff" : "inherit",
-                fontWeight: "600",
-                fontSize: "13px",
-                cursor: "pointer",
-              }}
-            >
-              ＋ Submit Prescription
-            </button>
+            {userRole !== "patient" && (
+              <button
+                type="button"
+                onClick={() => setActiveSubTab("add")}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "8px",
+                  border: "1px solid var(--line)",
+                  background: activeSubTab === "add" ? "var(--primary)" : "var(--surface)",
+                  color: activeSubTab === "add" ? "#ffffff" : "inherit",
+                  fontWeight: "600",
+                  fontSize: "13px",
+                  cursor: "pointer",
+                }}
+              >
+                ＋ Author Prescription
+              </button>
+            )}
           </div>
         </div>
       </header>

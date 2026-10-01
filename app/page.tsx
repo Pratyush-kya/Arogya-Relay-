@@ -308,8 +308,10 @@ export default function Home({
             }
           });
         } else {
-          setCurrentProfile(null);
-          setActiveRole("patient");
+          if (typeof window !== "undefined" && !localStorage.getItem("arogya.local_user")) {
+            setCurrentProfile(null);
+            setActiveRole("patient");
+          }
         }
       });
 
@@ -590,29 +592,30 @@ export default function Home({
   }
 
   // DEDICATED SEPARATE FULL-SCREEN: Chemist & Jan Aushadhi Dispensary Workstation
-  if (viewMode === "chemist") {
+  if (viewMode === "chemist" || activeRole === "chemist") {
     return (
       <ChemistDispensary
-        onBackToDashboard={() => {
-          setViewMode("dashboard");
-          if (typeof window !== "undefined" && (window.location.hash.startsWith("#chem") || window.location.hash.startsWith("#pharm") || window.location.hash.startsWith("#disp"))) {
-            window.history.pushState("", document.title, window.location.pathname + window.location.search);
-          }
-        }}
+        onSignOut={handleSignOut}
+        chemistName={currentProfile?.display_name || "Jan Aushadhi Kendra #1084"}
+        onBackToDashboard={
+          activeRole !== "chemist"
+            ? () => {
+                setViewMode("dashboard");
+                if (typeof window !== "undefined" && (window.location.hash.startsWith("#chem") || window.location.hash.startsWith("#pharm") || window.location.hash.startsWith("#disp"))) {
+                  window.history.pushState("", document.title, window.location.pathname + window.location.search);
+                }
+              }
+            : undefined
+        }
       />
     );
   }
 
   // DEDICATED SEPARATE FULL-SCREEN: System Administrator Governance Console
-  if (viewMode === "admin") {
+  if (viewMode === "admin" || activeRole === "admin") {
     return (
       <AdminScreen
-        onBackToDashboard={() => {
-          setViewMode("dashboard");
-          if (typeof window !== "undefined" && (window.location.hash.startsWith("#admin") || window.location.hash.startsWith("#console"))) {
-            window.history.pushState("", document.title, window.location.pathname + window.location.search);
-          }
-        }}
+        onBackToDashboard={handleSignOut}
         onOpenSupabaseConfig={() => setViewMode("supabase")}
       />
     );
@@ -725,43 +728,9 @@ export default function Home({
               </IconTooltip>
 
               <IconTooltip
-                title="Chemist & Jan Aushadhi Workstation"
-                desc="Verify single-use digital prescriptions, view Jan Aushadhi generic equivalents, and dispense medicines."
-                howToUse="Click to open the Chemist & Jan Aushadhi Workstation."
-                position="right"
-              >
-                <button
-                  type="button"
-                  className={viewMode === "chemist" ? "nav-item active" : "nav-item"}
-                  onClick={() => setViewMode("chemist")}
-                >
-                  <span className="nav-glyph">🏪</span> {t("nav.chemist")}
-                </button>
-              </IconTooltip>
-
-              <IconTooltip
-                title="Drishti AI Visual Matcher"
-                desc="Upload or capture a photo of a skin condition or rash to view matching clinical reference cases."
-                howToUse="Click to compare clinical skin lesion photos."
-                position="right"
-              >
-                <button
-                  type="button"
-                  className={activeTab === "matcher" && viewMode === "dashboard" ? "nav-item active" : "nav-item"}
-                  aria-current={activeTab === "matcher" && viewMode === "dashboard" ? "page" : undefined}
-                  onClick={() => {
-                    setViewMode("dashboard");
-                    setActiveTab("matcher");
-                  }}
-                >
-                  <span className="nav-glyph">📷</span> {t("nav.matcher")}
-                </button>
-              </IconTooltip>
-
-              <IconTooltip
-                title="Digital Prescription Tracker"
-                desc="Author, digitally sign, and review prescriptions with dosage schedules and reminder alerts."
-                howToUse="Click to issue or view verified electronic prescriptions."
+                title="My Prescriptions & Reminders"
+                desc="View your prescribed medications, daily dosage schedule, reminder alarms, and QR pass."
+                howToUse="Click to view your active prescriptions and dose alarms."
                 position="right"
               >
                 <button
@@ -1132,14 +1101,26 @@ export default function Home({
 
             <LanguageSwitcher />
 
+            <TopRightUserNav
+              currentUser={currentUser}
+              currentProfile={currentProfile}
+              onSignOut={handleSignOut}
+              onOpenAuthScreen={(mode) => {
+                setAuthScreenMode(mode);
+                setViewMode("auth");
+              }}
+              onOpenSupabase={() => setViewMode("supabase")}
+              onOpenAdmin={() => setViewMode("admin")}
+            />
+
             <button
               type="button"
               onClick={handleSignOut}
               style={{
-                background: "#fef2f2",
-                color: "#dc2626",
-                border: "1px solid #fecaca",
-                padding: "6px 12px",
+                background: "#fee2e2",
+                color: "#b91c1c",
+                border: "1px solid #fca5a5",
+                padding: "6px 14px",
                 borderRadius: "8px",
                 fontSize: "12px",
                 fontWeight: 700,
@@ -1148,40 +1129,42 @@ export default function Home({
                 alignItems: "center",
                 gap: "5px",
               }}
-              title="Log out of active session and return to public landing"
+              title="Log out of active session"
             >
               <span>🚪</span>
               <span>Log Out</span>
             </button>
 
-            <div className="topbar-menu">
-              <IconTooltip
-                title="Urgent Clinical Signals"
-                desc="Live triage warnings and emergency patient notifications."
-                howToUse="Click to view urgent case notifications and alerts."
-                position="bottom"
-              >
-                <button
-                  type="button"
-                  className="quiet-icon"
-                  aria-label={t("shell.notifications")}
-                  aria-expanded={notificationsOpen}
-                  onClick={() => { setNotificationsOpen((open) => !open); setAccountOpen(false); }}
+            {activeRole !== "patient" && (
+              <div className="topbar-menu">
+                <IconTooltip
+                  title="Urgent Clinical Signals"
+                  desc="Live triage warnings and emergency patient notifications."
+                  howToUse="Click to view urgent case notifications and alerts."
+                  position="bottom"
                 >
-                  ●<span />
-                </button>
-              </IconTooltip>
-              {notificationsOpen && (
-                <div className="notification-popover" role="region" aria-label={t("shell.notifications")}>
-                  <span className="eyebrow">{t("shell.liveNotifications")}</span>
-                  <strong>{urgentCount > 0 ? `${urgentCount} ${t("common.urgent")}` : t("shell.oneUrgentSignal")}</strong>
-                  <p>{t("shell.notificationDetail")}</p>
-                  <button type="button" onClick={openCases}>{t("overview.openBrief")} →</button>
-                </div>
-              )}
-            </div>
+                  <button
+                    type="button"
+                    className="quiet-icon"
+                    aria-label={t("shell.notifications")}
+                    aria-expanded={notificationsOpen}
+                    onClick={() => { setNotificationsOpen((open) => !open); setAccountOpen(false); }}
+                  >
+                    ●<span />
+                  </button>
+                </IconTooltip>
+                {notificationsOpen && (
+                  <div className="notification-popover" role="region" aria-label={t("shell.notifications")}>
+                    <span className="eyebrow">{t("shell.liveNotifications")}</span>
+                    <strong>{urgentCount > 0 ? `${urgentCount} ${t("common.urgent")}` : t("shell.oneUrgentSignal")}</strong>
+                    <p>{t("shell.notificationDetail")}</p>
+                    <button type="button" onClick={openCases}>{t("overview.openBrief")} →</button>
+                  </div>
+                )}
+              </div>
+            )}
 
-            {(activeRole === "health_worker" || activeRole === "doctor" || activeRole === "admin" || !mounted) && (
+            {(activeRole === "health_worker" || activeRole === "doctor" || activeRole === "admin") && (
               <IconTooltip
                 title="New Clinical Screening Workstation"
                 desc="Open dedicated full-screen console for patient registration, vitals dictation, and lesion camera capture."
@@ -1193,15 +1176,6 @@ export default function Home({
                 </button>
               </IconTooltip>
             )}
-
-            <TopRightUserNav
-              onOpenAuthScreen={(mode) => {
-                setAuthScreenMode(mode);
-                setViewMode("auth");
-              }}
-              onOpenSupabase={() => setViewMode("supabase")}
-              onOpenAdmin={() => setViewMode("admin")}
-            />
           </div>
         </header>
 
@@ -1248,7 +1222,7 @@ export default function Home({
         )}
         {activeTab === "prescriptions" && (
           <Suspense fallback={<WorkspaceLoading />}>
-            <PrescriptionTracker />
+            <PrescriptionTracker userRole={activeRole} />
           </Suspense>
         )}
         {activeTab === "matcher" && (
@@ -1687,7 +1661,7 @@ function Overview({
               </p>
             </div>
 
-            {/* Dedicated Hero Logout & Profile Badge */}
+            {/* Dedicated Hero Profile Badge */}
             <div
               style={{
                 background: "var(--surface, #ffffff)",
@@ -1696,46 +1670,19 @@ function Overview({
                 padding: "10px 16px",
                 display: "flex",
                 alignItems: "center",
-                gap: "14px",
+                gap: "10px",
                 boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <span style={{ fontSize: "24px" }}>👤</span>
-                <div>
-                  <strong style={{ fontSize: "13.5px", color: "var(--foreground, #0f172a)", display: "block" }}>
-                    {currentProfile?.display_name || currentUser?.email?.split("@")[0] || "Citizen"}
-                  </strong>
-                  <span style={{ fontSize: "11px", color: "#166534", background: "#dcfce7", padding: "1px 8px", borderRadius: "10px", fontWeight: 700 }}>
-                    Active Citizen Session
-                  </span>
-                </div>
+              <span style={{ fontSize: "24px" }}>👤</span>
+              <div>
+                <strong style={{ fontSize: "13.5px", color: "var(--foreground, #0f172a)", display: "block" }}>
+                  {currentProfile?.display_name || currentUser?.email?.split("@")[0] || "Citizen"}
+                </strong>
+                <span style={{ fontSize: "11px", color: "#166534", background: "#dcfce7", padding: "1px 8px", borderRadius: "10px", fontWeight: 700 }}>
+                  Active Citizen Session
+                </span>
               </div>
-
-              {onSignOut && (
-                <button
-                  type="button"
-                  onClick={onSignOut}
-                  style={{
-                    background: "#fee2e2",
-                    color: "#b91c1c",
-                    border: "1px solid #fca5a5",
-                    padding: "7px 14px",
-                    borderRadius: "8px",
-                    fontSize: "12.5px",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    transition: "background 0.15s ease",
-                  }}
-                  title="Log out of citizen portal and return to public landing"
-                >
-                  <span>🚪</span>
-                  <span>Log Out</span>
-                </button>
-              )}
             </div>
           </div>
 
@@ -1840,13 +1787,12 @@ function Overview({
                 <span>{t("nav.library")}</span> <span>→</span>
               </div>
             </div>
-
-            {/* Card 3: Generic Medicines & Jan Aushadhi Dispensary */}
+            {/* Card 3: My Prescriptions & Reminders */}
             <div
               role="button"
               tabIndex={0}
-              onClick={onOpenChemist || onOpenNearby}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") (onOpenChemist || onOpenNearby)(); }}
+              onClick={onOpenPrescriptions}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onOpenPrescriptions(); }}
               style={{
                 background: "var(--surface)",
                 border: "2px solid #3b82f6",
@@ -1862,13 +1808,13 @@ function Overview({
             >
               <span style={{ fontSize: "36px" }}>💊</span>
               <h2 style={{ fontSize: "20px", fontWeight: "800", margin: 0, color: "var(--foreground)" }}>
-                {t("patient.findMeds")}
+                {t("nav.prescriptions")} &amp; Reminders
               </h2>
               <p style={{ margin: 0, fontSize: "14px", color: "var(--muted)", lineHeight: 1.45 }}>
-                {t("patient.findMedsDesc")}
+                View your active doctor prescriptions, daily dosage times, reminder alarms, and your digital QR pass.
               </p>
               <div style={{ marginTop: "auto", paddingTop: "8px", fontWeight: 700, fontSize: "14px", color: "#2563eb", display: "flex", alignItems: "center", gap: "6px" }}>
-                <span>{t("nav.chemist")}</span> <span>→</span>
+                <span>View Prescriptions</span> <span>→</span>
               </div>
             </div>
           </div>
@@ -1947,26 +1893,6 @@ function Overview({
               📞 112
             </a>
           </div>
-
-          {/* Switch to Staff Mode Toggle Link */}
-          {onSwitchMode && (
-            <div style={{ textAlign: "center", paddingTop: "8px" }}>
-              <button
-                type="button"
-                onClick={() => onSwitchMode("staff")}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "var(--muted)",
-                  fontSize: "13px",
-                  cursor: "pointer",
-                  textDecoration: "underline",
-                }}
-              >
-                🩺 {t("mode.switchStaff")}
-              </button>
-            </div>
-          )}
         </section>
       ) : (
         /* ═══════════════════════════════════════════════════════════════════
