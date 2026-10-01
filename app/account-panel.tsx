@@ -19,7 +19,28 @@ export function AccountPanel({ open, onToggle }: { open?: boolean; onToggle?: ()
   const [profile, setProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user)).catch(() => setUser(null));
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user) {
+        setUser(data.user);
+      } else if (typeof window !== "undefined") {
+        const localUser = localStorage.getItem("arogya.local_user");
+        if (localUser) {
+          try {
+            setUser(JSON.parse(localUser));
+          } catch {}
+        }
+      }
+    }).catch(() => {
+      if (typeof window !== "undefined") {
+        const localUser = localStorage.getItem("arogya.local_user");
+        if (localUser) {
+          try {
+            setUser(JSON.parse(localUser));
+          } catch {}
+        }
+      }
+    });
+
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
@@ -28,6 +49,15 @@ export function AccountPanel({ open, onToggle }: { open?: boolean; onToggle?: ()
 
   useEffect(() => {
     if (!user) {
+      if (typeof window !== "undefined") {
+        const localProfile = localStorage.getItem("arogya.local_profile");
+        if (localProfile) {
+          try {
+            setProfile(JSON.parse(localProfile));
+            return;
+          } catch {}
+        }
+      }
       setProfile(null);
       return;
     }
@@ -48,9 +78,25 @@ export function AccountPanel({ open, onToggle }: { open?: boolean; onToggle?: ()
             pseudo_id: "ADM-PRATYUSH",
             verification_status: "verified",
           });
+        } else if (typeof window !== "undefined") {
+          const localProfile = localStorage.getItem("arogya.local_profile");
+          if (localProfile) {
+            try {
+              setProfile(JSON.parse(localProfile));
+            } catch {}
+          }
         }
       })
-      .catch(() => null);
+      .catch(() => {
+        if (typeof window !== "undefined") {
+          const localProfile = localStorage.getItem("arogya.local_profile");
+          if (localProfile) {
+            try {
+              setProfile(JSON.parse(localProfile));
+            } catch {}
+          }
+        }
+      });
   }, [supabase, user]);
 
   const displayName = profile?.display_name || user?.email?.split("@")[0] || "Field Clinic (Offline-Ready)";

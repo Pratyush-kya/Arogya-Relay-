@@ -358,6 +358,19 @@ export default function Home({
     return () => document.removeEventListener("keydown", closeMenus);
   }, [accountOpen, notificationsOpen]);
 
+  function handleSignOut() {
+    try {
+      const supabase = createClient();
+      supabase.auth.signOut().catch(() => null);
+    } catch {}
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("arogya.local_user");
+      localStorage.removeItem("arogya.local_profile");
+      sessionStorage.removeItem("arogya.admin.auth_session");
+      window.location.reload();
+    }
+  }
+
   const closeScreening = useCallback(() => {
     setScreeningOpen(false);
     if (stopListeningFn) {
@@ -1119,6 +1132,28 @@ export default function Home({
 
             <LanguageSwitcher />
 
+            <button
+              type="button"
+              onClick={handleSignOut}
+              style={{
+                background: "#fef2f2",
+                color: "#dc2626",
+                border: "1px solid #fecaca",
+                padding: "6px 12px",
+                borderRadius: "8px",
+                fontSize: "12px",
+                fontWeight: 700,
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px",
+              }}
+              title="Log out of active session and return to public landing"
+            >
+              <span>🚪</span>
+              <span>Log Out</span>
+            </button>
+
             <div className="topbar-menu">
               <IconTooltip
                 title="Urgent Clinical Signals"
@@ -1191,6 +1226,9 @@ export default function Home({
             onOpenPrescriptions={() => setActiveTab("prescriptions")}
             onOpenNearby={() => setActiveTab("nearby")}
             onOpenChemist={() => setViewMode("chemist")}
+            currentUser={currentUser}
+            currentProfile={currentProfile}
+            onSignOut={handleSignOut}
           />
         )}
         {activeTab === "cases" && (
@@ -1594,6 +1632,9 @@ interface OverviewProps {
   onOpenNearby: () => void;
   onOpenChemist?: () => void;
   onOpenDevice?: () => void;
+  currentUser?: User | null;
+  currentProfile?: Profile | null;
+  onSignOut?: () => void;
 }
 
 function Overview({
@@ -1608,6 +1649,9 @@ function Overview({
   onOpenNearby,
   onOpenChemist,
   onOpenDevice,
+  currentUser,
+  currentProfile,
+  onSignOut,
 }: OverviewProps) {
   const { t } = useLanguage();
   void onOpenDevice;
@@ -1622,15 +1666,77 @@ function Overview({
            PATIENT & FAMILY STREAMLINED PORTAL
            ═══════════════════════════════════════════════════════════════════ */
         <section className="patient-portal-hero" aria-labelledby="patient-title" style={{ padding: "8px 0 24px" }}>
-          {/* Main Welcome & Header */}
-          <div style={{ marginBottom: "20px" }}>
-            <span style={{ fontSize: "12px", fontWeight: "700", color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-              ✨ {t("patient.heroTitle")}
-            </span>
-            <DynamicGreeting />
-            <p style={{ fontSize: "15px", color: "var(--muted)", margin: "4px 0 0", maxWidth: "700px", lineHeight: "1.5" }}>
-              {t("patient.heroSubtitle")}
-            </p>
+          {/* Main Welcome & Header with Logout */}
+          <div
+            style={{
+              marginBottom: "20px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              flexWrap: "wrap",
+              gap: "16px",
+            }}
+          >
+            <div>
+              <span style={{ fontSize: "12px", fontWeight: "700", color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                ✨ {t("patient.heroTitle")}
+              </span>
+              <DynamicGreeting />
+              <p style={{ fontSize: "15px", color: "var(--muted)", margin: "4px 0 0", maxWidth: "700px", lineHeight: "1.5" }}>
+                {t("patient.heroSubtitle")}
+              </p>
+            </div>
+
+            {/* Dedicated Hero Logout & Profile Badge */}
+            <div
+              style={{
+                background: "var(--surface, #ffffff)",
+                border: "1.5px solid var(--border, #e2e8f0)",
+                borderRadius: "14px",
+                padding: "10px 16px",
+                display: "flex",
+                alignItems: "center",
+                gap: "14px",
+                boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={{ fontSize: "24px" }}>👤</span>
+                <div>
+                  <strong style={{ fontSize: "13.5px", color: "var(--foreground, #0f172a)", display: "block" }}>
+                    {currentProfile?.display_name || currentUser?.email?.split("@")[0] || "Citizen"}
+                  </strong>
+                  <span style={{ fontSize: "11px", color: "#166534", background: "#dcfce7", padding: "1px 8px", borderRadius: "10px", fontWeight: 700 }}>
+                    Active Citizen Session
+                  </span>
+                </div>
+              </div>
+
+              {onSignOut && (
+                <button
+                  type="button"
+                  onClick={onSignOut}
+                  style={{
+                    background: "#fee2e2",
+                    color: "#b91c1c",
+                    border: "1px solid #fca5a5",
+                    padding: "7px 14px",
+                    borderRadius: "8px",
+                    fontSize: "12.5px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    transition: "background 0.15s ease",
+                  }}
+                  title="Log out of citizen portal and return to public landing"
+                >
+                  <span>🚪</span>
+                  <span>Log Out</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Community Health Alert & Local Offline Notice */}

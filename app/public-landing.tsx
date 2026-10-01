@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { LanguageSwitcher } from "./language-switcher";
 import { createClient, ADMIN_EMAIL, isAdminEmail, type Profile } from "@/lib/supabase/client";
 
@@ -8,10 +8,49 @@ export interface PublicLandingProps {
   onSignIn?: (preferredRole?: "patient" | "doctor" | "health_worker" | "chemist") => void;
   onSignUp?: (preferredRole?: "patient" | "doctor" | "health_worker" | "chemist") => void;
   onOpenAdmin?: () => void;
+  onOpenDoctorPortal?: () => void;
+  onOpenChemistPortal?: () => void;
 }
 
-export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin }: PublicLandingProps) {
+export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPortal, onOpenChemistPortal }: PublicLandingProps) {
   const supabase = createClient();
+
+  // Active Logged In Session State
+  const [activeSessionUser, setActiveSessionUser] = useState<{ email: string; role: string; displayName?: string } | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedLocalUser = localStorage.getItem("arogya.local_user");
+      const savedLocalProfile = localStorage.getItem("arogya.local_profile");
+      if (savedLocalUser && savedLocalProfile) {
+        try {
+          const u = JSON.parse(savedLocalUser);
+          const p = JSON.parse(savedLocalProfile);
+          setActiveSessionUser({ email: p.email || u.email, role: p.role || "patient", displayName: p.display_name });
+        } catch {}
+      }
+    }
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user) {
+        setActiveSessionUser({
+          email: data.user.email || "",
+          role: (data.user.user_metadata?.role as string) || "patient",
+          displayName: (data.user.user_metadata?.display_name as string) || data.user.email?.split("@")[0],
+        });
+      }
+    }).catch(() => null);
+  }, [supabase]);
+
+  function handleHeroLogout() {
+    supabase.auth.signOut().catch(() => null);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("arogya.local_user");
+      localStorage.removeItem("arogya.local_profile");
+      sessionStorage.removeItem("arogya.admin.auth_session");
+      setActiveSessionUser(null);
+      window.location.reload();
+    }
+  }
 
   // Embedded Hero Auth Card State
   const [authTab, setAuthTab] = useState<"signin" | "signup">("signin");
@@ -511,11 +550,97 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin }: PublicLanding
             boxSizing: "border-box",
           }}
         >
-          {/* Card Header & Tab Switcher */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
+          {activeSessionUser ? (
+            <div style={{ textAlign: "center", padding: "16px 8px" }}>
+              <div
+                style={{
+                  width: "58px",
+                  height: "58px",
+                  borderRadius: "50%",
+                  background: "#dcfce7",
+                  color: "#166534",
+                  fontSize: "28px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "0 auto 14px",
+                  border: "2px solid #86efac",
+                }}
+              >
+                👤
+              </div>
+              <span
+                style={{
+                  display: "inline-block",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                  background: "#e0f2fe",
+                  color: "#0369a1",
+                  padding: "3px 10px",
+                  borderRadius: "12px",
+                  marginBottom: "10px",
+                }}
+              >
+                {activeSessionUser.role === "patient" ? "Citizen / Patient Session Active" : `${activeSessionUser.role.toUpperCase()} Session Active`}
+              </span>
+              <h3 style={{ margin: "0 0 6px", fontSize: "19px", color: "#0f172a", fontWeight: 800 }}>
+                Welcome back, {activeSessionUser.displayName || activeSessionUser.email}!
+              </h3>
+              <p style={{ margin: "0 0 22px", fontSize: "13px", color: "#64748b", lineHeight: 1.5 }}>
+                You are currently signed into your personalized health portal.
+              </p>
+
+              <div style={{ display: "grid", gap: "12px" }}>
+                <button
+                  type="button"
+                  onClick={() => window.location.reload()}
+                  style={{
+                    background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
+                    color: "#ffffff",
+                    border: "none",
+                    padding: "13px 20px",
+                    borderRadius: "10px",
+                    fontSize: "14px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    boxShadow: "0 4px 14px rgba(5,150,105,0.3)",
+                  }}
+                >
+                  Enter My Health Dashboard →
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleHeroLogout}
+                  style={{
+                    background: "#fef2f2",
+                    color: "#dc2626",
+                    border: "1.5px solid #fecaca",
+                    padding: "11px 18px",
+                    borderRadius: "10px",
+                    fontSize: "13px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <span>🚪</span>
+                  <span>Log Out of Current Session</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Card Header & Tab Switcher */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
               background: "#f1f5f9",
               borderRadius: "10px",
               padding: "4px",
@@ -883,7 +1008,9 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin }: PublicLanding
               </p>
             </form>
           )}
-        </div>
+        </>
+      )}
+    </div>
       </section>
 
       {/* Role Overview Cards (Below Hero - Single action to select role in Hero) */}
