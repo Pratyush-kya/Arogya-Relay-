@@ -237,7 +237,14 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
         }, 800);
       }
     } catch (err: any) {
-      setStatus({ tone: "error", text: err.message || "Failed to sign in. Please verify credentials." });
+      const isNetwork =
+        err?.message?.toLowerCase().includes("network") ||
+        err?.message?.toLowerCase().includes("fetch") ||
+        err?.name === "TypeError";
+      const msg = isNetwork
+        ? "Network Connection Notice: Unable to reach the Supabase authentication server. Please verify your connection or try again."
+        : (err.message || "Failed to sign in. Please verify credentials.");
+      setStatus({ tone: "error", text: msg });
     } finally {
       setBusy(false);
     }
@@ -355,7 +362,14 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
         }, 1000);
       }
     } catch (err: any) {
-      setStatus({ tone: "error", text: err.message || "Failed to create account. Check connection." });
+      const isNetwork =
+        err?.message?.toLowerCase().includes("network") ||
+        err?.message?.toLowerCase().includes("fetch") ||
+        err?.name === "TypeError";
+      const msg = isNetwork
+        ? "Network Connection Notice: Unable to reach the Supabase authentication server. Please verify your connection or try again."
+        : (err.message || "Failed to create account. Check connection.");
+      setStatus({ tone: "error", text: msg });
     } finally {
       setBusy(false);
     }

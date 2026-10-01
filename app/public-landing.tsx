@@ -64,7 +64,14 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin }: PublicLanding
         window.location.reload();
       }, 500);
     } catch (err: any) {
-      setStatus({ tone: "error", msg: err.message || "Invalid email or password. Please try again." });
+      const isNetwork =
+        err?.message?.toLowerCase().includes("network") ||
+        err?.message?.toLowerCase().includes("fetch") ||
+        err?.name === "TypeError";
+      const message = isNetwork
+        ? "Network Connection Notice: Unable to connect to Supabase authentication cloud. Please check your network connection or verify settings."
+        : (err.message || "Invalid email or password. Please try again.");
+      setStatus({ tone: "error", msg: message });
     }
   }
 
@@ -129,7 +136,14 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin }: PublicLanding
         window.location.reload();
       }, 500);
     } catch (err: any) {
-      setStatus({ tone: "error", msg: err.message || "Could not register account. Please check your inputs." });
+      const isNetwork =
+        err?.message?.toLowerCase().includes("network") ||
+        err?.message?.toLowerCase().includes("fetch") ||
+        err?.name === "TypeError";
+      const message = isNetwork
+        ? "Network Connection Notice: Unable to connect to Supabase authentication cloud. Please check your network connection or verify settings."
+        : (err.message || "Could not register account. Please check your inputs.");
+      setStatus({ tone: "error", msg: message });
     }
   }
 
