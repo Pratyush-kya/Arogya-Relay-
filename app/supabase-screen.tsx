@@ -1267,7 +1267,7 @@ export function SupabaseScreen({ onBackToDashboard, onOpenAuth }: SupabaseScreen
                     <div style={{ background: "#f1f5f9", padding: "10px 14px", borderRadius: "8px", fontSize: "11.5px" }}>
                       <div>File: <strong>{selectedFile.name}</strong></div>
                       <div style={{ color: "#64748b" }}>
-                        Size: {(selectedFile.size / 1024).toFixed(1)} KB · Type: {selectedFile.type || "unknown"}
+                        Size: {(((selectedFile?.size || 0)) / 1024).toFixed(1)} KB · Type: {selectedFile.type || "unknown"}
                       </div>
                     </div>
                   )}
