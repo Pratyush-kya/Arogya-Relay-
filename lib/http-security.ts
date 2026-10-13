@@ -5,7 +5,7 @@ export const API_RESPONSE_HEADERS = {
   "X-Content-Type-Options": "nosniff",
   "X-Frame-Options": "DENY",
   "Referrer-Policy": "strict-origin-when-cross-origin",
-  "Permissions-Policy": "geolocation=(self), microphone=(self), camera=(self)",
+  "Permissions-Policy": "geolocation=(self), microphone=(self), camera=()",
 };
 
 export function cleanText(input: unknown, maxLen = 1000): string {

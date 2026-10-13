@@ -6,6 +6,12 @@ export const ALLOWED_EVIDENCE_HOSTS = new Set([
   "idsp.nic.in",
   "nhp.gov.in",
   "www.nhp.gov.in",
+  "nhm.gov.in",
+  "www.nhm.gov.in",
+  "nppaindia.nic.in",
+  "www.nppaindia.nic.in",
+  "pharmaceuticals.gov.in",
+  "www.pharmaceuticals.gov.in",
 ]);
 
 export function isAllowedEvidenceUrl(urlString: string): boolean {
@@ -53,6 +59,22 @@ export async function retrieveOnlineEvidence(concepts: string[]): Promise<Array<
       quote: "Clinical guidelines on emergency transfer, basic life support, and pre-hospital stabilization for high-acuity presentation.",
     });
   }
+
+  // National Health Mission (NHM) primary healthcare & ASHA/Sub-Center protocol
+  citations.push({
+    sourceId: "src-mohfw-nhm",
+    title: "National Health Mission (NHM) — Standard Treatment Guidelines & Ayushman Arogya Mandir Protocols",
+    canonicalUrl: "https://nhm.gov.in/",
+    quote: "National Health Mission primary care clinical guidelines for community triage, essential drug distribution, and maternal/child referral pathways.",
+  });
+
+  // Drugs (Prices Control) Order (DPCO) & NPPA generic medicine ceiling price compliance
+  citations.push({
+    sourceId: "src-nppa-dpco",
+    title: "National Pharmaceutical Pricing Authority (NPPA) — Drugs (Prices Control) Order (DPCO)",
+    canonicalUrl: "https://www.nppaindia.nic.in/",
+    quote: "Ceiling price regulation under NLEM and PMBJP Jan Aushadhi Kendra quality-assured generic substitution guidance.",
+  });
 
   // If no specific concept matched but online mode was requested, provide general MoHFW protocol
   if (citations.length === 0) {

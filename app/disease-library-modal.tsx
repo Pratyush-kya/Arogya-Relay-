@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
   COMMON_DISEASES,
   findDiseasesBySymptom,
   type CommonDisease,
 } from "@/lib/clinical/disease-library";
-import { scanLesionImage, type VisualScanResult } from "@/lib/clinical/visual-scanner";
 import {
   getSavedReminders,
   toggleReminderState,
@@ -28,18 +27,10 @@ export function DiseaseLibraryModal({
   onClose,
   initialQuery = "",
 }: DiseaseLibraryModalProps) {
-  const [tab, setTab] = useState<"library" | "scanner" | "reminders">("library");
+  const [tab, setTab] = useState<"library" | "reminders">("library");
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedDisease, setSelectedDisease] = useState<CommonDisease | null>(COMMON_DISEASES[0]);
-
-  // Visual Scanner State
-  const [scanImageFile, setScanImageFile] = useState<File | null>(null);
-  const [scanPreviewUrl, setScanPreviewUrl] = useState<string | null>(null);
-  const [scanning, setScanning] = useState(false);
-  const [scanResult, setScanResult] = useState<VisualScanResult | null>(null);
-  const [scanError, setScanError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Reminders State
   const [reminders, setReminders] = useState<MedicationReminder[]>(getSavedReminders());
@@ -53,36 +44,6 @@ export function DiseaseLibraryModal({
   let filteredDiseases = findDiseasesBySymptom(searchQuery);
   if (selectedCategory !== "all") {
     filteredDiseases = filteredDiseases.filter((d) => d.category === selectedCategory);
-  }
-
-  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setScanImageFile(file);
-    const url = URL.createObjectURL(file);
-    setScanPreviewUrl(url);
-    setScanError(null);
-    setScanResult(null);
-
-    // Auto-run scanner
-    runVisualScan(file);
-  }
-
-  async function runVisualScan(source: File | string) {
-    setScanning(true);
-    setScanError(null);
-    try {
-      const res = await scanLesionImage(source);
-      setScanResult(res);
-      if (res.topMatches.length > 0) {
-        setSelectedDisease(res.topMatches[0].disease);
-      }
-    } catch (err: any) {
-      setScanError(err.message || "Could not analyze the lesion image.");
-    } finally {
-      setScanning(false);
-    }
   }
 
   async function handleEnablePush() {
@@ -206,27 +167,6 @@ export function DiseaseLibraryModal({
           >
             <span>📖</span>
             <span>Disease Library & Remedies ({COMMON_DISEASES.length})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setTab("scanner")}
-            style={{
-              padding: "12px 14px",
-              fontSize: "12.5px",
-              fontWeight: tab === "scanner" ? 800 : 600,
-              color: tab === "scanner" ? "var(--sc-accent, #17644f)" : "#64748b",
-              border: "none",
-              background: "transparent",
-              borderBottom: tab === "scanner" ? "3px solid var(--sc-accent, #17644f)" : "3px solid transparent",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
-          >
-            <span>📷</span>
-            <span>AI Visual Disease Scanner (Free)</span>
           </button>
 
           <button
@@ -502,171 +442,7 @@ export function DiseaseLibraryModal({
             </div>
           )}
 
-          {/* TAB 2: AI VISUAL LESION SCANNER */}
-          {tab === "scanner" && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", alignItems: "start" }}>
-              {/* Left Column: Image Input */}
-              <div
-                style={{
-                  background: "#ffffff",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "14px",
-                  padding: "18px",
-                }}
-              >
-                <h3 style={{ margin: "0 0 6px", fontSize: "15px", fontWeight: 800, color: "#0f172a" }}>
-                  📷 Scan Lesion, Rash or Eye Redness
-                </h3>
-                <p style={{ margin: "0 0 16px", fontSize: "12px", color: "#64748b" }}>
-                  Upload a photo or capture an image using your device camera. Our in-browser visual engine extracts erythema, annular patterns, and margin textures with zero paid API keys!
-                </p>
-
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  style={{
-                    border: "2px dashed #94a3b8",
-                    borderRadius: "12px",
-                    padding: "24px",
-                    textAlign: "center",
-                    cursor: "pointer",
-                    background: "#f8fafc",
-                    marginBottom: "14px",
-                  }}
-                >
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileSelect}
-                    style={{ display: "none" }}
-                  />
-                  {scanPreviewUrl ? (
-                    <div>
-                      <img
-                        src={scanPreviewUrl}
-                        alt="Scanned lesion"
-                        style={{
-                          maxWidth: "100%",
-                          maxHeight: "180px",
-                          borderRadius: "8px",
-                          objectFit: "contain",
-                          boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-                        }}
-                      />
-                      <div style={{ fontSize: "11px", color: "#64748b", marginTop: "8px" }}>
-                        Click to change photo
-                      </div>
-                    </div>
-                  ) : (
-                    <div>
-                      <div style={{ fontSize: "36px", marginBottom: "8px" }}>📸</div>
-                      <strong style={{ fontSize: "13px", color: "#0f172a" }}>
-                        Click to Upload or Take a Picture
-                      </strong>
-                      <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px" }}>
-                        Supports JPEG, PNG, WEBP from camera or gallery
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {scanning && (
-                  <div style={{ padding: "12px", background: "#eff6ff", color: "#1e40af", borderRadius: "8px", fontSize: "12px", textAlign: "center" }}>
-                    🔄 Analyzing visual spectrum, redness index, and border geometry...
-                  </div>
-                )}
-
-                {scanError && (
-                  <div style={{ padding: "12px", background: "#fef2f2", color: "#991b1b", borderRadius: "8px", fontSize: "12px" }}>
-                    {scanError}
-                  </div>
-                )}
-              </div>
-
-              {/* Right Column: Scan Matches & Guidance */}
-              <div>
-                {scanResult ? (
-                  <div style={{ display: "grid", gap: "14px" }}>
-                    {/* Visual Metrics Pill */}
-                    <div style={{ background: "#f1f5f9", padding: "12px", borderRadius: "10px", fontSize: "11.5px" }}>
-                      <strong style={{ display: "block", marginBottom: "4px", color: "#0f172a" }}>
-                        🔬 Extracted Visual Metrics:
-                      </strong>
-                      <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", color: "#475569" }}>
-                        <span>Redness / Erythema: <strong>{(scanResult.metrics.erythemaIndex * 100).toFixed(0)}%</strong></span>
-                        <span>Annular Ring Score: <strong>{(scanResult.metrics.annularScore * 100).toFixed(0)}%</strong></span>
-                        <span>Color Tone: <strong style={{ textTransform: "capitalize" }}>{scanResult.metrics.colorCategory}</strong></span>
-                      </div>
-                    </div>
-
-                    <h4 style={{ margin: "4px 0 0", fontSize: "14px", fontWeight: 800, color: "#0f172a" }}>
-                      Top Matched Conditions:
-                    </h4>
-
-                    {scanResult.topMatches.map((match, idx) => (
-                      <div
-                        key={idx}
-                        style={{
-                          background: "#ffffff",
-                          border: "1.5px solid #cbd5e1",
-                          borderRadius: "12px",
-                          padding: "14px",
-                          boxShadow: "0 2px 6px rgba(0,0,0,0.03)",
-                        }}
-                      >
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                          <strong style={{ fontSize: "14px", color: "#0f172a" }}>
-                            {idx + 1}. {match.disease.name}
-                          </strong>
-                          <span
-                            style={{
-                              fontSize: "11px",
-                              fontWeight: 800,
-                              background: match.confidence > 70 ? "#dcfce7" : "#ffedd5",
-                              color: match.confidence > 70 ? "#15803d" : "#c2410c",
-                              padding: "2px 8px",
-                              borderRadius: "10px",
-                            }}
-                          >
-                            {match.confidence}% Match
-                          </span>
-                        </div>
-                        <p style={{ margin: "0 0 8px", fontSize: "11.5px", color: "#64748b" }}>
-                          {match.matchReason}
-                        </p>
-                        <div style={{ fontSize: "11.5px", background: "#f0fdf4", padding: "8px 10px", borderRadius: "6px", color: "#166534" }}>
-                          <strong>Recommended Home Care:</strong> {match.disease.homeRemedies[0]}
-                        </div>
-                        <div style={{ marginTop: "6px", fontSize: "11px", color: "#1e40af" }}>
-                          <strong>OTC Therapy:</strong> {match.disease.otcGuidance[0]}
-                        </div>
-                      </div>
-                    ))}
-
-                    <div style={{ fontSize: "10.5px", color: "#64748b", fontStyle: "italic", background: "#fffbeb", padding: "10px", borderRadius: "8px" }}>
-                      ℹ️ {scanResult.safetyDisclaimer}
-                    </div>
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      padding: "40px 20px",
-                      textAlign: "center",
-                      background: "#f8fafc",
-                      borderRadius: "14px",
-                      border: "1px dashed #cbd5e1",
-                      color: "#64748b",
-                      fontSize: "12.5px",
-                    }}
-                  >
-                    Select an image on the left to see instant AI visual suggestions, confidence score, and home care remedies.
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: PRESCRIPTION DOSE PUSH ALERTS */}
+          {/* TAB 2: PRESCRIPTION DOSE PUSH ALERTS */}
           {tab === "reminders" && (
             <div style={{ maxWidth: "680px", margin: "0 auto", display: "grid", gap: "16px" }}>
               <div

@@ -57,10 +57,9 @@ Arogya Relay is an offline-first rural telehealth web platform connecting commun
 ## 3. Storage Architecture (Supabase Storage / S3 API)
 - **Buckets**:
   - `prescriptions`: Encrypted storage for scanned or photographed doctor paper prescriptions.
-  - `screenings`: Visual disease photos for Drishti AI skin/eye/wound lesion triage.
   - `doctor-credentials`: Medical registration certificates and ID proofs uploaded during doctor signup.
 - **Offline Fallback**:
-  - When offline or when bucket credentials are not reached, image payloads are persisted to local base64 / IndexedDB storage and synced automatically once internet connectivity is restored.
+  - When offline or when bucket credentials are not reached, payload records are persisted to local base64 / IndexedDB storage and synced automatically once internet connectivity is restored.
 
 ---
 
@@ -72,7 +71,6 @@ Arogya Relay is an offline-first rural telehealth web platform connecting commun
 - **New Screening Form Enhancements**:
   - Display authenticated screener credential banner at the top of the modal.
   - Instant vitals risk flags (SpO2 < 90% in crimson, Temp > 38.5°C in amber).
-  - Drishti AI lesion photo capture directly inside screening intake.
   - Interactive anatomical body map location selector.
   - Vitals voice dictation with automatic parsing.
 

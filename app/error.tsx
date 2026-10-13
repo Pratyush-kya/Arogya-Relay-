@@ -16,12 +16,23 @@ export default function ErrorPage({
   return (
     <div style={{ padding: "48px 24px", textAlign: "center", maxWidth: "600px", margin: "0 auto" }}>
       <h2 style={{ fontSize: "20px", marginBottom: "12px" }}>Something went wrong</h2>
-      <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "24px" }}>
+      <p style={{ color: "var(--muted)", fontSize: "14px", marginBottom: "20px" }}>
         The system encountered an error. All your offline records are safely preserved locally.
       </p>
-      <button type="button" onClick={() => reset()} className="primary-button">
-        Try Again
-      </button>
+      {error?.message && (
+        <details style={{ textAlign: "left", marginBottom: "20px", background: "var(--surface-muted, #f8fafc)", padding: "12px", borderRadius: "8px", border: "1px solid var(--border, #e2e8f0)", fontSize: "12px", color: "#b91c1c" }}>
+          <summary style={{ cursor: "pointer", fontWeight: 700 }}>Technical Details</summary>
+          <pre style={{ margin: "8px 0 0", whiteSpace: "pre-wrap", fontFamily: "monospace" }}>{error.message}</pre>
+        </details>
+      )}
+      <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+        <button type="button" onClick={() => reset()} className="primary-button">
+          Try Again
+        </button>
+        <button type="button" onClick={() => typeof window !== "undefined" && window.location.reload()} className="secondary-button">
+          Reload Page
+        </button>
+      </div>
     </div>
   );
 }

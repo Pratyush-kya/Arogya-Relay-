@@ -98,6 +98,28 @@ export const KNOWLEDGE_SOURCES: KnowledgeSource[] = [
     hash: "aha-cardiac-a1",
     version: "2026.1",
   },
+  {
+    sourceId: "MoHFW-NHM",
+    title: "National Health Mission (NHM) — Standard Treatment Guidelines & Primary Care Protocols",
+    publisher: "Ministry of Health and Family Welfare, Government of India",
+    canonicalUrl: "https://nhm.gov.in/",
+    reviewDate: "2025",
+    jurisdiction: "India",
+    licence: "Government of India open data (reuse with attribution)",
+    hash: "nhm-stg-n1",
+    version: "2026.1",
+  },
+  {
+    sourceId: "NPPA-DPCO",
+    title: "Drugs (Prices Control) Order (DPCO) & National List of Essential Medicines (NLEM)",
+    publisher: "National Pharmaceutical Pricing Authority, Department of Pharmaceuticals, GoI",
+    canonicalUrl: "https://www.nppaindia.nic.in/",
+    reviewDate: "2025",
+    jurisdiction: "India",
+    licence: "Government of India open regulatory data",
+    hash: "dpco-nppa-d1",
+    version: "2026.1",
+  },
 ];
 
 export const KNOWLEDGE_CHUNKS: KnowledgeChunk[] = [
@@ -208,6 +230,24 @@ export const KNOWLEDGE_CHUNKS: KnowledgeChunk[] = [
     text: "People with chronic conditions (such as diabetes, hypertension, or asthma) should watch for changes. New or worsening symptoms, missed medicines, or an acute episode such as shortness of breath should prompt a clinical review.",
     keywords: ["chronic", "diabetes", "hypertension", "asthma", "worse", "missed medicine", "conditions"],
     population: ["adult", "older_adult", "adolescent"],
+  },
+  {
+    chunkId: "c-nhm-primary-care",
+    sourceId: "MoHFW-NHM",
+    section: "Primary Healthcare & Sub-Center Community Triage",
+    anchor: "nhm-primary-triage",
+    text: "NHM guidelines mandate standard treatment protocols for Ayushman Arogya Mandirs and sub-centers: immediate red-flag triage, stabilization with free essential drugs, ORS and zinc for childhood diarrhea, and structured referral links to Community Health Centers.",
+    keywords: ["primary care", "sub center", "ayushman arogya mandir", "nhm", "referral", "essential drugs", "ors", "zinc", "diarrhea", "chc", "phc"],
+    population: ["infant", "child", "adolescent", "adult", "older_adult"],
+  },
+  {
+    chunkId: "c-dpco-generic-pricing",
+    sourceId: "NPPA-DPCO",
+    section: "DPCO Ceiling Price & Jan Aushadhi Generic Substitution",
+    anchor: "dpco-generic-ceiling",
+    text: "Under the Drugs (Prices Control) Order (DPCO) and NPPA regulations, ceiling prices are enforced for all scheduled essential formulations under NLEM. Pharmacists and Kendras are authorized and encouraged to dispense quality-assured, bioequivalent low-cost generics from PMBJP Jan Aushadhi Kendras in place of branded equivalents.",
+    keywords: ["dpco", "nppa", "nlem", "ceiling price", "generic substitution", "jan aushadhi", "pmbjp", "affordable medicine", "price control", "cheaper alternative"],
+    population: ["infant", "child", "adolescent", "adult", "older_adult"],
   },
 ];
 

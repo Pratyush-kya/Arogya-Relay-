@@ -595,7 +595,7 @@ export default function PrescriptionTracker({ userRole }: PrescriptionTrackerPro
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <strong style={{ fontSize: "13px" }}>📷 Attach Prescription Photo (Camera / Scan)</strong>
+              <strong style={{ fontSize: "13px" }}>📄 Attach Prescription Document / Image (File Upload)</strong>
               {imagePreview && (
                 <button
                   type="button"
@@ -614,7 +614,6 @@ export default function PrescriptionTracker({ userRole }: PrescriptionTrackerPro
               ref={fileInputRef}
               type="file"
               accept="image/*"
-              capture="environment"
               onChange={handlePrescriptionImage}
               style={{ fontSize: "13px" }}
             />

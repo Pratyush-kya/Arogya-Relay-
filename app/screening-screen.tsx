@@ -10,7 +10,6 @@ import { AnatomicalBodyMap } from "./body-map";
 import { LanguageSwitcher } from "./language-switcher";
 import { IconTooltip } from "./icon-tooltip";
 import { DiseaseLibraryModal } from "./disease-library-modal";
-import { scanLesionImage, type VisualScanResult } from "@/lib/clinical/visual-scanner";
 import { routeCaseToAvailableDoctor } from "@/lib/telemedicine/doctor-pool";
 import { createConsultationEscrow } from "@/lib/payments/escrow-engine";
 
@@ -47,10 +46,7 @@ export function ScreeningScreen({
   const [spo2, setSpo2] = useState("98");
   const [respiratoryRate, setRespiratoryRate] = useState("18");
 
-  // Lesion photo
-  const [lesionPhotoUrl, setLesionPhotoUrl] = useState("");
-  const [photoUploading, setPhotoUploading] = useState(false);
-  const [visualScanResult, setVisualScanResult] = useState<VisualScanResult | null>(null);
+  // Clinical Reference Modal
   const [showDiseaseModal, setShowDiseaseModal] = useState(false);
 
   // Triage & Notes
@@ -126,33 +122,6 @@ export function ScreeningScreen({
     }
   }
 
-  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setPhotoUploading(true);
-    setVisualScanResult(null);
-    try {
-      const res = await uploadToStorage(
-        "screenings",
-        `lesion_${Date.now()}_${file.name.replace(/\s+/g, "_")}`,
-        file
-      );
-      setLesionPhotoUrl(res.url);
-
-      // Run free in-browser AI visual feature analysis
-      try {
-        const scanRes = await scanLesionImage(file);
-        setVisualScanResult(scanRes);
-      } catch (scanErr) {
-        console.warn("Visual lesion scan notice:", scanErr);
-      }
-    } catch {
-      // Offline fallback
-    } finally {
-      setPhotoUploading(false);
-    }
-  }
-
   function toggleSymptom(sym: string) {
     setSelectedSymptoms((prev) =>
       prev.includes(sym) ? prev.filter((s) => s !== sym) : [...prev, sym]
@@ -198,7 +167,6 @@ export function ScreeningScreen({
         screener_id: screenerId,
         screener_name: screenerName,
         screener_role: screenerRole,
-        image_url: lesionPhotoUrl || undefined,
         clinical_notes: clinicalNotes.trim() || undefined,
       });
 
@@ -263,7 +231,7 @@ export function ScreeningScreen({
               <span>📋</span>
               <span>Clinical Field Screening & Triage Workstation</span>
             </h1>
-            <p>Offline-first clinical intake · Real-time vitals alert & lesion camera capture</p>
+            <p>Offline-first clinical intake · Real-time vitals alert & structured triage</p>
           </div>
         </div>
 
@@ -563,137 +531,14 @@ export function ScreeningScreen({
                 />
               </div>
             </div>
-
-            {/* Card 3: Clinical Photograph / Lesion Capture */}
-            <div className="workstation-card">
-              <div className="workstation-card-title">
-                <span>📸 3. Clinical Lesion / Rash Photograph</span>
-                <span style={{ fontSize: "11px", color: "var(--muted, #64748b)", fontWeight: 500 }}>
-                  Camera / File Upload
-                </span>
-              </div>
-
-              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                <IconTooltip
-                  title="Camera Capture & Image Upload"
-                  desc="Capture or attach photos of rash, wound, or skin conditions for telemedicine doctor inspection."
-                  howToUse="Click button to launch camera or pick photo file."
-                  position="right"
-                >
-                  <label
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      padding: "10px 16px",
-                      borderRadius: "10px",
-                      background: "rgba(23, 100, 79, 0.1)",
-                      color: "var(--sc-accent, #17644f)",
-                      border: "1px dashed var(--sc-accent, #17644f)",
-                      fontWeight: 700,
-                      fontSize: "12.5px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <span>📷</span>
-                    <span>{photoUploading ? "Uploading..." : "Take Photo / Upload Image"}</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      onChange={handlePhotoUpload}
-                      style={{ display: "none" }}
-                    />
-                  </label>
-                </IconTooltip>
-
-                {lesionPhotoUrl && (
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <img
-                      src={lesionPhotoUrl}
-                      alt="Clinical capture preview"
-                      style={{
-                        width: "60px",
-                        height: "60px",
-                        borderRadius: "8px",
-                        objectFit: "cover",
-                        border: "2px solid var(--sc-accent, #17644f)",
-                      }}
-                    />
-                    <div>
-                      <small style={{ color: "#166534", fontWeight: 700, display: "block" }}>✓ Photo Attached</small>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setLesionPhotoUrl("");
-                          setVisualScanResult(null);
-                        }}
-                        style={{ background: "none", border: "none", color: "#dc2626", fontSize: "10.5px", cursor: "pointer", padding: 0 }}
-                      >
-                        Remove photo
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {visualScanResult && visualScanResult.topMatches.length > 0 && (
-                  <div
-                    style={{
-                      marginTop: "12px",
-                      padding: "12px",
-                      borderRadius: "10px",
-                      background: "#f0fdf4",
-                      border: "1.5px solid #86efac",
-                    }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px", flexWrap: "wrap", gap: "4px" }}>
-                      <strong style={{ fontSize: "12px", color: "#166534" }}>
-                        🔍 In-Browser AI Recognition: {visualScanResult.topMatches[0].disease.name}
-                      </strong>
-                      <span
-                        style={{
-                          fontSize: "10px",
-                          fontWeight: 800,
-                          padding: "2px 6px",
-                          borderRadius: "6px",
-                          background: "#dcfce7",
-                          color: "#15803d",
-                        }}
-                      >
-                        {visualScanResult.topMatches[0].confidence}% Match
-                      </span>
-                    </div>
-                    <div style={{ fontSize: "11px", color: "#15803d", marginBottom: "8px" }}>
-                      <strong>Suggested Home Care:</strong> {visualScanResult.topMatches[0].disease.homeRemedies[0]}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setShowDiseaseModal(true)}
-                      style={{
-                        padding: "5px 10px",
-                        fontSize: "11px",
-                        fontWeight: 700,
-                        background: "#166534",
-                        color: "#ffffff",
-                        border: "none",
-                        borderRadius: "6px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      📖 View Full Home Remedies & OTC Guide ↗
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
 
           {/* RIGHT COLUMN: REAL-TIME VITALS & TRIAGE */}
           <div>
-            {/* Card 4: Vitals & Hands-Free Dictation */}
+            {/* Card 3: Vitals & Hands-Free Dictation */}
             <div className="workstation-card">
               <div className="workstation-card-title">
-                <span>💓 4. Objective Vital Signs</span>
+                <span>💓 3. Objective Vital Signs</span>
                 <IconTooltip
                   title="Speech Vitals Dictation"
                   desc="Speak vitals hands-free (e.g. 'BP 120 over 80, pulse 76, temp 37.5, spo2 98') to auto-populate fields."
@@ -834,7 +679,7 @@ export function ScreeningScreen({
             {/* Card 5: Triage Priority & Notes */}
             <div className="workstation-card">
               <div className="workstation-card-title">
-                <span>🚦 5. Clinical Triage Urgency</span>
+                <span>🚦 4. Clinical Triage Urgency</span>
                 <span style={{ fontSize: "11px", color: "var(--muted, #64748b)", fontWeight: 500 }}>
                   Queue Priority
                 </span>

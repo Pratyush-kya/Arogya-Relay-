@@ -16,8 +16,8 @@ export function ClinicDateWidget() {
     return () => clearInterval(interval);
   }, []);
 
-  // Operational Shift Determination
-  const hour = now.getHours();
+  // Operational Shift Determination (stable baseline until mounted on client)
+  const hour = mounted ? now.getHours() : 9;
   let shiftName = "Morning OPD";
   let shiftTone = "day";
   let shiftIcon = "☀️";
@@ -61,10 +61,11 @@ export function ClinicDateWidget() {
     : "09:00:00 AM";
 
   return (
-    <div className="clinic-date-container" aria-live="polite">
+    <div className="clinic-date-container" aria-live="polite" suppressHydrationWarning>
       <div
         className="clinic-date-widget"
-        aria-label={`Current Date: ${fullDateStr}, Time: ${timeFormatted}, Shift: ${shiftName}`}
+        aria-label={mounted ? `Current Date: ${fullDateStr}, Time: ${timeFormatted}, Shift: ${shiftName}` : "Clinical Shift Calendar"}
+        suppressHydrationWarning
       >
         {/* Authentic Calendar Leaf Badge */}
         <div className="calendar-leaf" aria-hidden="true">
@@ -84,9 +85,9 @@ export function ClinicDateWidget() {
         <div className="calendar-details">
           <div className="calendar-top-row">
             <span className="weekday-pill" suppressHydrationWarning>{weekdayLong}</span>
-            <span className={`shift-pill shift-${shiftTone}`}>
+            <span className={`shift-pill shift-${shiftTone}`} suppressHydrationWarning>
               <span className="shift-indicator" />
-              <span>{shiftIcon} {shiftName}</span>
+              <span suppressHydrationWarning>{shiftIcon} {shiftName}</span>
             </span>
           </div>
 

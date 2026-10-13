@@ -16,12 +16,14 @@ import { ClinicDateWidget } from "./clinic-date-widget";
 import { ChemistDispensary } from "./chemist-dispensary";
 import { AdminScreen } from "./admin-screen";
 import { PublicLanding } from "./public-landing";
+import { PatientWorkspace } from "./patient-workspace";
+import { DoctorWorkspace } from "./doctor-workspace";
+import { WorkerWorkspace } from "./worker-workspace";
 
 // Keep specialist workspaces out of the first dashboard payload.
 const CareGuidance = lazy(() => import("./care-guidance"));
 const NearbyCare = lazy(() => import("./nearby-care"));
 const CarePlanView = lazy(() => import("./care-plan"));
-const VisualDiseaseMatcher = lazy(() => import("./visual-disease-matcher"));
 const DiseaseLibrary = lazy(() => import("./disease-library"));
 const PrescriptionTracker = lazy(() => import("./prescription-tracker"));
 
@@ -36,9 +38,8 @@ import {
 import { AnatomicalBodyMap } from "./body-map";
 import { HealthPassCard } from "./health-pass-card";
 import { startVitalsListening, isSpeechRecognitionSupported, type ParsedVitals } from "@/lib/voice/vitals-dictation";
-import type { VisualDiseaseMatcherTransferData } from "./visual-disease-matcher";
 
-type Tab = "overview" | "cases" | "library" | "prescriptions" | "matcher" | "care" | "nearby" | "plan";
+type Tab = "overview" | "cases" | "library" | "prescriptions" | "care" | "nearby" | "plan";
 type SyncState = "ready" | "syncing" | "done";
 type CaseFilter = "all" | "urgent" | "review" | "evaluated";
 
@@ -167,7 +168,6 @@ export default function Home({
   const [prefilledSpo2, setPrefilledSpo2] = useState<string>("98");
   const [prefilledPulse, setPrefilledPulse] = useState<string>("76");
   const [prefilledNotes, setPrefilledNotes] = useState<string>("");
-  const [screeningImageUrl, setScreeningImageUrl] = useState<string>("");
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentProfile, setCurrentProfile] = useState<Profile | null>(null);
 
@@ -328,13 +328,6 @@ export default function Home({
     };
   }, []);
 
-  async function handleScreeningImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const res = await uploadToStorage("screenings", file.name, file);
-    setScreeningImageUrl(res.url);
-  }
-
   const syncLabel = useMemo(() => {
     if (syncState === "syncing") return t("shell.syncing");
     if (syncState === "done") return t("shell.synced");
@@ -453,7 +446,6 @@ export default function Home({
       screener_id: currentProfile?.pseudo_id || "HW-NR-01",
       screener_name: currentProfile?.display_name || currentUser?.email || "Community Health Worker",
       screener_role: currentProfile?.role || "health_worker",
-      image_url: screeningImageUrl || undefined,
     });
 
     setScreenings((prev) => [newRec, ...prev]);
@@ -463,7 +455,6 @@ export default function Home({
     setSelectedSymptoms([]);
     setPrefilledNotes("");
     setPrefilledRef("");
-    setScreeningImageUrl("");
   }
 
   async function handleDoctorEvaluate(id: string, doctorNotes: string, prescriptionAdvice: string) {
@@ -471,12 +462,6 @@ export default function Home({
     const refreshed = await fetchAllScreenings();
     if (refreshed.length > 0) setScreenings(refreshed);
     setNoticeKey("shell.screeningSaved");
-  }
-
-  function handleTransferFromMatcher(data: VisualDiseaseMatcherTransferData) {
-    setSelectedSymptoms(data.symptoms.length > 0 ? data.symptoms : [data.condition.toLowerCase().replace(/\s+/g, "_")]);
-    setPrefilledNotes(data.fieldNotes);
-    setViewMode("screening");
   }
 
   function handleTransferFromLibrary(symptoms: string[], notes: string) {
@@ -637,6 +622,70 @@ export default function Home({
           setViewMode("admin");
         }}
       />
+    );
+  }
+
+  // DEDICATED SEPARATE FULL-SCREEN: Doctor Clinical Workstation
+  if (currentUser && (activeRole === "doctor" || currentProfile?.role === "doctor")) {
+    return (
+      <>
+        <DoctorWorkspace
+          currentUser={currentUser}
+          currentProfile={currentProfile}
+          screenings={screenings}
+          onDoctorEvaluate={handleDoctorEvaluate}
+          onOpenHealthPass={(r) => setHealthPassRecord(r)}
+          onSignOut={handleSignOut}
+        />
+        {healthPassRecord && (
+          <HealthPassCard
+            record={healthPassRecord}
+            onClose={() => setHealthPassRecord(null)}
+          />
+        )}
+      </>
+    );
+  }
+
+  // DEDICATED SEPARATE FULL-SCREEN: ASHA Field Health Worker Workstation
+  if (currentUser && (activeRole === "health_worker" || currentProfile?.role === "health_worker")) {
+    return (
+      <>
+        <WorkerWorkspace
+          currentUser={currentUser}
+          currentProfile={currentProfile}
+          screenings={screenings}
+          onOpenScreening={() => setViewMode("screening")}
+          onSyncReports={syncReports}
+          syncState={syncState}
+          onSignOut={handleSignOut}
+        />
+        {healthPassRecord && (
+          <HealthPassCard
+            record={healthPassRecord}
+            onClose={() => setHealthPassRecord(null)}
+          />
+        )}
+      </>
+    );
+  }
+
+  // DEDICATED SEPARATE FULL-SCREEN: Citizen & Family Health Portal
+  if (currentUser && (activeRole === "patient" || currentProfile?.role === "patient" || !activeRole)) {
+    return (
+      <>
+        <PatientWorkspace
+          currentUser={currentUser}
+          currentProfile={currentProfile}
+          onSignOut={handleSignOut}
+        />
+        {healthPassRecord && (
+          <HealthPassCard
+            record={healthPassRecord}
+            onClose={() => setHealthPassRecord(null)}
+          />
+        )}
+      </>
     );
   }
 
@@ -833,17 +882,6 @@ export default function Home({
                 }}
               >
                 <span className="nav-glyph">♥</span> {t("nav.plan")}
-              </button>
-
-              <button
-                type="button"
-                className={activeTab === "matcher" && viewMode === "dashboard" ? "nav-item active" : "nav-item"}
-                onClick={() => {
-                  setViewMode("dashboard");
-                  setActiveTab("matcher");
-                }}
-              >
-                <span className="nav-glyph">📷</span> {t("nav.matcher")}
               </button>
 
               <button
@@ -1167,7 +1205,7 @@ export default function Home({
             {(activeRole === "health_worker" || activeRole === "doctor" || activeRole === "admin") && (
               <IconTooltip
                 title="New Clinical Screening Workstation"
-                desc="Open dedicated full-screen console for patient registration, vitals dictation, and lesion camera capture."
+                desc="Open dedicated full-screen console for patient registration, vitals dictation, and structured clinical triage."
                 howToUse="Click to launch the full-screen screening workstation."
                 position="bottom"
               >
@@ -1192,7 +1230,6 @@ export default function Home({
             onSwitchMode={(m) => setActiveRole(m === "patient" ? "patient" : "doctor")}
             onOpenScreening={openScreening}
             onOpenCases={openCases}
-            onOpenMatcher={() => setActiveTab("matcher")}
             onOpenLibrary={() => {
               setViewMode("dashboard");
               setActiveTab("library");
@@ -1223,11 +1260,6 @@ export default function Home({
         {activeTab === "prescriptions" && (
           <Suspense fallback={<WorkspaceLoading />}>
             <PrescriptionTracker userRole={activeRole} />
-          </Suspense>
-        )}
-        {activeTab === "matcher" && (
-          <Suspense fallback={<WorkspaceLoading />}>
-            <VisualDiseaseMatcher onTransferToScreening={handleTransferFromMatcher} />
           </Suspense>
         )}
         <Suspense fallback={<WorkspaceLoading />}>
@@ -1438,72 +1470,6 @@ export default function Home({
                     )}
                   </div>
 
-                  {/* Photo Attachment for Skin/Eye/Lesions */}
-                  <div
-                    style={{
-                      margin: "12px 0",
-                      padding: "10px 14px",
-                      background: "#f8fafc",
-                      borderRadius: "10px",
-                      border: "1px dashed #94a3b8",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "8px",
-                    }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div>
-                        <span style={{ fontSize: "11.5px", fontWeight: 700, display: "block", color: "#1e293b" }}>
-                          📷 Attach Clinical / Lesion Photograph
-                        </span>
-                        <small style={{ fontSize: "9.5px", color: "#64748b" }}>
-                          Direct capture for Drishti AI triage, rash verification, and doctor consultation
-                        </small>
-                      </div>
-                      <label
-                        style={{
-                          background: "#e2e8f0",
-                          padding: "4px 10px",
-                          borderRadius: "6px",
-                          fontSize: "11px",
-                          fontWeight: 600,
-                          cursor: "pointer",
-                        }}
-                      >
-                        Capture / Select Photo
-                        <input
-                          type="file"
-                          accept="image/*"
-                          capture="environment"
-                          onChange={handleScreeningImageUpload}
-                          style={{ display: "none" }}
-                        />
-                      </label>
-                    </div>
-
-                    {screeningImageUrl && (
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "4px" }}>
-                        <img
-                          src={screeningImageUrl}
-                          alt="Clinical Lesion Attachment"
-                          style={{ width: "52px", height: "52px", borderRadius: "8px", objectFit: "cover", border: "1.5px solid #cbd5e1" }}
-                        />
-                        <div>
-                          <span style={{ fontSize: "11px", fontWeight: 700, color: "#166534", display: "block" }}>
-                            ✓ Photograph Attached & Encrypted
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => setScreeningImageUrl("")}
-                            style={{ background: "none", border: "none", color: "#dc2626", fontSize: "10px", cursor: "pointer", padding: 0 }}
-                          >
-                            Remove photo
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
                   {/* Body Map Toggle */}
                   <div style={{ margin: "12px 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={{ fontSize: "12px", fontWeight: 700 }}>Symptoms Selection:</span>
@@ -1600,7 +1566,6 @@ interface OverviewProps {
   onSwitchMode?: (mode: "patient" | "staff") => void;
   onOpenScreening?: () => void;
   onOpenCases: () => void;
-  onOpenMatcher: () => void;
   onOpenLibrary: () => void;
   onOpenPrescriptions: () => void;
   onOpenNearby: () => void;
@@ -1617,7 +1582,6 @@ function Overview({
   onSwitchMode,
   onOpenScreening,
   onOpenCases,
-  onOpenMatcher,
   onOpenLibrary,
   onOpenPrescriptions,
   onOpenNearby,
@@ -1819,41 +1783,6 @@ function Overview({
             </div>
           </div>
 
-          {/* Visual Assistant Subcard */}
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={onOpenMatcher}
-            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onOpenMatcher(); }}
-            style={{
-              background: "var(--surface)",
-              border: "1.5px dashed var(--line)",
-              borderRadius: "14px",
-              padding: "16px 20px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "16px",
-              marginBottom: "18px",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-              <span style={{ fontSize: "30px" }}>📷</span>
-              <div>
-                <strong style={{ fontSize: "15px", display: "block", color: "var(--foreground)" }}>
-                  {t("patient.drishtiCard")}
-                </strong>
-                <span style={{ fontSize: "13px", color: "var(--muted)" }}>
-                  {t("patient.drishtiCardDesc")}
-                </span>
-              </div>
-            </div>
-            <span style={{ fontWeight: 700, color: "var(--primary)", fontSize: "13px", whiteSpace: "nowrap" }}>
-              {t("overview.drishtiAction")} →
-            </span>
-          </div>
-
           {/* Emergency 112 Direct Call Strip */}
           <div
             style={{
@@ -1908,9 +1837,6 @@ function Overview({
               <div className="hero-actions">
                 <button type="button" className="glass-button" onClick={onOpenCases}>
                   {t("overview.liveQueue")} <span>→</span>
-                </button>
-                <button type="button" className="glass-button" onClick={onOpenMatcher}>
-                  {t("overview.drishtiAction")} <span>→</span>
                 </button>
               </div>
             </div>
@@ -2014,14 +1940,6 @@ function Overview({
                 <p>{t("overview.cardRxDesc")}</p>
               </div>
             </article>
-            <article className="metric-card" style={{ cursor: "pointer" }} onClick={onOpenMatcher}>
-              <span className="metric-icon sand">📷</span>
-              <div>
-                <strong>{t("nav.matcher")}</strong>
-                <h3>{t("overview.cardDrishtiTitle")}</h3>
-                <p>{t("overview.cardDrishtiDesc")}</p>
-              </div>
-            </article>
             <article className="metric-card" style={{ cursor: "pointer" }} onClick={onOpenNearby}>
               <span className="metric-icon rose">⌖</span>
               <div>
@@ -2031,26 +1949,6 @@ function Overview({
               </div>
             </article>
           </section>
-
-          {/* Switch to Patient Mode button */}
-          {onSwitchMode && (
-            <div style={{ textAlign: "center", margin: "16px 0 8px" }}>
-              <button
-                type="button"
-                onClick={() => onSwitchMode("patient")}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "var(--muted)",
-                  fontSize: "13px",
-                  cursor: "pointer",
-                  textDecoration: "underline",
-                }}
-              >
-                👤 {t("mode.switchPatient")}
-              </button>
-            </div>
-          )}
         </>
       )}
 
@@ -2124,7 +2022,7 @@ function AlertRow({
         <span className={`priority ${tone}`}>{priority}</span>
         <small suppressHydrationWarning className="case-time-pill" title={new Date(record.created_at).toLocaleString("en-IN")}>
           <span className="case-time-clock">🕒</span>
-          <span>{new Date(record.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+          <span suppressHydrationWarning>{new Date(record.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
         </small>
       </div>
       <button type="button" aria-label={`Open case ${record.id}`} aria-expanded={expanded} onClick={onOpen}>
