@@ -102,6 +102,8 @@ export interface LocationSnapshot extends Coordinates {
 export interface RankedFacilityResult {
   facility: Facility;
   distanceKm: number;
+  straightLineKm?: number;
+  roadEtaMin?: number | null;
   score: number;
   capabilityMet: boolean;
 }

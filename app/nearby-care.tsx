@@ -311,7 +311,7 @@ export default function NearbyCare() {
             National Ambulance Hotline: Dial 112 directly for immediate government dispatch.
             {nearestHospital && (
               <span style={{ display: "block", marginTop: "2px", fontWeight: 600 }}>
-                Nearest Emergency Center: {nearestHospital.facility.name} ({formatDistance(nearestHospital.straightLineKm)} away)
+                Nearest Emergency Center: {nearestHospital.facility.name} ({formatDistance(nearestHospital.straightLineKm ?? nearestHospital.distanceKm)} away)
               </span>
             )}
           </p>
@@ -577,7 +577,7 @@ export default function NearbyCare() {
             </div>
             <p style={{ margin: "2px 0 0", fontSize: "12px", color: "var(--muted)" }}>
               {nearestHospital
-                ? `Nearest: ${nearestHospital.facility.name.slice(0, 26)}... (${formatDistance(nearestHospital.straightLineKm)})`
+                ? `Nearest: ${nearestHospital.facility.name.slice(0, 26)}... (${formatDistance(nearestHospital.straightLineKm ?? nearestHospital.distanceKm)})`
                 : "No hospitals found in perimeter."}
             </p>
           </div>
@@ -616,7 +616,7 @@ export default function NearbyCare() {
             </div>
             <p style={{ margin: "2px 0 0", fontSize: "12px", color: "var(--muted)" }}>
               {nearestMedicineStore
-                ? `Nearest: ${nearestMedicineStore.facility.name.slice(0, 26)}... (${formatDistance(nearestMedicineStore.straightLineKm)})`
+                ? `Nearest: ${nearestMedicineStore.facility.name.slice(0, 26)}... (${formatDistance(nearestMedicineStore.straightLineKm ?? nearestMedicineStore.distanceKm)})`
                 : "Jan Aushadhi generic stores"}
             </p>
           </div>
@@ -812,7 +812,7 @@ export default function NearbyCare() {
             </div>
             {nearestHospital && (
               <span style={{ fontSize: "12px", background: "#fef2f2", color: "#991b1b", padding: "4px 10px", borderRadius: "12px", fontWeight: 700 }}>
-                Nearest: {formatDistance(nearestHospital.straightLineKm)}
+                Nearest: {formatDistance(nearestHospital.straightLineKm ?? nearestHospital.distanceKm)}
               </span>
             )}
           </div>
@@ -881,7 +881,7 @@ export default function NearbyCare() {
                     </div>
 
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "var(--foreground)" }}>
-                      <span>📏 <strong>{formatDistance(r.straightLineKm)}</strong></span>
+                      <span>📏 <strong>{formatDistance(r.straightLineKm ?? r.distanceKm)}</strong></span>
                       {r.roadEtaMin != null && <span>· 🚗 <strong>~{r.roadEtaMin} mins</strong> by road</span>}
                       {r.facility.capabilities.emergency && (
                         <span style={{ color: "#dc2626", fontWeight: 700, marginLeft: "auto" }}>
@@ -1060,7 +1060,7 @@ export default function NearbyCare() {
                     </div>
 
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "var(--foreground)" }}>
-                      <span>📏 <strong>{formatDistance(r.straightLineKm)}</strong></span>
+                      <span>📏 <strong>{formatDistance(r.straightLineKm ?? r.distanceKm)}</strong></span>
                       {r.roadEtaMin != null && <span>· 🚗 <strong>~{r.roadEtaMin} mins</strong></span>}
                       <span style={{ color: "#166534", fontWeight: 700, marginLeft: "auto" }}>
                         ✓ PMBJP Generic Stock

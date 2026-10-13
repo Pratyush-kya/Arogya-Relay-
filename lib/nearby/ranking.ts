@@ -27,6 +27,8 @@ export function rankFacilities(
     results.push({
       facility: f,
       distanceKm: d,
+      straightLineKm: d,
+      roadEtaMin: Math.round(d * 2.4),
       score: capabilityMet ? 100 - d : 10 - d,
       capabilityMet,
     });

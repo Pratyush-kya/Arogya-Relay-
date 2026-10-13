@@ -39,7 +39,10 @@ export function classifyLocation(point: GeoPoint): "accurate" | "approximate" | 
   return "accurate";
 }
 
-export function coarseGrid(point: { lat: number; lng: number }): string {
+export function coarseGrid(point: { lat?: number; lng?: number } | null | undefined): string {
+  if (!point || typeof point.lat !== "number" || typeof point.lng !== "number" || isNaN(point.lat) || isNaN(point.lng)) {
+    return "0.00,0.00";
+  }
   return `${point.lat.toFixed(2)},${point.lng.toFixed(2)}`;
 }
 
@@ -60,14 +63,18 @@ export function buildConsentSnapshot(
   };
 }
 
-export function formatDistance(km: number): string {
+export function formatDistance(km?: number | null): string {
+  if (km == null || typeof km !== "number" || isNaN(km)) {
+    return "-- km";
+  }
   if (km < 1) {
     return `${Math.round(km * 1000)} m`;
   }
   return `${km.toFixed(1)} km`;
 }
 
-export function formatEta(minutes: number): string {
+export function formatEta(minutes?: number | null): string {
+  if (minutes == null || typeof minutes !== "number" || isNaN(minutes)) return "--";
   if (minutes < 60) return `${Math.round(minutes)} min`;
   const h = Math.floor(minutes / 60);
   const m = Math.round(minutes % 60);
