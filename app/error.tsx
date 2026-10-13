@@ -11,6 +11,24 @@ export default function ErrorPage({
 }) {
   useEffect(() => {
     console.error("Application error:", error);
+    if (typeof window !== "undefined") {
+      const hasAutoReloaded = sessionStorage.getItem("arogya.error_auto_reloaded");
+      if (!hasAutoReloaded) {
+        sessionStorage.setItem("arogya.error_auto_reloaded", "true");
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.getRegistrations().then((regs) => {
+            regs.forEach((r) => r.unregister());
+          }).catch(() => {});
+        }
+        if ("caches" in window) {
+          caches.keys().then((names) => Promise.all(names.map((n) => caches.delete(n)))).finally(() => {
+            window.location.href = window.location.origin + "/?fresh=" + Date.now();
+          });
+        } else {
+          window.location.href = window.location.origin + "/?fresh=" + Date.now();
+        }
+      }
+    }
   }, [error]);
 
   return (

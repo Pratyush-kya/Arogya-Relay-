@@ -101,6 +101,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <LanguageProvider>
           {children}
         </LanguageProvider>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if(typeof navigator!=='undefined'&&'serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(r){for(var i=0;i<r.length;i++){r[i].unregister();}}).catch(function(){});}`,
+          }}
+        />
       </body>
     </html>
   );
