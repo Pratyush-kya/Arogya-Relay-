@@ -6,6 +6,7 @@ import type { ScreeningRecord } from "@/lib/types";
 import DiseaseLibrary from "./disease-library";
 import { HealthCampFinder } from "./health-camp-finder";
 import CareGuidance from "./care-guidance";
+import NearbyCare from "./nearby-care";
 
 interface WorkerWorkspaceProps {
   currentUser: { email?: string } | null;
@@ -33,7 +34,7 @@ export function WorkerWorkspace({
   onSignOut,
 }: WorkerWorkspaceProps) {
   const { t, effectiveLang, setLang } = useLanguage();
-  const [activeTab, setActiveTab] = useState<"intake" | "camps" | "library" | "care">("intake");
+  const [activeTab, setActiveTab] = useState<"intake" | "camps" | "nearby" | "care" | "library">("intake");
 
   const workerName =
     currentProfile?.full_name ||
@@ -183,6 +184,7 @@ export function WorkerWorkspace({
         {[
           { id: "intake", label: `Field Screenings (${screenings.length})`, icon: "📋" },
           { id: "camps", label: "Village Health Camps", icon: "📍" },
+          { id: "nearby", label: "Nearby Facilities & Kendras", icon: "⌖" },
           { id: "care", label: "Field Care Guidance", icon: "✚" },
           { id: "library", label: "Arogya Gyan Reference", icon: "📖" },
         ].map((tab) => (
@@ -372,6 +374,7 @@ export function WorkerWorkspace({
         )}
 
         {activeTab === "camps" && <HealthCampFinder />}
+        {activeTab === "nearby" && <NearbyCare />}
         {activeTab === "care" && <CareGuidance />}
         {activeTab === "library" && <DiseaseLibrary />}
       </main>
