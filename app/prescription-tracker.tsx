@@ -233,8 +233,8 @@ export default function PrescriptionTracker({ userRole }: PrescriptionTrackerPro
               style={{
                 padding: "8px 16px",
                 borderRadius: "8px",
-                border: "1px solid var(--line)",
-                background: activeSubTab === "reminders" ? "var(--primary)" : "var(--surface)",
+                border: "1px solid var(--line, #dfe7e2)",
+                background: activeSubTab === "reminders" ? "var(--primary, #047857)" : "var(--surface, #ffffff)",
                 color: activeSubTab === "reminders" ? "#ffffff" : "inherit",
                 fontWeight: "600",
                 fontSize: "13px",
@@ -250,8 +250,8 @@ export default function PrescriptionTracker({ userRole }: PrescriptionTrackerPro
                 style={{
                   padding: "8px 16px",
                   borderRadius: "8px",
-                  border: "1px solid var(--line)",
-                  background: activeSubTab === "add" ? "var(--primary)" : "var(--surface)",
+                  border: "1px solid var(--line, #dfe7e2)",
+                  background: activeSubTab === "add" ? "var(--primary, #047857)" : "var(--surface, #ffffff)",
                   color: activeSubTab === "add" ? "#ffffff" : "inherit",
                   fontWeight: "600",
                   fontSize: "13px",

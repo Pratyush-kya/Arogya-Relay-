@@ -97,9 +97,9 @@ export function ReadAloud({
               fontSize: "11px",
               fontWeight: rate === s ? 700 : 500,
               borderRadius: "4px",
-              border: rate === s ? "1px solid var(--primary)" : "1px solid var(--line)",
-              background: rate === s ? "var(--primary)" : "var(--surface)",
-              color: rate === s ? "#fff" : "var(--foreground)",
+              border: rate === s ? "1px solid var(--primary, #047857)" : "1px solid var(--line, #dfe7e2)",
+              background: rate === s ? "var(--primary, #047857)" : "var(--surface, #ffffff)",
+              color: rate === s ? "#fff" : "var(--foreground, #19342d)",
               cursor: "pointer",
             }}
           >

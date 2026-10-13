@@ -233,30 +233,34 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
         </div>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() => setSelectedCategory(cat.id)}
-              style={{
-                padding: "6px 14px",
-                borderRadius: "20px",
-                border: "1px solid var(--line)",
-                background: selectedCategory === cat.id ? "var(--primary)" : "transparent",
-                color: selectedCategory === cat.id ? "#ffffff" : "inherit",
-                fontSize: "13px",
-                fontWeight: selectedCategory === cat.id ? "600" : "normal",
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "5px",
-              }}
-            >
-              <span>{cat.icon}</span>
-              <span>{effectiveLang === "hi" ? cat.labelHi : cat.label}</span>
-            </button>
-          ))}
+          {categories.map((cat) => {
+            const isSelected = selectedCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setSelectedCategory(cat.id)}
+                style={{
+                  padding: "7px 15px",
+                  borderRadius: "20px",
+                  border: isSelected ? "1.5px solid #047857" : "1px solid var(--line, #dfe7e2)",
+                  background: isSelected ? "#047857" : "var(--surface, #ffffff)",
+                  color: isSelected ? "#ffffff" : "var(--foreground, #19342d)",
+                  fontSize: "13px",
+                  fontWeight: isSelected ? "700" : "500",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  boxShadow: isSelected ? "0 2px 6px rgba(4, 120, 87, 0.25)" : "none",
+                }}
+              >
+                <span>{cat.icon}</span>
+                <span>{getCategoryLabel(cat)}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -331,10 +335,10 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                   <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                     <span style={{ fontSize: "36px", lineHeight: 1 }}>{item.icon}</span>
                     <div>
-                      <h3 style={{ margin: 0, fontSize: "17px", fontWeight: "800", color: "var(--foreground)" }}>
+                      <h3 style={{ margin: 0, fontSize: "17px", fontWeight: "800", color: "var(--foreground, #19342d)" }}>
                         {getDiseaseDisplayName(item)}
                       </h3>
-                      <span style={{ fontSize: "14px", color: "var(--primary)", fontWeight: "600" }}>
+                      <span style={{ fontSize: "14px", color: "var(--primary, #047857)", fontWeight: "600" }}>
                         {getDiseaseSecondaryName(item)}
                       </span>
                     </div>
@@ -579,7 +583,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                     style={{
                       background: isExpanded ? "#f1f5f9" : "none",
                       border: isExpanded ? "1px solid #cbd5e1" : "none",
-                      color: isExpanded ? "#475569" : "var(--primary)",
+                      color: isExpanded ? "#475569" : "var(--primary, #047857)",
                       fontSize: "12px",
                       fontWeight: "700",
                       cursor: "pointer",
@@ -619,8 +623,8 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
               key={item.id}
               className="disease-card clinical-card"
               style={{
-                background: "var(--surface)",
-                border: isExpanded ? "2px solid var(--primary)" : "1px solid var(--line)",
+                background: "var(--surface, #ffffff)",
+                border: isExpanded ? "2px solid var(--primary, #047857)" : "1px solid var(--line, #dfe7e2)",
                 borderRadius: "14px",
                 padding: "20px",
                 display: "flex",
@@ -793,7 +797,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                     style={{
                       background: isExpanded ? "#f1f5f9" : "none",
                       border: isExpanded ? "1px solid #cbd5e1" : "none",
-                      color: "var(--primary)",
+                      color: "var(--primary, #047857)",
                       fontSize: "12px",
                       fontWeight: "600",
                       cursor: "pointer",
