@@ -8,6 +8,11 @@ import PrescriptionTracker from "./prescription-tracker";
 import DiseaseLibrary from "./disease-library";
 import NearbyCare from "./nearby-care";
 import type { ScreeningRecord } from "@/lib/types";
+import {
+  HeroFeedbackModal,
+  HeroInstructionsModal,
+  FloatingFeedbackButton,
+} from "./hero-feedback-and-instructions";
 
 interface PatientWorkspaceProps {
   currentUser: { email?: string } | null;
@@ -24,6 +29,8 @@ export function PatientWorkspace({
 }: PatientWorkspaceProps) {
   const { t, effectiveLang, setLang } = useLanguage();
   const [activeTab, setActiveTab] = useState<"overview" | "camps" | "prescriptions" | "gyan" | "nearby">("overview");
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [instructionsOpen, setInstructionsOpen] = useState(false);
 
   const displayName = currentProfile?.display_name || currentProfile?.full_name || currentUser?.email?.split("@")[0] || "Citizen";
 
@@ -198,6 +205,48 @@ export function PatientWorkspace({
                 <p style={{ margin: 0, fontSize: "14px", opacity: 0.92, maxWidth: "600px", lineHeight: 1.45 }}>
                   Access your digital prescriptions, verified home remedies with voice narration, and locate nearby health camps in your district.
                 </p>
+                <div style={{ display: "flex", gap: "8px", marginTop: "12px", flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    onClick={() => setInstructionsOpen(true)}
+                    style={{
+                      background: "rgba(255,255,255,0.18)",
+                      color: "#ffffff",
+                      border: "1px solid rgba(255,255,255,0.35)",
+                      borderRadius: "8px",
+                      padding: "6px 12px",
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "5px",
+                    }}
+                  >
+                    <span>📖</span>
+                    <span>How to Use Guide</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFeedbackOpen(true)}
+                    style={{
+                      background: "#fef3c7",
+                      color: "#92400e",
+                      border: "1px solid #fde68a",
+                      borderRadius: "8px",
+                      padding: "6px 12px",
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "5px",
+                    }}
+                  >
+                    <span>💬</span>
+                    <span>Facing an Issue? Give Feedback</span>
+                  </button>
+                </div>
               </div>
 
               {/* Digital Pass Token Badge */}
@@ -373,6 +422,20 @@ export function PatientWorkspace({
         {activeTab === "gyan" && <DiseaseLibrary onClose={() => setActiveTab("overview")} />}
         {activeTab === "nearby" && <NearbyCare />}
       </main>
+
+      {/* Modals & Floating Help/Feedback Button */}
+      <HeroFeedbackModal
+        isOpen={feedbackOpen}
+        onClose={() => setFeedbackOpen(false)}
+      />
+      <HeroInstructionsModal
+        isOpen={instructionsOpen}
+        onClose={() => setInstructionsOpen(false)}
+      />
+      <FloatingFeedbackButton
+        onOpenFeedback={() => setFeedbackOpen(true)}
+        onOpenGuide={() => setInstructionsOpen(true)}
+      />
     </div>
   );
 }

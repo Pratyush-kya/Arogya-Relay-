@@ -3,6 +3,12 @@
 import React, { useEffect, useState } from "react";
 import { LanguageSwitcher } from "./language-switcher";
 import { createClient, ADMIN_EMAIL, isAdminEmail, type Profile, DEFAULT_DEMO_USERS } from "@/lib/supabase/client";
+import {
+  HeroFeedbackModal,
+  HeroInstructionsModal,
+  HeroQuickGuideCard,
+  FloatingFeedbackButton,
+} from "./hero-feedback-and-instructions";
 
 export interface PublicLandingProps {
   onSignIn?: (preferredRole?: "patient" | "doctor" | "health_worker" | "chemist") => void;
@@ -17,6 +23,10 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
 
   // Active Logged In Session State
   const [activeSessionUser, setActiveSessionUser] = useState<{ email: string; role: string; displayName?: string } | null>(null);
+
+  // Hero Feedback & Instructions Modal States
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+  const [instructionsModalOpen, setInstructionsModalOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -380,7 +390,47 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+          <button
+            type="button"
+            onClick={() => setInstructionsModalOpen(true)}
+            style={{
+              background: "#eff6ff",
+              color: "#1d4ed8",
+              border: "1px solid #bfdbfe",
+              borderRadius: "8px",
+              padding: "6px 12px",
+              fontSize: "12px",
+              fontWeight: 700,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "5px",
+            }}
+          >
+            <span>📖</span>
+            <span>How to Use</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setFeedbackModalOpen(true)}
+            style={{
+              background: "#fffbeb",
+              color: "#92400e",
+              border: "1px solid #fde68a",
+              borderRadius: "8px",
+              padding: "6px 12px",
+              fontSize: "12px",
+              fontWeight: 700,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "5px",
+            }}
+          >
+            <span>💬</span>
+            <span>Report Issue / Feedback</span>
+          </button>
           <LanguageSwitcher />
         </div>
       </header>
@@ -443,12 +493,18 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                 fontSize: "15px",
                 color: "#475569",
                 lineHeight: 1.55,
-                margin: "0 0 20px",
+                margin: "0 0 16px",
               }}
             >
               A unified, decentralized health platform bridging citizens, verified doctors, ASHA community field workers,
               and Jan Aushadhi generic pharmacies. Sign in or register in the central portal on the right.
             </p>
+
+            {/* Quick In-Hero Usage Instructions and Issue Reporting Card */}
+            <HeroQuickGuideCard
+              onOpenFeedback={() => setFeedbackModalOpen(true)}
+              onOpenFullGuide={() => setInstructionsModalOpen(true)}
+            />
           </div>
 
           {/* Quick Pillars from Citizen down to Chemist & Dispensary */}
@@ -1328,6 +1384,20 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
           </p>
         </div>
       </footer>
+
+      {/* Interactive Modals & Floating Help/Feedback Button */}
+      <HeroFeedbackModal
+        isOpen={feedbackModalOpen}
+        onClose={() => setFeedbackModalOpen(false)}
+      />
+      <HeroInstructionsModal
+        isOpen={instructionsModalOpen}
+        onClose={() => setInstructionsModalOpen(false)}
+      />
+      <FloatingFeedbackButton
+        onOpenFeedback={() => setFeedbackModalOpen(true)}
+        onOpenGuide={() => setInstructionsModalOpen(true)}
+      />
     </div>
   );
 }

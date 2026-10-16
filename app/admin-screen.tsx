@@ -11,18 +11,20 @@ import {
 import { fetchAllScreenings, type ScreeningRecord } from "@/lib/supabase/screenings";
 import { LanguageSwitcher } from "./language-switcher";
 import { IconTooltip } from "./icon-tooltip";
+import { getStoredFeedbackReports, type FeedbackReport } from "./hero-feedback-and-instructions";
 
 export interface AdminScreenProps {
   onBackToDashboard: () => void;
   onOpenSupabaseConfig?: () => void;
 }
 
-type AdminTab = "users" | "doctors" | "screenings" | "escrow" | "security";
+type AdminTab = "users" | "doctors" | "screenings" | "escrow" | "security" | "feedback";
 
 export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminScreenProps) {
   const supabase = useMemo(() => createClient(), []);
   const [tab, setTab] = useState<AdminTab>("users");
   const [users, setUsers] = useState<Profile[]>([]);
+  const [feedbackReports, setFeedbackReports] = useState<FeedbackReport[]>([]);
   const [screenings, setScreenings] = useState<ScreeningRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
@@ -678,6 +680,43 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
           >
             <span>🔒</span> Security &amp; Database Health
           </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setTab("feedback");
+              setFeedbackReports(getStoredFeedbackReports());
+            }}
+            style={{
+              padding: "10px 18px",
+              background: "none",
+              border: "none",
+              borderBottom: tab === "feedback" ? "3px solid var(--primary)" : "3px solid transparent",
+              color: tab === "feedback" ? "var(--primary)" : "var(--muted)",
+              fontWeight: 700,
+              fontSize: "14px",
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <span>💬</span> User Feedback &amp; Issues
+            {feedbackReports.length > 0 && (
+              <span
+                style={{
+                  background: "#d97706",
+                  color: "#ffffff",
+                  fontSize: "11px",
+                  borderRadius: "10px",
+                  padding: "1px 7px",
+                  fontWeight: 800,
+                }}
+              >
+                {feedbackReports.length}
+              </span>
+            )}
+          </button>
         </div>
 
         {/* TAB 1: USERS & ROLE MANAGEMENT */}
@@ -1187,6 +1226,136 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* TAB 6: USER FEEDBACK & ISSUES */}
+        {tab === "feedback" && (
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
+              <div>
+                <h2 style={{ margin: "0 0 4px", fontSize: "18px", fontWeight: "800" }}>User Issue Reports &amp; Community Feedback</h2>
+                <p style={{ margin: 0, fontSize: "13px", color: "var(--muted)" }}>
+                  Issues, bug reports, and suggestions submitted by users from the hero section and workspaces.
+                </p>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                <button
+                  type="button"
+                  onClick={() => setFeedbackReports(getStoredFeedbackReports())}
+                  style={{
+                    background: "var(--surface)",
+                    border: "1px solid var(--line)",
+                    borderRadius: "8px",
+                    padding: "8px 14px",
+                    fontSize: "12.5px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  🔄 Refresh Reports
+                </button>
+                {feedbackReports.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (confirm("Are you sure you want to clear all stored feedback reports?")) {
+                        localStorage.removeItem("arogya.user_feedback");
+                        setFeedbackReports([]);
+                      }
+                    }}
+                    style={{
+                      background: "#fee2e2",
+                      color: "#dc2626",
+                      border: "1px solid #fecaca",
+                      borderRadius: "8px",
+                      padding: "8px 14px",
+                      fontSize: "12.5px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                    }}
+                  >
+                    🗑️ Clear Stored Reports
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {feedbackReports.length === 0 ? (
+              <div
+                style={{
+                  background: "var(--surface)",
+                  borderRadius: "14px",
+                  border: "1px dashed var(--line)",
+                  padding: "48px 24px",
+                  textAlign: "center",
+                }}
+              >
+                <div style={{ fontSize: "36px", marginBottom: "10px" }}>💬</div>
+                <h3 style={{ margin: "0 0 6px", fontSize: "16px", fontWeight: 700 }}>No User Feedback Reports Yet</h3>
+                <p style={{ margin: 0, fontSize: "13px", color: "var(--muted)" }}>
+                  When visitors or patients report an issue in the Hero section or bottom-right help button, their report will be visible here.
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gap: "14px" }}>
+                {feedbackReports.map((report) => (
+                  <div
+                    key={report.id}
+                    style={{
+                      background: "var(--surface)",
+                      border: "1px solid var(--line)",
+                      borderRadius: "12px",
+                      padding: "18px 20px",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px", flexWrap: "wrap", gap: "8px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span
+                          style={{
+                            background: "#fef3c7",
+                            color: "#92400e",
+                            padding: "3px 10px",
+                            borderRadius: "12px",
+                            fontSize: "11px",
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          {report.category}
+                        </span>
+                        <strong style={{ fontSize: "14px", color: "var(--foreground)" }}>
+                          {report.name ? `Report from ${report.name}` : "Anonymous Report"}
+                        </strong>
+                        {report.contact && (
+                          <span style={{ fontSize: "12px", color: "var(--muted)" }}>
+                            ({report.contact})
+                          </span>
+                        )}
+                      </div>
+                      <span style={{ fontSize: "11.5px", color: "var(--muted)" }}>
+                        🕒 {new Date(report.createdAt).toLocaleString()}
+                      </span>
+                    </div>
+
+                    <p style={{ margin: "0 0 12px", fontSize: "13.5px", lineHeight: "1.5", color: "var(--foreground)", background: "var(--surface-muted)", padding: "12px 14px", borderRadius: "8px" }}>
+                      {report.message}
+                    </p>
+
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px", color: "var(--muted)", flexWrap: "wrap", gap: "8px" }}>
+                      <span>
+                        🌐 Origin: <code>{report.url}</code>
+                      </span>
+                      <span>
+                        Device: {report.online ? "🟢 Online" : "🟠 Offline"} · {report.userAgent.substring(0, 45)}...
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
