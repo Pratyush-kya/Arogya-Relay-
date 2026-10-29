@@ -35,14 +35,14 @@ test("Doctor pool tracks availability and routes cases with 90s TTL", async () =
   const doctors = await getAvailableDoctors();
   assert.ok(doctors.length > 0, "At least one verified doctor should be available in pool");
 
+  const callStartTime = Date.now();
   const routeRes = await routeCaseToAvailableDoctor("SCR-TEST-001", "PT-1001", "urgent");
   assert.strictEqual(routeRes.success, true, "Routing must succeed for available doctor");
   assert.ok(routeRes.assignedDoctor, "Doctor must be assigned");
 
-  // Check 90s TTL expiration timestamp
-  const now = Date.now();
+  // Check 90s TTL expiration timestamp (accounting for network latency during test)
   const expireTime = new Date(routeRes.expiresAt).getTime();
-  const diffSec = Math.round((expireTime - now) / 1000);
+  const diffSec = Math.round((expireTime - callStartTime) / 1000);
   assert.ok(diffSec >= 85 && diffSec <= 95, `TTL should be ~90 seconds, got ${diffSec}s`);
 });
 

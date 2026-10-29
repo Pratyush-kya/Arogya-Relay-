@@ -6,8 +6,6 @@ import { createClient, ADMIN_EMAIL, isAdminEmail, type Profile, DEFAULT_DEMO_USE
 import {
   HeroFeedbackModal,
   HeroInstructionsModal,
-  HeroQuickGuideCard,
-  FloatingFeedbackButton,
 } from "./hero-feedback-and-instructions";
 
 export interface PublicLandingProps {
@@ -440,11 +438,11 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
         style={{
           maxWidth: "1160px",
           margin: "0 auto",
-          padding: "36px 24px 32px",
+          padding: "24px 24px 28px",
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
           gap: "32px",
-          alignItems: "stretch",
+          alignItems: "start",
           justifyContent: "center",
         }}
       >
@@ -453,8 +451,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
           style={{
             display: "flex",
             flexDirection: "column",
-            justifyContent: "space-between",
-            height: "100%",
+            gap: "18px",
           }}
         >
           <div>
@@ -469,7 +466,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                 borderRadius: "20px",
                 fontSize: "12px",
                 fontWeight: 700,
-                marginBottom: "14px",
+                marginBottom: "12px",
               }}
             >
               <span>🛡️</span> Zero-Loss Clinical Relay · 2G &amp; Offline Resilient
@@ -477,12 +474,12 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
 
             <h2
               style={{
-                fontSize: "clamp(26px, 3.6vw, 38px)",
+                fontSize: "clamp(24px, 3.2vw, 34px)",
                 fontWeight: 800,
                 letterSpacing: "-0.03em",
                 color: "var(--ink, #0f172a)",
-                lineHeight: 1.2,
-                margin: "0 0 14px",
+                lineHeight: 1.22,
+                margin: "0 0 10px",
               }}
             >
               Institutional Health Access for Bharat, Connected or Disconnected.
@@ -490,25 +487,19 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
 
             <p
               style={{
-                fontSize: "15px",
+                fontSize: "14.5px",
                 color: "#475569",
-                lineHeight: 1.55,
-                margin: "0 0 16px",
+                lineHeight: 1.5,
+                margin: 0,
               }}
             >
               A unified, decentralized health platform bridging citizens, verified doctors, ASHA community field workers,
               and Jan Aushadhi generic pharmacies. Sign in or register in the central portal on the right.
             </p>
-
-            {/* Quick In-Hero Usage Instructions and Issue Reporting Card */}
-            <HeroQuickGuideCard
-              onOpenFeedback={() => setFeedbackModalOpen(true)}
-              onOpenFullGuide={() => setInstructionsModalOpen(true)}
-            />
           </div>
 
           {/* Quick Pillars from Citizen down to Chemist & Dispensary */}
-          <div style={{ display: "grid", gap: "10px", marginTop: "12px" }}>
+          <div style={{ display: "grid", gap: "10px" }}>
             <div
               style={{
                 display: "flex",
@@ -591,7 +582,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
           </div>
         </div>
 
-        {/* Right Column: Centralized Interactive Auth Card spanning between top and bottom borders */}
+        {/* Right Column: Centralized Interactive Auth Card */}
         <div
           id="hero-auth-card"
           style={{
@@ -599,11 +590,9 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
             borderRadius: "18px",
             border: "1.5px solid #cbd5e1",
             boxShadow: "0 12px 36px rgba(0,0,0,0.06)",
-            padding: "26px 28px",
-            height: "100%",
+            padding: "24px 26px",
             display: "flex",
             flexDirection: "column",
-            justifyContent: "center",
             boxSizing: "border-box",
           }}
         >
@@ -1385,7 +1374,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
         </div>
       </footer>
 
-      {/* Interactive Modals & Floating Help/Feedback Button */}
+      {/* Interactive Modals */}
       <HeroFeedbackModal
         isOpen={feedbackModalOpen}
         onClose={() => setFeedbackModalOpen(false)}
@@ -1393,10 +1382,6 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
       <HeroInstructionsModal
         isOpen={instructionsModalOpen}
         onClose={() => setInstructionsModalOpen(false)}
-      />
-      <FloatingFeedbackButton
-        onOpenFeedback={() => setFeedbackModalOpen(true)}
-        onOpenGuide={() => setInstructionsModalOpen(true)}
       />
     </div>
   );

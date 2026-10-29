@@ -11,7 +11,6 @@ import type { ScreeningRecord } from "@/lib/types";
 import {
   HeroFeedbackModal,
   HeroInstructionsModal,
-  FloatingFeedbackButton,
 } from "./hero-feedback-and-instructions";
 
 interface PatientWorkspaceProps {
@@ -423,7 +422,7 @@ export function PatientWorkspace({
         {activeTab === "nearby" && <NearbyCare />}
       </main>
 
-      {/* Modals & Floating Help/Feedback Button */}
+      {/* Modals */}
       <HeroFeedbackModal
         isOpen={feedbackOpen}
         onClose={() => setFeedbackOpen(false)}
@@ -431,10 +430,6 @@ export function PatientWorkspace({
       <HeroInstructionsModal
         isOpen={instructionsOpen}
         onClose={() => setInstructionsOpen(false)}
-      />
-      <FloatingFeedbackButton
-        onOpenFeedback={() => setFeedbackOpen(true)}
-        onOpenGuide={() => setInstructionsOpen(true)}
       />
     </div>
   );
