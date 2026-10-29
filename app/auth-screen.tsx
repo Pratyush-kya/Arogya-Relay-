@@ -492,6 +492,29 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
       {/* Main Container */}
       <div className="fullscreen-content-container">
         <div className="auth-fullscreen-card">
+          {/* Motto / Quotation Banner */}
+          <div
+            style={{
+              textAlign: "center",
+              padding: "10px 16px",
+              background: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)",
+              borderBottom: "1px solid #bbf7d0",
+            }}
+          >
+            <p
+              style={{
+                margin: 0,
+                fontSize: "13px",
+                fontWeight: 700,
+                color: "#166534",
+                letterSpacing: "-0.01em",
+                fontStyle: "italic",
+              }}
+            >
+              &ldquo;Your Health, Our Priority. Your Trust, Our Promise&rdquo;
+            </p>
+          </div>
+
           {/* Workstation Navigation Tabs */}
           <nav className="auth-tabs-header">
             <button

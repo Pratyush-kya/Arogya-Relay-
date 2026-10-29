@@ -682,6 +682,31 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
             </div>
           ) : (
             <>
+              {/* Motto / Quotation Banner */}
+              <div
+                style={{
+                  textAlign: "center",
+                  marginBottom: "14px",
+                  padding: "8px 12px",
+                  background: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)",
+                  border: "1px solid #bbf7d0",
+                  borderRadius: "10px",
+                }}
+              >
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "12.5px",
+                    fontWeight: 700,
+                    color: "#166534",
+                    letterSpacing: "-0.01em",
+                    fontStyle: "italic",
+                  }}
+                >
+                  &ldquo;Your Health, Our Priority. Your Trust, Our Promise&rdquo;
+                </p>
+              </div>
+
               {/* Card Header & Tab Switcher */}
               <div
                 style={{
