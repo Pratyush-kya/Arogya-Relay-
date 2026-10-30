@@ -1,0 +1,144 @@
+\documentclass[9pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=0.6cm,top=0.4cm,bottom=0.4cm]{geometry}
+\usepackage{amsmath}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tcolorbox}
+\usepackage{tabularx}
+\usepackage{enumitem}
+
+\definecolor{primary}{RGB}{185, 28, 28}
+\definecolor{primarydark}{RGB}{153, 27, 27}
+\definecolor{accent}{RGB}{2, 132, 199}
+\definecolor{lightgray}{RGB}{248, 250, 252}
+\definecolor{linegray}{RGB}{226, 232, 240}
+\definecolor{darktext}{RGB}{15, 23, 42}
+\definecolor{warningbg}{RGB}{254, 242, 242}
+
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+
+% ── Outer Border ─────────────────────────────────────────────────────────────
+\begin{tcolorbox}[
+    colback=white,
+    colframe=primary,
+    arc=3mm,
+    boxrule=1.5pt,
+    left=8pt, right=8pt, top=5pt, bottom=5pt
+]
+
+% ── Hospital Header ──────────────────────────────────────────────────────────
+\begin{center}
+    {\scriptsize\textbf{\color{primarydark}GOVERNMENT OF MEGHALAYA $\cdot$ DEPARTMENT OF HEALTH \& FAMILY WELFARE}}\\[1pt]
+    {\scriptsize\textbf{\color{accent}NATIONAL HEALTH MISSION (NHM) $\cdot$ RESPIRATORY \& TOBACCO CESSATION DIVISION}}\\[2pt]
+    {\Large\textbf{\color{primary}MAWLYNNONG SUB-DIVISIONAL HOSPITAL \& PHC}}\\[1pt]
+    {\footnotesize Department of Internal \& Chest Medicine $\cdot$ Emergency Hotline: 112 / +91 364 250 8821}\\[1pt]
+    {\scriptsize\textbf{SPECIALIZED CLINICAL ENCOUNTER \& URGENT RESPIRATORY SLIP (OPD-PULM)}}
+\end{center}
+
+\vspace{-6pt}
+\noindent\textcolor{primary}{\rule{\linewidth}{1.2pt}}
+
+% ── Doctor Credentials Banner ────────────────────────────────────────────────
+\vspace{1pt}
+\begin{tabularx}{\linewidth}{@{}Xr@{}}
+    \textbf{\large Dr. Rajesh Patel, MBBS, MD (Med)} & \textbf{Date:} 30 October 2026 \\
+    Consultant Physician \& Medical Officer & \textbf{Time:} Urgent Chest Consultation \\
+    Reg. No: \textbf{\color{primarydark}NMC-2018-88412} (National Medical Commission) & \textbf{Clinical Priority:} \textbf{\color{primary}HIGH / URGENT} \\
+    Mawlynnong SDH \& Rural Health Division & \textbf{Prescription ID:} \textbf{\color{accent}RX-CHEST-881} \\
+\end{tabularx}
+
+\vspace{1pt}
+\noindent\textcolor{linegray}{\rule{\linewidth}{0.6pt}}
+
+% ── Patient Demographics & Vitals ────────────────────────────────────────────
+\vspace{1pt}
+\begin{tcolorbox}[colback=lightgray, colframe=linegray, arc=2mm, boxrule=0.5pt, left=6pt, right=6pt, top=3pt, bottom=3pt]
+    \begin{tabularx}{\linewidth}{@{}p{3.8cm}p{2.6cm}p{3.2cm}X@{}}
+        \textbf{Patient:} Citizen Encounter & \textbf{Age/Sex:} Adult / Male & \textbf{Risk:} Chronic Chain Smoker & \textbf{Ref:} \textbf{PT-RESP-770} \\
+        \textbf{BP:} 136/86 mmHg & \textbf{Pulse Rate:} 88 bpm & \textbf{Resp. Rate:} 22 /min & \textbf{SpO$_2$:} 95\% (Room Air) \\
+    \end{tabularx}
+\end{tcolorbox}
+
+% ── Chief Complaints & History of Tobacco Use ────────────────────────────────
+\vspace{1pt}
+\noindent\textbf{\color{primarydark}CHIEF COMPLAINTS \& CLINICAL ASSESSMENT:}
+\begin{itemize}[leftmargin=14pt, topsep=1pt, itemsep=0.5pt]
+    \item \textbf{Presenting Symptoms:} Severe paroxysmal coughing for several days; acute sharp pleuritic chest pain on coughing and deep inhalation.
+    \item \textbf{Significant Risk Profile:} Chain smoking since age 16 ($>15$ pack-years). Heavy bronchial epithelial irritation, compromised mucociliary clearance.
+    \item \textbf{Auscultation / Examination:} Bilateral coarse rhonchi, prolonged expiratory phase, focal lower anterior pleuritic chest wall tenderness.
+    \item \textbf{Provisional Diagnosis:} \textbf{Severe Acute Tracheobronchitis with Pleuritic Chest Pain}; Suspected underlying Chronic Obstructive Pulmonary Disease (COPD) stage I/II. \textit{Must rule out secondary spontaneous pneumothorax and pneumonia.}
+\end{itemize}
+
+\vspace{1pt}
+\noindent\textcolor{primary}{\rule{\linewidth}{0.8pt}}
+
+% ── Urgent Diagnostic Workup ─────────────────────────────────────────────────
+\vspace{1pt}
+\noindent\textbf{\color{primarydark}STAT DIAGNOSTIC INVESTIGATIONS ORDERED:}
+\begin{enumerate}[leftmargin=14pt, topsep=1pt, itemsep=0.5pt]
+    \item \textbf{Chest X-Ray (PA View):} URGENT -- Rule out pneumothorax, focal consolidation/pneumonia, or space-occupying lesion.
+    \item \textbf{12-Lead ECG:} Rule out acute coronary syndrome / myocardial ischemia in a heavy chronic smoker.
+    \item \textbf{Complete Blood Count (CBC) \& CRP:} Check leukocytosis, acute infection markers.
+    \item \textbf{Sputum Cytology \& Gram Stain/AFB:} If expectoration is purulent or discolored.
+\end{enumerate}
+
+\vspace{1pt}
+\noindent\textcolor{linegray}{\rule{\linewidth}{0.6pt}}
+
+% ── Rx Prescribed Medications ────────────────────────────────────────────────
+\vspace{1pt}
+{\LARGE\textbf{\color{primary}R\raisebox{-0.2ex}{x}}} \hfill {\scriptsize\textit{\color{darktext}Affordable PMBJP Jan Aushadhi Formulations Specified}}
+
+\vspace{1pt}
+\begin{tabularx}{\linewidth}{|r|X|c|c|X|}
+\hline
+\textbf{\#} & \textbf{Prescribed Formulation} & \textbf{Strength} & \textbf{Timings} & \textbf{Instructions \& Duration} \\
+\hline
+1 & \textbf{Levosalbutamol + Ipratropium} \newline \textit{(Duolin Inhaler MDI + Spacer)} & 50/20 mcg & \textbf{TID} (8am/1pm/9pm) & 2 puffs 3 times daily. Relieves bronchial spasm $\times$ 7 Days. \\
+\hline
+2 & \textbf{Tab. Amoxicillin + Clavulanate} \newline \textit{(PMBJP Generic / Augmentin eq.)} & 625 mg & \textbf{BD} (Post-food) & 1 tab twice daily after meals for bacterial infection $\times$ 5 Days. \\
+\hline
+3 & \textbf{Syp. Ambroxol + Levocetirizine} \newline \textit{(Mucolytic Expectorant)} & 100 ml & \textbf{BD} (Morning/Night) & 10 ml twice daily. Thins mucus and calms spasms $\times$ 5 Days. \\
+\hline
+4 & \textbf{Tab. Aceclofenac + Paracetamol} \newline \textit{(Anti-inflammatory Analgesic)} & 100/325 mg & \textbf{SOS / BD} (Post-food) & For acute pleuritic chest wall pain. Take strictly after food. \\
+\hline
+\end{tabularx}
+
+% ── Critical Warning & Tobacco Cessation ─────────────────────────────────────
+\vspace{2pt}
+\begin{tcolorbox}[colback=warningbg, colframe=primary, arc=2mm, boxrule=0.8pt, left=5pt, right=5pt, top=2pt, bottom=2pt]
+    \textbf{\color{primarydark}[CRITICAL RED FLAGS -- CALL 112 / VISIT ER IMMEDIATELY]:}
+    \begin{itemize}[leftmargin=12pt, topsep=1pt, itemsep=0pt]
+        \item If you develop \textbf{hemoptysis} (coughing up blood), sudden severe breathlessness, blueness of lips/nails, or crushing central radiating chest pain, proceed to the nearest emergency department without delay.
+        \item \textbf{STRICT TOBACCO CESSATION:} Stop all smoking immediately. Smoke paralyzes airway cilia and drastically worsens acute lung injury.
+    \end{itemize}
+\end{tcolorbox}
+
+\vspace{2pt}
+
+% ── Footer with Seal and Signature ───────────────────────────────────────────
+\begin{tabularx}{\linewidth}{@{}Xr@{}}
+    \begin{tcolorbox}[colback=white, colframe=primary!40, arc=2mm, width=8cm, boxrule=0.6pt, left=5pt, right=5pt, top=2pt, bottom=2pt]
+        {\scriptsize\textbf{\color{primarydark}JAN AUSHADHI FAIR PRICE NOTICE:}}\\
+        {\tiny Collect from Pradhan Mantri Jan Aushadhi Kendra \#7402. Estimated generic total: Rs.~68.50 vs Branded Rs.~395.00 (Savings: 82\%). Verified non-expired stock.}
+    \end{tcolorbox}
+    &
+    \begin{minipage}{6.5cm}
+        \centering
+        \vspace{1pt}
+        \textit{\color{primarydark}\Large Dr. Rajesh Patel}\\[-4pt]
+        \rule{5cm}{0.8pt}\\[2pt]
+        \textbf{\small Dr. Rajesh Patel, MBBS, MD}\\
+        {\footnotesize Reg. No: NMC-2018-88412}\\
+        {\scriptsize Medical Officer \& Physician, SDH Mawlynnong}\\
+        {\tiny Government of Meghalaya}
+    \end{minipage}
+\end{tabularx}
+
+\end{tcolorbox}
+
+\end{document}
