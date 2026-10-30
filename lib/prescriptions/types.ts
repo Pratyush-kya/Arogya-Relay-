@@ -41,4 +41,53 @@ export interface PatientPrescription {
   createdAt: string;
   updatedAt?: string;
   synced: boolean;
+  totalPriceInr?: number;
+  mrpPriceInr?: number;
+  suggestedChemist?: {
+    id: string;
+    name: string;
+    address: string;
+    phone?: string;
+    distanceKm?: number;
+  };
+}
+
+export type FollowUpIssueType =
+  | "dose_change"
+  | "side_effect"
+  | "symptom_worsened"
+  | "feeling_better"
+  | "medicine_finished"
+  | "other";
+
+export interface PrescriptionFollowUpRequest {
+  id: string;
+  prescriptionId: string;
+  patientRef: string;
+  patientName: string;
+  doctorName: string;
+  doctorNmc?: string;
+  issueType: FollowUpIssueType;
+  patientMessage: string;
+  reportedAt: string;
+  status: "pending_doctor_review" | "doctor_revised" | "dispensed";
+  doctorReply?: string;
+  revisedMedicines?: ScheduledMedicine[];
+  suggestedChemist?: {
+    id: string;
+    name: string;
+    address: string;
+    phone?: string;
+    distanceKm?: number;
+  };
+  totalPriceInr?: number;
+  mrpPriceInr?: number;
+  savingsPercent?: number;
+  batchVerified?: boolean;
+  expirySafeDate?: string;
+  dispensedChemistId?: string;
+  dispensedChemistName?: string;
+  dispensedAt?: string;
+  doctorAuditStatus?: "pending_dispense" | "dispense_verified" | "discrepancy_flagged";
+  doctorAuditNotes?: string;
 }

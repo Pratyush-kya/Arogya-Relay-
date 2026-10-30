@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useLanguage } from "@/lib/i18n/provider";
 import { HealthCampFinder } from "./health-camp-finder";
 import { ReadAloud } from "./read-aloud";
+import { PatientFollowupCard } from "./patient-followup-card";
 import PrescriptionTracker from "./prescription-tracker";
 import DiseaseLibrary from "./disease-library";
 import NearbyCare from "./nearby-care";
@@ -315,6 +316,12 @@ export function PatientWorkspace({
                 📞 Call 112
               </a>
             </div>
+
+            {/* Doctor Follow-Up & Dosage Modification Card */}
+            <PatientFollowupCard
+              patientRef={currentUser?.email?.includes("ramesh") ? "PT-RAMESH-01" : "PT-1001"}
+              onNavigateToChemistMap={() => setActiveTab("nearby")}
+            />
 
             {/* 4 Primary Action Cards */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "18px" }}>

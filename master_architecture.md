@@ -1,82 +1,51 @@
 # Arogya Relay — Master Architecture & Security Blueprint
 
 ## 1. System Vision & Architecture
-Arogya Relay is an offline-first rural telehealth web platform connecting community health workers (ASHAs), patients, and verified doctors across remote and low-connectivity Indian regions.
+Arogya Relay is a doctor-linked patient follow-up, prescription dosage adjustment, and fair-price pharmacy fulfillment network. It directly connects citizens, verified doctors, and government Jan Aushadhi generic chemists.
 
 ```
                     ┌─────────────────────────┐
                     │     Arogya Relay Web    │
-                    │  (Next.js 16 + React 19)│
+                    │  (Next.js 15 + React 19)│
                     └───────────┬─────────────┘
                                 │
           ┌─────────────────────┼──────────────────────┐
           │                     │                      │
 ┌─────────▼─────────┐ ┌─────────▼──────────┐ ┌─────────▼──────────┐
-│   Offline Layer   │ │   Security & RBAC  │ │  Supabase / Cloud  │
-│  IndexedDB Queue  │ │ Admin / Doctor / HW│ │ PostgreSQL + Auth  │
-│  Local Disease DB │ │ NMC Reg. Approval  │ │ S3 Storage Buckets │
-│  Web Speech TTS   │ │ Screener Credential│ │ Web Push Service   │
+│   Patient Portal  │ │  Doctor Workstation│ │  Chemist Dispensary│
+│  - Follow-up Msg  │ │  - Case & Rx Queue │ │  - Token Verify    │
+│  - Dose Change Req│ │  - Dose Adjust/Revise│ │ - Fair Price Lock │
+│  - Fair Price View│ │  - Chemist Suggest │ │  - Non-Expired Ver │
+│  - Nearest Chemist│ │  - Dispense Audit  │ │  - Escrow Settle   │
+│  - Health Camps   │ │                    │ │                    │
+│  - Disease Cures  │ │                    │ │                    │
+│  - Emergency Hosp │ │                    │ │                    │
 └───────────────────┘ └────────────────────┘ └────────────────────┘
 ```
 
 ---
 
-## 2. Role-Based Access Control (RBAC) & Doctor Verification
-
-### 2.1 Admin Persona
-- **Primary Admin Email**: `pratyushkiranrath4@gmail.com`
-- **Initial Password**: `Pratyush@#3130`
-- **Privileges**:
-  - Full system administration, audit log access, database connection management.
-  - Exclusive access to the **Doctor Verification Portal** to review medical council registration numbers, credentials, and approve or reject clinical practitioner accounts.
-
-### 2.2 Doctor Verification Safeguard (Anti-Impersonation)
-- **Problem**: In rural telehealth, unverified accounts claiming to be doctors could issue lethal drug prescriptions or misdiagnose patients.
-- **Enforcement**:
-  - Registration as a doctor mandates:
-    1. Full Name & Dr. Title
-    2. National Medical Commission (NMC) or State Medical Council Registration Number
-    3. State Medical Council (e.g. Maharashtra Medical Council, Odisha Council of Medical Registration, etc.)
-    4. Year of Registration
-    5. Primary Specialization (General Medicine, Paediatrics, Community Medicine, etc.)
-    6. Primary Hospital / CHC / Clinic Affiliation
-    7. License Document / ID Upload
-  - Default status: `pending_verification`.
-  - In `pending_verification` state, prescriptions cannot be finalized or signed, and clinical approvals are blocked.
-  - Once verified by Admin (`pratyushkiranrath4@gmail.com`), the doctor gains `verified` status and full prescribing rights.
-
-### 2.3 Field Health Worker (ASHA / ANM) Attribution
-- **Problem**: Untraceable anonymous screenings compromise patient safety and legal accountability.
-- **Enforcement**:
-  - Every screening captures screener metadata: Screener ID, Full Name, Role, and Village / Unit code.
-  - Active session automatically injects authenticated credentials into the submission payload.
-  - In offline guest mode, an explicit Health Worker Operator ID / PIN is validated.
+## 2. Core Operational Workflow
+1. **Prescription Linkage**: The patient consults a doctor and holds an active prescription token (e.g. `PT-1001` / `RX-9021`).
+2. **Follow-up / Issue Messaging**: If the patient experiences side-effects, feels unwell, or requires a dosage change, they send a message to the prescribing doctor using their prescription ID.
+3. **Doctor Review & Revision**: The doctor reviews the patient's record and previous prescription, adjusts doses or prescribes revised medicines, and suggests the nearest verified chemist.
+4. **Transparent Pricing & Quality Assurance**: When the revised report is sent back to the patient, the **exact fair government price** is computed beforehand, with a guarantee of **zero fake prices and zero expired products**.
+5. **Nearest Chemist Pickup**: The patient locates the nearest Jan Aushadhi / verified chemist, presents the token, and collects verified medicines.
+6. **Doctor Dispense Audit**: The doctor can verify in their audit log whether the chemist dispensed the accurate prescribed medicines.
 
 ---
 
-## 3. Storage Architecture (Supabase Storage / S3 API)
-- **Buckets**:
-  - `prescriptions`: Encrypted storage for scanned or photographed doctor paper prescriptions.
-  - `doctor-credentials`: Medical registration certificates and ID proofs uploaded during doctor signup.
-- **Offline Fallback**:
-  - When offline or when bucket credentials are not reached, payload records are persisted to local base64 / IndexedDB storage and synced automatically once internet connectivity is restored.
+## 3. Role-Based Access Control (RBAC) & Actor Roles
+- **Citizen / Patient**: Manages health records, sends dosage adjustment requests to doctors, views transparent pricing, finds nearest chemists and emergency hospitals.
+- **Verified Doctor (NMC Licensed)**: Evaluates patient follow-up requests, adjusts dosages, signs prescriptions with cryptographic HMAC-SHA256, recommends chemists, and audits dispensing.
+- **Jan Aushadhi Chemist / Pharma**: Verifies single-use prescription tokens, validates non-expired batch certification, and settles dispensing at locked government rates.
+- **System Admin**: Verifies physician credentials against State / National Medical Council registries and audits system activity.
+- *(Note: ASHA field worker intermediary role is removed to allow direct patient-doctor-chemist continuity).*
 
 ---
 
-## 4. UI Refactoring & Header Modernization
-- **Header Top-Right Action Center**:
-  - Remove key sign (`🔑`) from the bottom sidebar.
-  - Consolidate user profile, role badge, login / logout, and verification status in the top right navigation bar.
-  - Clean separation: `[⚡ Supabase]` `[🌐 Language]` `[👤 Profile/Sign-in]` `[🔔 Alerts]`.
-- **New Screening Form Enhancements**:
-  - Display authenticated screener credential banner at the top of the modal.
-  - Instant vitals risk flags (SpO2 < 90% in crimson, Temp > 38.5°C in amber).
-  - Interactive anatomical body map location selector.
-  - Vitals voice dictation with automatic parsing.
-
----
-
-## 5. Deployment & Release Pipeline
-- **Git Repository**: `https://github.com/Pratyush-kya/Arogya-Relay-`
-- **Hosting**: Vercel (Edge runtime / Serverless) + Cloudflare Worker security headers.
-- **Zero-Downtime Guarantee**: Full application functions even if Supabase backend or network is offline.
+## 4. Key Public Health Utilities
+- **Location-Based Health Camps**: Filter and discover upcoming medical camps by district/city.
+- **Curated Diseases & Verified Cures**: Prominent disease guides displaying verified cures, treatments, and red-flag danger signs on top.
+- **Emergency Nearest Hospital**: 1-tap locator for emergency-capable hospitals with direct 112 hotline integration.
+- **Multilingual & Voice Support**: 8 Indian languages (English, Hindi, Odia, Bengali, Telugu, Marathi, Assamese, Santali) with text-to-speech audio read-aloud.

@@ -18,7 +18,6 @@ import { AdminScreen } from "./admin-screen";
 import { PublicLanding } from "./public-landing";
 import { PatientWorkspace } from "./patient-workspace";
 import { DoctorWorkspace } from "./doctor-workspace";
-import { WorkerWorkspace } from "./worker-workspace";
 
 // Keep specialist workspaces out of the first dashboard payload.
 const CareGuidance = lazy(() => import("./care-guidance"));
@@ -647,31 +646,8 @@ export default function Home({
     );
   }
 
-  // DEDICATED SEPARATE FULL-SCREEN: ASHA Field Health Worker Workstation
-  if (currentUser && (activeRole === "health_worker" || currentProfile?.role === "health_worker")) {
-    return (
-      <>
-        <WorkerWorkspace
-          currentUser={currentUser}
-          currentProfile={currentProfile}
-          screenings={screenings}
-          onOpenScreening={() => setViewMode("screening")}
-          onSyncReports={syncReports}
-          syncState={syncState}
-          onSignOut={handleSignOut}
-        />
-        {healthPassRecord && (
-          <HealthPassCard
-            record={healthPassRecord}
-            onClose={() => setHealthPassRecord(null)}
-          />
-        )}
-      </>
-    );
-  }
-
-  // DEDICATED SEPARATE FULL-SCREEN: Citizen & Family Health Portal
-  if (currentUser && (activeRole === "patient" || currentProfile?.role === "patient" || !activeRole)) {
+  // DEDICATED SEPARATE FULL-SCREEN: Citizen & Family Health Portal (Direct Doctor Follow-up & Pharma)
+  if (currentUser && (activeRole === "patient" || currentProfile?.role === "patient" || currentProfile?.role === "health_worker" || !activeRole)) {
     return (
       <>
         <PatientWorkspace

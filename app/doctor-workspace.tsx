@@ -8,6 +8,7 @@ import PrescriptionTracker from "./prescription-tracker";
 import CarePlanView from "./care-plan";
 import DiseaseLibrary from "./disease-library";
 import NearbyCare from "./nearby-care";
+import { DoctorFollowupManager } from "./doctor-followup-manager";
 
 interface DoctorWorkspaceProps {
   currentUser: { email?: string } | null;
@@ -34,7 +35,7 @@ export function DoctorWorkspace({
   onSignOut,
 }: DoctorWorkspaceProps) {
   const { t, effectiveLang, setLang } = useLanguage();
-  const [activeTab, setActiveTab] = useState<"cases" | "care" | "prescriptions" | "plan" | "library" | "nearby">("cases");
+  const [activeTab, setActiveTab] = useState<"followups" | "cases" | "care" | "prescriptions" | "plan" | "library" | "nearby">("followups");
 
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "urgent" | "review" | "evaluated">("all");
@@ -192,6 +193,7 @@ export function DoctorWorkspace({
         }}
       >
         {[
+          { id: "followups", label: "Patient Follow-ups & Chemist Suggestion", icon: "✉" },
           { id: "cases", label: `Triage Queue (${screenings.length})`, icon: "◎" },
           { id: "care", label: "Care Guidance (RAG)", icon: "✚" },
           { id: "prescriptions", label: "Digital Prescriptions", icon: "💊" },
@@ -535,6 +537,7 @@ export function DoctorWorkspace({
           </div>
         )}
 
+        {activeTab === "followups" && <DoctorFollowupManager doctorName={docName} doctorNmc={regNo} />}
         {activeTab === "care" && <CareGuidance />}
         {activeTab === "prescriptions" && <PrescriptionTracker userRole="doctor" />}
         {activeTab === "plan" && <CarePlanView />}

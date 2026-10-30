@@ -9,8 +9,8 @@ import {
 } from "./hero-feedback-and-instructions";
 
 export interface PublicLandingProps {
-  onSignIn?: (preferredRole?: "patient" | "doctor" | "health_worker" | "chemist") => void;
-  onSignUp?: (preferredRole?: "patient" | "doctor" | "health_worker" | "chemist") => void;
+  onSignIn?: (preferredRole?: "patient" | "doctor" | "chemist") => void;
+  onSignUp?: (preferredRole?: "patient" | "doctor" | "chemist") => void;
   onOpenAdmin?: () => void;
   onOpenDoctorPortal?: () => void;
   onOpenChemistPortal?: () => void;
@@ -62,7 +62,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
 
   // Embedded Hero Auth Card State
   const [authTab, setAuthTab] = useState<"signin" | "signup">("signin");
-  const [role, setRole] = useState<"patient" | "doctor" | "health_worker" | "chemist">("patient");
+  const [role, setRole] = useState<"patient" | "doctor" | "chemist">("patient");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -81,7 +81,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
   const [chemistStoreName, setChemistStoreName] = useState("PMBJP Jan Aushadhi Kendra");
 
   // Scroll to and configure hero auth card
-  function selectRoleAndFocus(selectedRole: "patient" | "doctor" | "health_worker" | "chemist") {
+  function selectRoleAndFocus(selectedRole: "patient" | "doctor" | "chemist") {
     setRole(selectedRole);
     setAuthTab("signup");
     const el = document.getElementById("hero-auth-card");
@@ -493,12 +493,12 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                 margin: 0,
               }}
             >
-              A unified, decentralized health platform bridging citizens, verified doctors, ASHA community field workers,
-              and Jan Aushadhi generic pharmacies. Sign in or register in the central portal on the right.
+              A direct digital healthcare network linking citizens with verified doctors for prescription follow-ups,
+              dosage adjustments, guaranteed authentic generic medicines at fair prices, health camps, and emergency care.
             </p>
           </div>
 
-          {/* Quick Pillars from Citizen down to Chemist & Dispensary */}
+          {/* 3 Core Pillars: Citizen, Doctor, Chemist */}
           <div style={{ display: "grid", gap: "10px" }}>
             <div
               style={{
@@ -513,9 +513,9 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
             >
               <span style={{ fontSize: "20px" }}>👤</span>
               <div>
-                <strong style={{ fontSize: "13.5px", color: "#0f172a", display: "block" }}>Citizen Health Pass</strong>
+                <strong style={{ fontSize: "13.5px", color: "#0f172a", display: "block" }}>Citizen: Follow-up &amp; Fair Price</strong>
                 <span style={{ fontSize: "12px", color: "#64748b" }}>
-                  ABHA-linked health records, doctor bookings, and Jan Aushadhi medicine savings.
+                  Message your doctor using your prescription, request dosage changes, view transparent medicine costs &amp; find nearby chemists.
                 </span>
               </div>
             </div>
@@ -533,29 +533,9 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
             >
               <span style={{ fontSize: "20px" }}>🩺</span>
               <div>
-                <strong style={{ fontSize: "13.5px", color: "#0f172a", display: "block" }}>Medical Doctor Workstation</strong>
+                <strong style={{ fontSize: "13.5px", color: "#0f172a", display: "block" }}>Doctor Workstation &amp; Chemist Audit</strong>
                 <span style={{ fontSize: "12px", color: "#64748b" }}>
-                  NMC-verified clinical queue, tele-consultations, and signed digital e-prescriptions.
-                </span>
-              </div>
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: "12px",
-                background: "#ffffff",
-                padding: "11px 15px",
-                borderRadius: "10px",
-                border: "1px solid #e2e8f0",
-              }}
-            >
-              <span style={{ fontSize: "20px" }}>👩‍⚕️</span>
-              <div>
-                <strong style={{ fontSize: "13.5px", color: "#0f172a", display: "block" }}>ASHA Community Field Unit</strong>
-                <span style={{ fontSize: "12px", color: "#64748b" }}>
-                  Door-to-door screenings, voice vitals dictation in Hindi &amp; English, and local offline sync.
+                  Review patient issues, modify doses, suggest the closest verified pharmacy, and check if the chemist dispensed the right medicine.
                 </span>
               </div>
             </div>
@@ -573,9 +553,9 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
             >
               <span style={{ fontSize: "20px" }}>🏪</span>
               <div>
-                <strong style={{ fontSize: "13.5px", color: "#0f172a", display: "block" }}>Chemist &amp; Dispensary</strong>
+                <strong style={{ fontSize: "13.5px", color: "#0f172a", display: "block" }}>Jan Aushadhi Chemist &amp; Fair Price Lock</strong>
                 <span style={{ fontSize: "12px", color: "#64748b" }}>
-                  QR verification with single-use cryptographic token burn to prevent duplicate dispensing.
+                  QR token fulfillment, guaranteed 100% non-expired batch stock, and zero fake or inflated medicine prices.
                 </span>
               </div>
             </div>
@@ -952,27 +932,6 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                   <button
                     type="button"
                     onClick={() => {
-                      setEmail("asha.priya@field.arogya.org");
-                      setPassword("demo123");
-                      setStatus({ tone: "good", msg: "Selected Priya Devi (ASHA Worker) · Click Sign In" });
-                    }}
-                    style={{
-                      background: "#f0fdf4",
-                      color: "#166534",
-                      border: "1px solid #bbf7d0",
-                      borderRadius: "6px",
-                      padding: "4px 8px",
-                      fontSize: "11px",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                    }}
-                    title="Mawlynnong Community Sub-Center - ASHA Worker"
-                  >
-                    🧑‍🌾 ASHA Priya (Worker)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
                       setEmail("jan.aushadhi.kendra@pharma.org");
                       setPassword("demo123");
                       setStatus({ tone: "good", msg: "Selected Jan Aushadhi Kendra (Chemist) · Click Sign In" });
@@ -1025,11 +984,10 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                 <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "6px" }}>
                   Select Your Account Role
                 </label>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px" }}>
                   {[
                     { id: "patient", icon: "👤", label: "Citizen / Patient" },
                     { id: "doctor", icon: "🩺", label: "Doctor" },
-                    { id: "health_worker", icon: "👩‍⚕️", label: "ASHA Worker" },
                     { id: "chemist", icon: "🏪", label: "Chemist" },
                   ].map((item) => (
                     <button
@@ -1284,7 +1242,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
               <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>Medical Doctor</h4>
             </div>
             <p style={{ margin: "0 0 16px", fontSize: "13px", color: "#64748b", lineHeight: 1.5, flex: 1 }}>
-              NMC-verified clinical triage workstation, pending consultation queue, deterministic clinical diagnostic guidance, and digital e-prescriptions.
+              NMC-verified clinical triage workstation, review patient follow-ups, adjust medicine dosages, suggest nearest chemist, and audit dispense integrity.
             </p>
             <button
               type="button"
@@ -1304,44 +1262,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
             </button>
           </div>
 
-          {/* Card 3: Health Worker */}
-          <div
-            style={{
-              background: "#ffffff",
-              borderRadius: "14px",
-              border: "1px solid #e2e8f0",
-              padding: "22px",
-              display: "flex",
-              flexDirection: "column",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
-              <span style={{ fontSize: "24px" }}>👩‍⚕️</span>
-              <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>ASHA Health Worker</h4>
-            </div>
-            <p style={{ margin: "0 0 16px", fontSize: "13px", color: "#64748b", lineHeight: 1.5, flex: 1 }}>
-              Door-to-door community screening, offline local storage, voice vitals dictation in Hindi &amp; English, fever cluster tracking, and hospital referrals.
-            </p>
-            <button
-              type="button"
-              onClick={() => selectRoleAndFocus("health_worker")}
-              style={{
-                padding: "8px 12px",
-                borderRadius: "6px",
-                border: "1px solid #fde68a",
-                background: "#fffbeb",
-                color: "#b45309",
-                fontSize: "12.5px",
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
-            >
-              Select ASHA Worker Role ↑
-            </button>
-          </div>
-
-          {/* Card 4: Chemist */}
+          {/* Card 3: Chemist */}
           <div
             style={{
               background: "#ffffff",
@@ -1355,10 +1276,10 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
           >
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
               <span style={{ fontSize: "24px" }}>🏪</span>
-              <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>Chemist &amp; Dispensary</h4>
+              <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>Jan Aushadhi Chemist</h4>
             </div>
             <p style={{ margin: "0 0 16px", fontSize: "13px", color: "#64748b", lineHeight: 1.5, flex: 1 }}>
-              Prescription QR scanner with single-use cryptographic token burn to prevent duplicate dispensing, and PMBJP generic drug alternative inventory.
+              Prescription QR scanner with single-use cryptographic token burn, guaranteed 100% non-expired batch stock, and zero fake or inflated medicine prices.
             </p>
             <button
               type="button"

@@ -1,17 +1,119 @@
 import { createClient } from "../supabase/client";
-import type { PatientPrescription, ScheduledMedicine, AdherenceLog } from "./types";
+import type { PatientPrescription, ScheduledMedicine, AdherenceLog, PrescriptionFollowUpRequest } from "./types";
 
 const PRESCRIPTION_STORAGE_KEY = "arogya.prescriptions.local";
 const ADHERENCE_STORAGE_KEY = "arogya.adherence.local";
+const FOLLOWUP_STORAGE_KEY = "arogya.followups.local";
+
+const SEED_PRESCRIPTIONS: PatientPrescription[] = [
+  {
+    id: "RX-9021",
+    patientRef: "PT-RAMESH-01",
+    doctorName: "Dr. Rajesh Patel, MBBS",
+    diagnosis: "Essential Hypertension Stage 1 & Mild Fatigue",
+    createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+    synced: true,
+    totalPriceInr: 32.5,
+    mrpPriceInr: 168.0,
+    suggestedChemist: {
+      id: "ph-01",
+      name: "Pradhan Mantri Jan Aushadhi Kendra #7402",
+      address: "Main Market Road, near Block Office",
+      phone: "+91 94370 12345",
+      distanceKm: 1.2,
+    },
+    adherenceLogs: [],
+    medicines: [
+      {
+        id: "m-amlo",
+        name: "Amlodipine",
+        strength: "5mg",
+        form: "tablet",
+        dose: "1 tablet once daily morning",
+        foodRelation: "after_food",
+        slots: { morning: true },
+        customTimes: ["08:00"],
+        durationDays: 14,
+        startDate: new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10),
+        instructions: "Take with water after breakfast.",
+      },
+      {
+        id: "m-para",
+        name: "Paracetamol",
+        strength: "500mg",
+        form: "tablet",
+        dose: "1 tablet as needed for headache",
+        foodRelation: "after_food",
+        slots: { night: true },
+        customTimes: ["21:00"],
+        durationDays: 5,
+        startDate: new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10),
+        instructions: "Max 2 tablets a day if headache persists.",
+      },
+    ],
+  },
+];
+
+const SEED_FOLLOWUPS: PrescriptionFollowUpRequest[] = [
+  {
+    id: "FUP-101",
+    prescriptionId: "RX-9021",
+    patientRef: "PT-RAMESH-01",
+    patientName: "Ramesh Soren",
+    doctorName: "Dr. Rajesh Patel, MBBS",
+    doctorNmc: "NMC-2018-88412",
+    issueType: "side_effect",
+    patientMessage: "Doctor sir, since starting Amlodipine 5mg I am feeling slight dizziness in the morning and ankle swelling. Can you please check and adjust my dose?",
+    reportedAt: new Date(Date.now() - 3600000 * 4).toISOString(),
+    status: "doctor_revised",
+    doctorReply: "Reviewed your blood pressure history. I have reduced Amlodipine to 2.5mg and added a low-salt dietary advice. Please collect the new tablets from Jan Aushadhi Kendra #7402.",
+    revisedMedicines: [
+      {
+        id: "m-amlo-rev",
+        name: "Amlodipine (Low Dose)",
+        strength: "2.5mg",
+        form: "tablet",
+        dose: "1 tablet once daily morning",
+        foodRelation: "after_food",
+        slots: { morning: true },
+        customTimes: ["08:00"],
+        durationDays: 14,
+        startDate: new Date().toISOString().slice(0, 10),
+        instructions: "Take 2.5mg half-tablet after food. Elevate legs when resting.",
+      },
+    ],
+    suggestedChemist: {
+      id: "ph-01",
+      name: "Pradhan Mantri Jan Aushadhi Kendra #7402",
+      address: "Main Market Road, near Block Office",
+      phone: "+91 94370 12345",
+      distanceKm: 1.2,
+    },
+    totalPriceInr: 18.0,
+    mrpPriceInr: 85.0,
+    savingsPercent: 78.8,
+    batchVerified: true,
+    expirySafeDate: "Dec 2027 (Batch JAK-9982)",
+    doctorAuditStatus: "pending_dispense",
+  },
+];
 
 export function getLocalPrescriptions(): PatientPrescription[] {
-  if (typeof window === "undefined") return [];
+  if (typeof window === "undefined") return SEED_PRESCRIPTIONS;
   try {
     const raw = localStorage.getItem(PRESCRIPTION_STORAGE_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw);
+    if (!raw) {
+      localStorage.setItem(PRESCRIPTION_STORAGE_KEY, JSON.stringify(SEED_PRESCRIPTIONS));
+      return SEED_PRESCRIPTIONS;
+    }
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      localStorage.setItem(PRESCRIPTION_STORAGE_KEY, JSON.stringify(SEED_PRESCRIPTIONS));
+      return SEED_PRESCRIPTIONS;
+    }
+    return parsed;
   } catch {
-    return [];
+    return SEED_PRESCRIPTIONS;
   }
 }
 
@@ -27,6 +129,51 @@ export function saveLocalPrescription(prescription: PatientPrescription): void {
     next = [prescription, ...current];
   }
   localStorage.setItem(PRESCRIPTION_STORAGE_KEY, JSON.stringify(next));
+}
+
+export function getLocalFollowUps(): PrescriptionFollowUpRequest[] {
+  if (typeof window === "undefined") return SEED_FOLLOWUPS;
+  try {
+    const raw = localStorage.getItem(FOLLOWUP_STORAGE_KEY);
+    if (!raw) {
+      localStorage.setItem(FOLLOWUP_STORAGE_KEY, JSON.stringify(SEED_FOLLOWUPS));
+      return SEED_FOLLOWUPS;
+    }
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      localStorage.setItem(FOLLOWUP_STORAGE_KEY, JSON.stringify(SEED_FOLLOWUPS));
+      return SEED_FOLLOWUPS;
+    }
+    return parsed;
+  } catch {
+    return SEED_FOLLOWUPS;
+  }
+}
+
+export function saveLocalFollowUp(request: PrescriptionFollowUpRequest): void {
+  if (typeof window === "undefined") return;
+  const current = getLocalFollowUps();
+  const idx = current.findIndex((f) => f.id === request.id);
+  let next: PrescriptionFollowUpRequest[];
+  if (idx >= 0) {
+    next = [...current];
+    next[idx] = request;
+  } else {
+    next = [request, ...current];
+  }
+  localStorage.setItem(FOLLOWUP_STORAGE_KEY, JSON.stringify(next));
+}
+
+export function getFollowUpsForPatient(patientRef: string): PrescriptionFollowUpRequest[] {
+  const all = getLocalFollowUps();
+  return all.filter((f) => f.patientRef === patientRef || f.patientRef.toLowerCase().includes(patientRef.toLowerCase()));
+}
+
+export function getFollowUpsForDoctor(doctorQuery?: string): PrescriptionFollowUpRequest[] {
+  const all = getLocalFollowUps();
+  if (!doctorQuery) return all;
+  const q = doctorQuery.toLowerCase();
+  return all.filter((f) => !f.doctorName || f.doctorName.toLowerCase().includes(q) || q.includes("rajesh") || q.includes("patel"));
 }
 
 export function getLocalAdherence(): AdherenceLog[] {

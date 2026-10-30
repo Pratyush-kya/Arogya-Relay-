@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { getLocalPrescriptions, saveLocalPrescription } from "@/lib/prescriptions/storage";
+import { getLocalPrescriptions, saveLocalPrescription, getLocalFollowUps, saveLocalFollowUp } from "@/lib/prescriptions/storage";
 import { settleChemistEscrow } from "@/lib/payments/escrow-engine";
 import { createClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/lib/i18n/provider";
@@ -138,6 +138,21 @@ export function ChemistDispensary({ onBackToDashboard, onSignOut, chemistName }:
 
       // 3. Settle chemist escrow
       settleChemistEscrow(scannedRx.id, chemistId);
+
+      // 4. Update matching follow-up records for doctor audit
+      try {
+        const followups = getLocalFollowUps();
+        const matched = followups.find((f) => f.prescriptionId === scannedRx.id || f.patientRef === scannedRx.patientRef);
+        if (matched) {
+          matched.status = "dispensed";
+          matched.dispensedChemistId = chemistId;
+          matched.dispensedChemistName = chemistName || "Jan Aushadhi Kendra #1084";
+          matched.dispensedAt = new Date().toISOString();
+          saveLocalFollowUp(matched);
+        }
+      } catch {
+        // Fallback
+      }
 
       setScannedRx((prev: any) => ({ ...prev, diagnosis: updatedDiagnosis }));
       setStatusMessage({
@@ -292,6 +307,16 @@ export function ChemistDispensary({ onBackToDashboard, onSignOut, chemistName }:
             <button
               type="button"
               onClick={() => {
+                setTokenInput("RX-9021");
+                handleVerifyToken("RX-9021");
+              }}
+              style={{ background: "#ecfdf5", border: "1px solid #a7f3d0", color: "#065f46", padding: "4px 8px", borderRadius: "4px", fontSize: "0.75rem", cursor: "pointer", fontWeight: 700 }}
+            >
+              💊 Follow-up Case RX-9021 (Ramesh Soren)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
                 setTokenInput("PT-7821");
                 handleVerifyToken("PT-7821");
               }}
@@ -299,6 +324,33 @@ export function ChemistDispensary({ onBackToDashboard, onSignOut, chemistName }:
             >
               Demo Case PT-7821
             </button>
+          </div>
+
+          {/* Quality & Authentic Price Guarantee Banner */}
+          <div
+            style={{
+              marginTop: "16px",
+              padding: "10px 14px",
+              borderRadius: "8px",
+              background: "#f0fdf4",
+              border: "1px solid #bbf7d0",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: "8px",
+              fontSize: "12px",
+              color: "#166534",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "16px" }}>🛡️</span>
+              <strong>Jan Aushadhi Quality Standard:</strong>
+              <span>100% Non-Expired Stock Guaranteed · Fixed Government Rates (No Price Inflation)</span>
+            </div>
+            <span style={{ fontSize: "11px", fontWeight: 700, background: "#dcfce7", padding: "2px 8px", borderRadius: "4px" }}>
+              Batch Verified
+            </span>
           </div>
         </div>
 
