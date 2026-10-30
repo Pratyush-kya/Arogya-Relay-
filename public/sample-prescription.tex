@@ -1,0 +1,127 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1.0cm,top=0.8cm,bottom=0.8cm]{geometry}
+\usepackage{amsmath}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tcolorbox}
+\usepackage{tabularx}
+\usepackage{enumitem}
+
+\definecolor{primary}{RGB}{4, 120, 87}
+\definecolor{primarydark}{RGB}{6, 95, 70}
+\definecolor{accent}{RGB}{2, 132, 199}
+\definecolor{lightgray}{RGB}{245, 247, 250}
+\definecolor{linegray}{RGB}{220, 226, 235}
+\definecolor{darktext}{RGB}{15, 23, 42}
+
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+
+% ── Outer Border ─────────────────────────────────────────────────────────────
+\begin{tcolorbox}[
+    colback=white,
+    colframe=primary,
+    arc=3mm,
+    boxrule=1.5pt,
+    left=10pt, right=10pt, top=8pt, bottom=8pt
+]
+
+% ── Hospital Header ──────────────────────────────────────────────────────────
+\begin{center}
+    {\scriptsize\textbf{\color{primarydark}GOVERNMENT OF MEGHALAYA $\cdot$ DEPARTMENT OF HEALTH \& FAMILY WELFARE}}\\[1pt]
+    {\scriptsize\textbf{\color{accent}NATIONAL HEALTH MISSION (NHM) $\cdot$ AYUSHMAN BHARAT DIGITAL MISSION (ABDM)}}\\[4pt]
+    {\Large\textbf{\color{primary}MAWLYNNONG SUB-DIVISIONAL HOSPITAL \& PHC}}\\[2pt]
+    {\footnotesize Purbanchal Circle, East Khasi Hills District, Meghalaya -- 793110 $\cdot$ Helpline: 112 / +91 364 250 8821}\\[1pt]
+    {\scriptsize\textbf{OUTPATIENT CLINICAL ENCOUNTER \& PRESCRIPTION SLIP (OPD-RX)}}
+\end{center}
+
+\vspace{-6pt}
+\noindent\textcolor{primary}{\rule{\linewidth}{1.5pt}}
+
+% ── Doctor Credentials Banner ────────────────────────────────────────────────
+\vspace{1pt}
+\begin{tabularx}{\linewidth}{@{}Xr@{}}
+    \textbf{\large Dr. Rajesh Patel, MBBS, MD (Med)} & \textbf{Date:} 26 October 2026 \\
+    Consultant Physician \& Medical Officer (General Medicine) & \textbf{Time:} 10:45 AM IST \\
+    Reg. No: \textbf{\color{primarydark}NMC-2018-88412} (National Medical Commission) & \textbf{OPD Token:} \#A-104 \\
+    Mawlynnong SDH \& Primary Health Centre & \textbf{Prescription ID:} \textbf{\color{accent}RX-9021} \\
+\end{tabularx}
+
+\vspace{2pt}
+\noindent\textcolor{linegray}{\rule{\linewidth}{0.8pt}}
+
+% ── Patient Demographics & Vitals ────────────────────────────────────────────
+\vspace{2pt}
+\begin{tcolorbox}[colback=lightgray, colframe=linegray, arc=2mm, boxrule=0.5pt, left=6pt, right=6pt, top=4pt, bottom=4pt]
+    \begin{tabularx}{\linewidth}{@{}p{3.8cm}p{2.6cm}p{3.2cm}X@{}}
+        \textbf{Patient Name:} Ramesh Soren & \textbf{Age/Sex:} 46 Y / Male & \textbf{Patient ID:} \textbf{PT-RAMESH-01} & \textbf{ABHA ID:} 91-8821-4402 \\
+        \textbf{Blood Pressure:} 148/92 mmHg & \textbf{Pulse Rate:} 78 bpm & \textbf{SpO$_2$:} 98\% Room Air & \textbf{Weight / BMI:} 68 kg / 23.8 \\
+    \end{tabularx}
+\end{tcolorbox}
+
+% ── Clinical Diagnosis & Presenting Complaints ───────────────────────────────
+\vspace{2pt}
+\noindent\textbf{\color{primarydark}CLINICAL ASSESSMENT \& PROVISIONAL DIAGNOSIS:}
+\begin{itemize}[leftmargin=16pt, topsep=1pt, itemsep=1pt]
+    \item \textbf{Diagnosis:} Essential Hypertension (Stage 1), Mild Exertional Fatigue, Incipient Postural Dizziness.
+    \item \textbf{Presenting Complaints:} Mild headache on waking, occipital heaviness for 2 weeks, borderline elevated ambulatory BP.
+    \item \textbf{Allergies:} No known drug allergies (NKDA).
+\end{itemize}
+
+\vspace{2pt}
+\noindent\textcolor{primary}{\rule{\linewidth}{1pt}}
+
+% ── Rx Prescribed Medications ────────────────────────────────────────────────
+\vspace{2pt}
+{\huge\textbf{\color{primary}R\raisebox{-0.2ex}{x}}} \hfill {\small\textit{\color{darktext}NLEM / Jan Aushadhi Generic Equivalents Specified}}
+
+\vspace{2pt}
+\begin{tabularx}{\linewidth}{|r|X|c|c|c|X|}
+\hline
+\textbf{\#} & \textbf{Medicine Formulation} & \textbf{Strength} & \textbf{Dose / Route} & \textbf{Timings} & \textbf{Instructions \& Duration} \\
+\hline
+1 & \textbf{Tab. Amlodipine} \newline \textit{(PMBJP Generic / Norvasc eq.)} & 5 mg & 1 Tab Oral & \textbf{08:00 AM} (Morning) & Take after breakfast with water $\times$ 14 Days. \\
+\hline
+2 & \textbf{Tab. Paracetamol} \newline \textit{(PMBJP Generic)} & 500 mg & 1 Tab Oral & \textbf{SOS} (As needed) & Take after food if headache persists (Max 2/day) $\times$ 5 Days. \\
+\hline
+3 & \textbf{Tab. B-Complex + Zinc} \newline \textit{(Zincovit Generic eq.)} & Standard & 1 Tab Oral & \textbf{01:00 PM} (Lunch) & Take once daily after lunch with drinking water $\times$ 10 Days. \\
+\hline
+\end{tabularx}
+
+% ── Non-Pharmacological Advice & Follow-up Instructions ──────────────────────
+\vspace{4pt}
+\noindent\textbf{\color{primarydark}INVESTIGATIONS ORDERED \& LIFESTYLE ADVICE:}
+\begin{enumerate}[leftmargin=16pt, topsep=1pt, itemsep=1pt]
+    \item \textbf{Dietary Sodium Restriction:} Strictly keep salt intake $<2\,\text{g/day}$. Avoid papad, pickles, and processed snacks.
+    \item \textbf{Hydration \& Physical Activity:} Maintain adequate daily hydration (2.5--3 Litres); brisk 25-minute morning walk.
+    \item \textbf{Investigations Recommended:} Fasting Blood Sugar, Serum Creatinine, Serum Electrolytes ($K^+, Na^+$), Routine Urine analysis.
+    \item \textbf{IMPORTANT -- DOSAGE MODIFICATION INSTRUCTION:} If you experience dizziness, lightheadedness, or ankle swelling, submit a follow-up report via the Arogya Relay app immediately for dosage adjustment (reduction to 2.5 mg) without stopping treatment abruptly.
+\end{enumerate}
+
+\vspace{6pt}
+
+% ── Footer with Seal and Signature ───────────────────────────────────────────
+\begin{tabularx}{\linewidth}{@{}Xr@{}}
+    \begin{tcolorbox}[colback=white, colframe=primary!40, arc=2mm, width=8cm, boxrule=0.8pt, left=6pt, right=6pt, top=4pt, bottom=4pt]
+        {\scriptsize\textbf{\color{primarydark}DISPENSARY VERIFICATION NOTICE:}}\\
+        {\tiny Collect generic formulations from Pradhan Mantri Jan Aushadhi Kendra \#7402 (Main Market Road). Guaranteed non-expired stock with locked fair price of Rs.~32.50 vs Branded MRP Rs.~168.00.}
+    \end{tcolorbox}
+    &
+    \begin{minipage}{6.5cm}
+        \centering
+        \vspace{2pt}
+        \textit{\color{primarydark}\Large Dr. Rajesh Patel}\\[-4pt]
+        \rule{5cm}{0.8pt}\\[2pt]
+        \textbf{\small Dr. Rajesh Patel, MBBS, MD}\\
+        {\footnotesize Reg. No: NMC-2018-88412}\\
+        {\scriptsize Medical Officer, Mawlynnong SDH \& PHC}\\
+        {\tiny Government of Meghalaya}
+    \end{minipage}
+\end{tabularx}
+
+\end{tcolorbox}
+
+\end{document}

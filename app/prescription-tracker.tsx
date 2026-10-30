@@ -772,30 +772,88 @@ export default function PrescriptionTracker({
               style={{
                 border: "1.5px dashed var(--line, #cbd5e1)",
                 borderRadius: "10px",
-                padding: "14px",
+                padding: "16px",
                 background: "var(--surface-muted, #f8fafc)",
                 display: "flex",
                 flexDirection: "column",
-                gap: "8px",
+                gap: "10px",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "12.5px", fontWeight: 600 }}>
-                  📄 Attach Previous Prescription Slip or Lab Test (Optional)
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--foreground, #0f172a)" }}>
+                  📄 Attach Prescription Slip or Lab Report (File Upload / 1-Click Sample)
                 </span>
-                {reportFilePreview && (
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                   <button
                     type="button"
                     onClick={() => {
-                      setReportFilePreview(null);
-                      if (reportFileInputRef.current) reportFileInputRef.current.value = "";
+                      setReportFilePreview("/sample-prescription-slip.png");
+                      setSelectedDoctorId("doc-rajesh");
+                      setSelectedRxId("RX-9021");
+                      setReportIssueType("dose_change");
+                      if (!reportMessage.trim()) {
+                        setReportMessage(
+                          "Doctor sir, since starting Tab. Amlodipine 5mg from my visit, I am experiencing morning dizziness, lightheadedness when standing up, and slight swelling in my ankles. My BP measured today at the local sub-centre was 132/84 mmHg. Please review and adjust my medicine dose."
+                        );
+                      }
+                      setStatusMessage("Attached official sample prescription slip (Dr. Rajesh Patel · RX-9021)!");
                     }}
-                    style={{ background: "none", border: "none", color: "#dc2626", fontSize: "12px", cursor: "pointer", fontWeight: 600 }}
+                    style={{
+                      background: "#047857",
+                      color: "#ffffff",
+                      border: "none",
+                      padding: "5px 12px",
+                      borderRadius: "6px",
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "5px",
+                    }}
                   >
-                    Remove File
+                    <span>⚡</span>
+                    <span>1-Click Load Official Slip</span>
                   </button>
-                )}
+
+                  <a
+                    href="/sample-prescription.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download="Dr_Rajesh_Patel_Prescription_RX-9021.pdf"
+                    style={{
+                      background: "#e0f2fe",
+                      color: "#0369a1",
+                      border: "1px solid #bae6fd",
+                      padding: "5px 12px",
+                      borderRadius: "6px",
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      textDecoration: "none",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "5px",
+                    }}
+                  >
+                    <span>📥</span>
+                    <span>Download PDF</span>
+                  </a>
+
+                  {reportFilePreview && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReportFilePreview(null);
+                        if (reportFileInputRef.current) reportFileInputRef.current.value = "";
+                      }}
+                      style={{ background: "none", border: "none", color: "#dc2626", fontSize: "12px", cursor: "pointer", fontWeight: 600 }}
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
               </div>
+
               <input
                 ref={reportFileInputRef}
                 type="file"
@@ -803,14 +861,26 @@ export default function PrescriptionTracker({
                 onChange={handleReportFileUpload}
                 style={{ fontSize: "12.5px" }}
               />
+
               {reportFilePreview && (
-                <div style={{ marginTop: "6px" }}>
+                <div style={{ marginTop: "8px", display: "flex", alignItems: "flex-start", gap: "14px", flexWrap: "wrap", background: "#ffffff", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={reportFilePreview}
                     alt="Uploaded report preview"
-                    style={{ maxHeight: "140px", borderRadius: "6px", border: "1px solid #cbd5e1", objectFit: "cover" }}
+                    style={{ maxHeight: "180px", maxWidth: "240px", borderRadius: "6px", border: "1px solid #cbd5e1", objectFit: "contain", background: "#f8fafc" }}
                   />
+                  <div style={{ fontSize: "12px", color: "var(--foreground, #1e293b)", maxWidth: "340px" }}>
+                    <strong style={{ display: "block", color: "#065f46", fontSize: "13px" }}>
+                      ✓ Official Medical Prescription Attached
+                    </strong>
+                    <span style={{ display: "block", color: "var(--muted, #64748b)", marginTop: "2px" }}>
+                      Mawlynnong Sub-Divisional Hospital &amp; PHC · Dr. Rajesh Patel (NMC-2018-88412) · Ref: RX-9021
+                    </span>
+                    <p style={{ margin: "6px 0 0", fontSize: "11.5px", color: "#475569" }}>
+                      Contains Tab. Amlodipine 5mg, Paracetamol 500mg, Vitals (BP 148/92), and medical officer stamp ready for dosage review.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
