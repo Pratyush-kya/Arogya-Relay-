@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useLanguage } from "@/lib/i18n/provider";
 import { HealthCampFinder } from "./health-camp-finder";
 import { ReadAloud } from "./read-aloud";
-import { PatientFollowupCard } from "./patient-followup-card";
 import PrescriptionTracker from "./prescription-tracker";
+import { TWO_AVAILABLE_DOCTORS } from "@/lib/prescriptions/types";
 import DiseaseLibrary from "./disease-library";
 import NearbyCare from "./nearby-care";
 import type { ScreeningRecord } from "@/lib/types";
@@ -29,6 +29,8 @@ export function PatientWorkspace({
 }: PatientWorkspaceProps) {
   const { t, effectiveLang, setLang } = useLanguage();
   const [activeTab, setActiveTab] = useState<"overview" | "camps" | "prescriptions" | "gyan" | "nearby">("overview");
+  const [prescriptionSection, setPrescriptionSection] = useState<"submit" | "response" | "alarms">("response");
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>("doc-rajesh");
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [instructionsOpen, setInstructionsOpen] = useState(false);
 
@@ -317,15 +319,175 @@ export function PatientWorkspace({
               </a>
             </div>
 
-            {/* Doctor Follow-Up & Dosage Modification Card */}
-            <PatientFollowupCard
-              patientRef={currentUser?.email?.includes("ramesh") ? "PT-RAMESH-01" : "PT-1001"}
-              onNavigateToChemistMap={() => setActiveTab("nearby")}
-            />
+            {/* Verified Real Doctors Met in Person */}
+            <div
+              style={{
+                background: "var(--surface, #ffffff)",
+                border: "1.5px solid var(--border, #cbd5e1)",
+                borderRadius: "16px",
+                padding: "22px 24px",
+                boxShadow: "0 4px 14px rgba(0, 0, 0, 0.04)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "10px" }}>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "22px" }}>🩺</span>
+                    <h2 style={{ fontSize: "17.5px", fontWeight: 800, margin: 0, color: "var(--foreground, #0f172a)" }}>
+                      Your Verified Doctors (Met in Person)
+                    </h2>
+                  </div>
+                  <p style={{ margin: "4px 0 0", fontSize: "13px", color: "var(--muted, #64748b)" }}>
+                    Submit clinical reports, describe side effects, or request medicine dosage changes directly to your real examining doctors.
+                  </p>
+                </div>
 
-            {/* 4 Primary Action Cards */}
+                <div
+                  style={{
+                    background: "#ecfdf5",
+                    border: "1px solid #86efac",
+                    color: "#166534",
+                    padding: "4px 12px",
+                    borderRadius: "20px",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  <span>🟢</span>
+                  <span>2 Verified Doctors Available</span>
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: "14px" }}>
+                {TWO_AVAILABLE_DOCTORS.map((doc) => (
+                  <div
+                    key={doc.id}
+                    style={{
+                      border: "1.5px solid var(--line, #e2e8f0)",
+                      borderRadius: "14px",
+                      padding: "16px 18px",
+                      background: "var(--surface-muted, #f8fafc)",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                      gap: "14px",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: "14px" }}>
+                      <span style={{ fontSize: "38px", lineHeight: 1 }}>{doc.avatar}</span>
+                      <div style={{ flex: 1 }}>
+                        <strong style={{ fontSize: "15.5px", color: "var(--foreground, #0f172a)", display: "block" }}>
+                          {doc.name}
+                        </strong>
+                        <span style={{ fontSize: "11px", fontWeight: 700, color: "#059669", display: "block", marginTop: "2px" }}>
+                          ✓ {doc.nmcNumber} (NMC Verified)
+                        </span>
+                        <p style={{ margin: "4px 0 2px", fontSize: "12.5px", color: "var(--foreground, #1e293b)", fontWeight: 500 }}>
+                          {doc.specialization} · {doc.experience}
+                        </p>
+                        <p style={{ margin: 0, fontSize: "11.5px", color: "var(--muted, #64748b)" }}>
+                          🏥 {doc.hospital}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", gap: "8px", borderTop: "1px solid var(--line, #e2e8f0)", paddingTop: "12px" }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedDoctorId(doc.id);
+                          setPrescriptionSection("submit");
+                          setActiveTab("prescriptions");
+                        }}
+                        className="primary-button"
+                        style={{
+                          flex: 1,
+                          fontSize: "12.5px",
+                          padding: "8px 12px",
+                          borderRadius: "8px",
+                          fontWeight: 700,
+                          background: "#047857",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "6px",
+                        }}
+                      >
+                        <span>📤</span>
+                        <span>Submit Report / Dose Change</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedDoctorId(doc.id);
+                          setPrescriptionSection("response");
+                          setActiveTab("prescriptions");
+                        }}
+                        className="secondary-button"
+                        style={{
+                          fontSize: "12px",
+                          padding: "8px 12px",
+                          borderRadius: "8px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        View Reply
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 3 Primary Action Cards */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "18px" }}>
-              {/* Card 1: District Health Camps */}
+              {/* Card 1: My Prescriptions & Alarms */}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  setPrescriptionSection("response");
+                  setActiveTab("prescriptions");
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    setPrescriptionSection("response");
+                    setActiveTab("prescriptions");
+                  }
+                }}
+                style={{
+                  background: "var(--surface, #ffffff)",
+                  border: "2px solid #0284c7",
+                  borderRadius: "16px",
+                  padding: "22px",
+                  cursor: "pointer",
+                  boxShadow: "0 4px 14px rgba(2, 132, 199, 0.08)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "10px",
+                }}
+              >
+                <span style={{ fontSize: "32px" }}>💊</span>
+                <h3 style={{ fontSize: "18px", fontWeight: 800, margin: 0, color: "var(--foreground, #0f172a)" }}>
+                  My Prescriptions &amp; Alarms
+                </h3>
+                <p style={{ margin: 0, fontSize: "13.5px", color: "var(--muted, #64748b)", lineHeight: 1.45 }}>
+                  Submit reports to doctors, view modified doses with Jan Aushadhi fair price guarantee, and set daily reminder alarms.
+                </p>
+                <span style={{ marginTop: "auto", fontWeight: 700, fontSize: "13.5px", color: "#0284c7" }}>
+                  Open Prescriptions &amp; Alarms →
+                </span>
+              </div>
+
+              {/* Card 2: District Health Camps */}
               <div
                 role="button"
                 tabIndex={0}
@@ -352,36 +514,6 @@ export function PatientWorkspace({
                 </p>
                 <span style={{ marginTop: "auto", fontWeight: 700, fontSize: "13.5px", color: "#047857" }}>
                   Find Nearby Camps →
-                </span>
-              </div>
-
-              {/* Card 2: My Prescriptions */}
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={() => setActiveTab("prescriptions")}
-                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setActiveTab("prescriptions"); }}
-                style={{
-                  background: "var(--surface, #ffffff)",
-                  border: "2px solid #0284c7",
-                  borderRadius: "16px",
-                  padding: "22px",
-                  cursor: "pointer",
-                  boxShadow: "0 4px 14px rgba(2, 132, 199, 0.08)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "10px",
-                }}
-              >
-                <span style={{ fontSize: "32px" }}>💊</span>
-                <h3 style={{ fontSize: "18px", fontWeight: 800, margin: 0, color: "var(--foreground, #0f172a)" }}>
-                  My Prescriptions
-                </h3>
-                <p style={{ margin: 0, fontSize: "13.5px", color: "var(--muted, #64748b)", lineHeight: 1.45 }}>
-                  View doctor prescriptions, daily dosage reminder alarms, single-use QR pass, and PMBJP generic drug equivalents.
-                </p>
-                <span style={{ marginTop: "auto", fontWeight: 700, fontSize: "13.5px", color: "#0284c7" }}>
-                  View Medicines →
                 </span>
               </div>
 
@@ -415,16 +547,18 @@ export function PatientWorkspace({
                 </span>
               </div>
             </div>
-
-            {/* Embedded District Camp Preview */}
-            <div style={{ marginTop: "8px" }}>
-              <HealthCampFinder />
-            </div>
           </div>
         )}
 
         {activeTab === "camps" && <HealthCampFinder />}
-        {activeTab === "prescriptions" && <PrescriptionTracker userRole="patient" />}
+        {activeTab === "prescriptions" && (
+          <PrescriptionTracker
+            userRole="patient"
+            initialSection={prescriptionSection}
+            defaultDoctorId={selectedDoctorId}
+            onNavigateToTab={(tab) => setActiveTab(tab as any)}
+          />
+        )}
         {activeTab === "gyan" && <DiseaseLibrary onClose={() => setActiveTab("overview")} />}
         {activeTab === "nearby" && <NearbyCare />}
       </main>
