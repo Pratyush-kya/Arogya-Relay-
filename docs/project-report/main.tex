@@ -46,7 +46,7 @@
     bookmarks=true,
     bookmarksnumbered=true,
     pdfauthor={Bishnu Prasad and Project Team},
-    pdftitle={Arogya Relay: A Zero-Loss Rural Telehealth Platform with Distributed Offline-Resilient Architecture}
+    pdftitle={Arogya Relay: A Doctor-Linked Patient Follow-up, Dosage Modification & Fair-Price Pharma Telehealth Platform}
 ]{hyperref}
 
 % Color definitions
@@ -126,7 +126,7 @@
     \vspace*{0.5cm}
     
     {\Huge \bfseries \color{primaryblue} AROGYA RELAY} \\[0.4cm]
-    {\Large \bfseries A Zero-Loss Rural Telehealth Platform with Distributed Offline-Resilient Architecture} \\[1.5cm]
+    {\Large \bfseries A Doctor-Linked Patient Follow-up, Dosage Modification \& Fair-Price Pharma Telehealth Platform} \\[1.5cm]
     
     {\large \bfseries A PROJECT REPORT} \\[0.5cm]
     
@@ -313,7 +313,7 @@ To resolve these systemic bottlenecks, this project presents \textbf{Arogya Rela
 Arogya Relay incorporates four strict architectural invariants to ensure clinical safety and data integrity:
 \begin{enumerate}[label=\textbf{\arabic*.}]
     \item \textbf{Deterministic Rule Gateways:} Pre-classifies red-flag medical emergencies prior to any generative model intervention, preventing lethal AI hallucinations and guaranteeing immediate India 112 emergency routing.
-    \item \textbf{Strict Role Isolation:} Eliminates cross-role UI bleed across Citizen, ASHA Field Worker, Verified Physician, Pharmacist, and Administrator workspaces.
+    \item \textbf{Strict Role Isolation:} Eliminates cross-role UI bleed across Citizen/Patient, Verified Physician, Pharmacist, and Administrator workspaces.
     \item \textbf{Single-Use Cryptographic Escrow Tokens:} Automatically burns prescription tokens upon medication fulfillment, eliminating duplicate dispensing and prescription forgery.
     \item \textbf{Non-Recursive Row-Level Security:} Implements optimized PostgreSQL \texttt{SECURITY DEFINER} routines that eliminate recursive policy loops and guarantee $O(1)$ query evaluation.
 \end{enumerate}
@@ -507,7 +507,7 @@ Arogya Relay serves five distinct stakeholder personas, each operating within un
 \textbf{Persona / Role} & \textbf{Operating Environment} & \textbf{Core Functional Scope} & \textbf{Interface Guardrails} \\
 \midrule
 \textbf{Citizen / Patient} \newline (Ramesh Soren) & Low-end smartphone; low literacy; regional dialect. & Health library; digital prescription wallet; medication alarms; teleconsultation intake. & Zero clinician jargon; zero prescribing UI; read-aloud TTS. \\
-\textbf{ASHA Field Worker} \newline (Priya Devi) & Rural hamlets; severe 2G/offline; handheld tablet. & Field screening; voice vitals dictation; lesion camera; offline sync queue. & Offline-first IndexedDB; simple touch targets; sync status badges. \\
+\textbf{Citizen / Caregiver} \newline (Family Health Lead) & Rural habitations; mobile phone; regional dialect. & Follow-up symptom tracking; dosage query; nearest Jan Aushadhi pickup. & Multi-language; voice read-aloud TTS; zero clinical jargon. \\
 \textbf{Verified Doctor} \newline (Dr. Rajesh Patel) & PHC/CHC clinic or district hospital workstation. & Clinical case triage queue; care guidance; digital Rx authoring \& NMC signing. & Verified NMC credentials required; full longitudinal timeline view. \\
 \textbf{Jan Aushadhi Chemist} \newline (Dispensary \#1084) & Government pharmacy counter; desktop/mobile browser. & QR token scan/verify; generic substitution price comparison; escrow settlement. & Single-use token burn; locked to dispensary counter. \\
 \textbf{System Admin} \newline (Governance Console) & State Health Directorate or District IT Office. & User role assignment; NMC physician license verification; audit trail analysis. & Full governance audit; Row-Level Security bypass via \texttt{SECURITY DEFINER}. \\
@@ -685,21 +685,22 @@ To overcome linguistic barriers and digital illiteracy in rural outposts, Arogya
 
 Furthermore, the field screening workstation integrates the Web Speech API (\texttt{lib/voice/*}, \texttt{app/screening-screen.tsx}) to support Voice Vitals Dictation. Frontline health workers can speak conversational regional sentences. A local regular expression parser extracts numeric vital signs in real time, automatically populating the temperature, pulse, and $\text{SpO}_2$ fields without requiring manual keyboard entry.
 
-\section{ASHA Field Screening Workstation \& Offline Cache}
-The ASHA Field Workstation (\texttt{app/screening-screen.tsx}, \texttt{app/worker-workspace.tsx}) is designed specifically for rugged rural outreach. Recognizing that field workers operate in dusty environments with low-cost tablets, the UI utilizes high-contrast touch chips, large typography, and streamlined workflows.
+\section{Patient Follow-up \& Dosage Modification System}
+The Patient Follow-up module (\texttt{app/patient-followup-card.tsx}, \texttt{app/prescription-tracker.tsx}) enables citizens who have already consulted a doctor to communicate directly regarding dosage adjustments or side effects referencing their original prescription token.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.95\textwidth]{image4.png}
-    \caption{ASHA Field Worker Screening Workstation \& Local Cache State}
-    \label{fig:asha_workstation}
+    \caption{Doctor-Linked Follow-up, Dosage Modification \& Fair-Price Pharmacy Interface}
+    \label{fig:followup_system}
 \end{figure}
 
-Key capabilities demonstrated in the ASHA workstation include:
+Key capabilities demonstrated in the Patient Follow-up module include:
 \begin{itemize}[leftmargin=1.5em]
-    \item \textbf{Symptom \& Anatomical Mapping:} A visual interactive body map (\texttt{app/body-map.tsx}) allows health workers to tap anatomical zones (head, chest, abdomen, limbs) to rapidly record localized symptoms without typing lengthy text.
-    \item \textbf{Drishti Visual Lesion Camera:} Allows the frontline worker to capture high-resolution clinical photographs of dermatological lesions or skin infections, caching image blobs locally in IndexedDB for asynchronous transmission to dermatologists.
-    \item \textbf{Offline Storage Diagnostics:} An integrated diagnostics panel (\texttt{app/field-device.tsx}) monitors local storage utilization, pending sync queues, battery discharge rates, and GPS sensor accuracy, alerting the health worker before entering connectivity blackout zones.
+    \item \textbf{Prescription-Linked Follow-up Messaging:} Patients select their active prescription (e.g., \texttt{RX-9021}) and communicate specific issues (dizziness, nausea, symptoms not subsiding, or need for dose reduction) directly to the prescribing physician.
+    \item \textbf{Transparent Medicine Pricing:} When the doctor issues an adjusted prescription, the system calculates the exact Jan Aushadhi generic price in advance (e.g., Rs.~18.00 vs Rs.~85.00 branded MRP, 78.8\% savings), eliminating price inflation and hidden costs.
+    \item \textbf{100\% Non-Expired Stock Guarantee:} Every prescription revision incorporates a government batch certification guarantee (\texttt{batchVerified: true}), assuring rural citizens that dispensed formulations are authentic and strictly non-expired.
+    \item \textbf{Nearest Medicine Shop Locator:} Automatically maps the closest verified Jan Aushadhi Kendra or generic dispensary with direct contact details and turn-by-turn directions.
 \end{itemize}
 
 \section{Verified Doctor Workstation \& NMC Digital Signing}
