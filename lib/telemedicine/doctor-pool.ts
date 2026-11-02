@@ -8,6 +8,7 @@ import { createClient } from "../supabase/client.ts";
 export interface DoctorActiveSession {
   doctorId: string;
   doctorName: string;
+  doctorEmail?: string;
   isFreeNow: boolean;
   consultationFeeInr: number;
   specialization: string;
@@ -32,6 +33,7 @@ const LOCAL_DOCTOR_SESSIONS: DoctorActiveSession[] = [
   {
     doctorId: "doc-rajesh-01",
     doctorName: "Dr. Rajesh Patel (MD)",
+    doctorEmail: "bishnuprasadsatapathy7846@gmail.com",
     isFreeNow: true,
     consultationFeeInr: 50,
     specialization: "General Physician",
@@ -41,6 +43,7 @@ const LOCAL_DOCTOR_SESSIONS: DoctorActiveSession[] = [
   {
     doctorId: "doc-ananya-02",
     doctorName: "Dr. Ananya Sharma (DNB)",
+    doctorEmail: "samarpitbiswal966@gmail.com",
     isFreeNow: true,
     consultationFeeInr: 60,
     specialization: "Dermatologist / Telehealth",
@@ -50,6 +53,7 @@ const LOCAL_DOCTOR_SESSIONS: DoctorActiveSession[] = [
   {
     doctorId: "doc-subhash-03",
     doctorName: "Dr. Subhash Bose (MBBS)",
+    doctorEmail: "dr.subhash.bose@gmail.com",
     isFreeNow: false,
     consultationFeeInr: 40,
     specialization: "Primary Health & Infectious Disease",

@@ -188,10 +188,43 @@ export default function Home({
         if (!alive) return;
         if (data?.user) {
           setCurrentUser(data.user);
+          const cleanEmail = (data.user.email || "").toLowerCase().trim();
+          const isDocEmail =
+            cleanEmail === "bishnuprasadsatapathy7846@gmail.com" ||
+            cleanEmail === "samarpitbiswal966@gmail.com" ||
+            cleanEmail === "dr.patel@ruralhealth.org" ||
+            cleanEmail === "dr.ananya@health.gov.in" ||
+            cleanEmail.includes("doctor");
+          const isChemistEmail =
+            cleanEmail === "jan.aushadhi.kendra@pharma.org" ||
+            cleanEmail.includes("chemist");
+          const isRootAdmin = cleanEmail === "pratyushkiranrath4@gmail.com";
+
           supabase.from("profiles").select("*").eq("id", data.user.id).maybeSingle<Profile>().then(({ data: p }) => {
             if (alive) {
-              if (p) setCurrentProfile(p);
-              const r = p?.role || (data.user?.user_metadata?.role as any) || "patient";
+              let r = p?.role || (data.user?.user_metadata?.role as any);
+              if (isRootAdmin) r = "admin";
+              else if (isDocEmail) r = "doctor";
+              else if (isChemistEmail) r = "chemist";
+              else if (!r) r = "patient";
+
+              const finalProfile: Profile = isDocEmail
+                ? {
+                    ...(p || ({} as Profile)),
+                    id: data.user.id,
+                    email: cleanEmail,
+                    role: "doctor",
+                    display_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Dr. Ananya Sharma, MD" : "Dr. Rajesh Patel, MBBS",
+                    medical_reg_no: cleanEmail === "samarpitbiswal966@gmail.com" ? "NMC-2020-54190" : "NMC-2018-88412",
+                    council_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Delhi Medical Council" : "National Medical Commission",
+                    specialization: cleanEmail === "samarpitbiswal966@gmail.com" ? "Internal Medicine & Paediatrics" : "General Medicine & Cardiology",
+                    facility_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Community Health Centre & Rural Hospital" : "Mawlynnong Sub-Divisional Hospital & PHC",
+                    verification_status: "verified",
+                  }
+                : p || ({ id: data.user.id, email: cleanEmail, role: r, display_name: cleanEmail.split("@")[0] } as Profile);
+
+              setCurrentProfile(finalProfile);
+
               if (r === "doctor" || r === "reviewer") {
                 setActiveRole("doctor");
                 setActiveTab("cases");
@@ -222,9 +255,40 @@ export default function Home({
               try {
                 const u = JSON.parse(savedLocalUser);
                 const p = JSON.parse(savedLocalProfile);
+                const cleanEmail = (u?.email || p?.email || "").toLowerCase().trim();
+                const isDocEmail =
+                  cleanEmail === "bishnuprasadsatapathy7846@gmail.com" ||
+                  cleanEmail === "samarpitbiswal966@gmail.com" ||
+                  cleanEmail === "dr.patel@ruralhealth.org" ||
+                  cleanEmail === "dr.ananya@health.gov.in" ||
+                  cleanEmail.includes("doctor");
+                const isChemistEmail =
+                  cleanEmail === "jan.aushadhi.kendra@pharma.org" ||
+                  cleanEmail.includes("chemist");
+                const isRootAdmin = cleanEmail === "pratyushkiranrath4@gmail.com";
+
+                let r = p?.role || u?.user_metadata?.role;
+                if (isRootAdmin) r = "admin";
+                else if (isDocEmail) r = "doctor";
+                else if (isChemistEmail) r = "chemist";
+                else if (!r) r = "patient";
+
+                const finalProfile = isDocEmail
+                  ? {
+                      ...p,
+                      role: "doctor",
+                      display_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Dr. Ananya Sharma, MD" : "Dr. Rajesh Patel, MBBS",
+                      medical_reg_no: cleanEmail === "samarpitbiswal966@gmail.com" ? "NMC-2020-54190" : "NMC-2018-88412",
+                      council_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Delhi Medical Council" : "National Medical Commission",
+                      specialization: cleanEmail === "samarpitbiswal966@gmail.com" ? "Internal Medicine & Paediatrics" : "General Medicine & Cardiology",
+                      facility_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Community Health Centre & Rural Hospital" : "Mawlynnong Sub-Divisional Hospital & PHC",
+                      verification_status: "verified",
+                    }
+                  : p;
+
                 setCurrentUser(u);
-                setCurrentProfile(p);
-                const r = p?.role || u?.user_metadata?.role || "patient";
+                setCurrentProfile(finalProfile);
+
                 if (r === "doctor" || r === "reviewer") {
                   setActiveRole("doctor");
                   setActiveTab("cases");
@@ -281,10 +345,43 @@ export default function Home({
         if (!alive) return;
         setCurrentUser(session?.user ?? null);
         if (session?.user) {
+          const cleanEmail = (session.user.email || "").toLowerCase().trim();
+          const isDocEmail =
+            cleanEmail === "bishnuprasadsatapathy7846@gmail.com" ||
+            cleanEmail === "samarpitbiswal966@gmail.com" ||
+            cleanEmail === "dr.patel@ruralhealth.org" ||
+            cleanEmail === "dr.ananya@health.gov.in" ||
+            cleanEmail.includes("doctor");
+          const isChemistEmail =
+            cleanEmail === "jan.aushadhi.kendra@pharma.org" ||
+            cleanEmail.includes("chemist");
+          const isRootAdmin = cleanEmail === "pratyushkiranrath4@gmail.com";
+
           supabase.from("profiles").select("*").eq("id", session.user.id).maybeSingle<Profile>().then(({ data: p }) => {
             if (alive) {
-              if (p) setCurrentProfile(p);
-              const r = p?.role || (session.user?.user_metadata?.role as any) || "patient";
+              let r = p?.role || (session.user?.user_metadata?.role as any);
+              if (isRootAdmin) r = "admin";
+              else if (isDocEmail) r = "doctor";
+              else if (isChemistEmail) r = "chemist";
+              else if (!r) r = "patient";
+
+              const finalProfile: Profile = isDocEmail
+                ? {
+                    ...(p || ({} as Profile)),
+                    id: session.user.id,
+                    email: cleanEmail,
+                    role: "doctor",
+                    display_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Dr. Ananya Sharma, MD" : "Dr. Rajesh Patel, MBBS",
+                    medical_reg_no: cleanEmail === "samarpitbiswal966@gmail.com" ? "NMC-2020-54190" : "NMC-2018-88412",
+                    council_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Delhi Medical Council" : "National Medical Commission",
+                    specialization: cleanEmail === "samarpitbiswal966@gmail.com" ? "Internal Medicine & Paediatrics" : "General Medicine & Cardiology",
+                    facility_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Community Health Centre & Rural Hospital" : "Mawlynnong Sub-Divisional Hospital & PHC",
+                    verification_status: "verified",
+                  }
+                : p || ({ id: session.user.id, email: cleanEmail, role: r, display_name: cleanEmail.split("@")[0] } as Profile);
+
+              setCurrentProfile(finalProfile);
+
               if (r === "doctor" || r === "reviewer") {
                 setActiveRole("doctor");
                 setActiveTab("cases");

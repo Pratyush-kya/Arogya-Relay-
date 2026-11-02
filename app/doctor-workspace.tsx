@@ -44,13 +44,20 @@ export function DoctorWorkspace({
   const [prescriptionAdvice, setPrescriptionAdvice] = useState("");
   const [submittingEval, setSubmittingEval] = useState(false);
 
+  const isAnanya =
+    currentUser?.email?.includes("ananya") || currentUser?.email?.includes("samarpitbiswal966");
+
   const docName =
     currentProfile?.full_name ||
     currentProfile?.display_name ||
-    (currentUser?.email?.includes("ananya") ? "Dr. Ananya Sharma, MD" : "Dr. Rajesh Patel, MBBS");
+    (isAnanya ? "Dr. Ananya Sharma, MD" : "Dr. Rajesh Patel, MBBS");
 
-  const regNo = currentProfile?.nmc_registration_number || (currentUser?.email?.includes("ananya") ? "DOC-ANANYA" : "DOC-RAJESH");
-  const hospital = currentProfile?.hospital_affiliation || (currentUser?.email?.includes("ananya") ? "Pynursla CHC" : "Mawlynnong District Hospital");
+  const regNo = currentProfile?.nmc_registration_number || (isAnanya ? "DOC-ANANYA" : "DOC-RAJESH");
+  const hospital = currentProfile?.hospital_affiliation || (isAnanya ? "Pynursla CHC" : "Mawlynnong District Hospital");
+  const docEmail =
+    currentProfile?.email ||
+    currentUser?.email ||
+    (isAnanya ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com");
 
   // Filtering for triage cases
   const normalizedQuery = query.trim().toLowerCase();
@@ -537,7 +544,7 @@ export function DoctorWorkspace({
           </div>
         )}
 
-        {activeTab === "followups" && <DoctorFollowupManager doctorName={docName} doctorNmc={regNo} />}
+        {activeTab === "followups" && <DoctorFollowupManager doctorName={docName} doctorNmc={regNo} doctorEmail={docEmail} />}
         {activeTab === "care" && <CareGuidance />}
         {activeTab === "prescriptions" && <PrescriptionTracker userRole="doctor" />}
         {activeTab === "plan" && <CarePlanView />}

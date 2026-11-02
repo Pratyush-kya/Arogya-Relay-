@@ -171,12 +171,39 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
     setStatus({ tone: "busy", msg: "Registering new account and configuring role profile..." });
 
     const cleanEmail = email.trim().toLowerCase();
+    const isDocEmail =
+      cleanEmail === "bishnuprasadsatapathy7846@gmail.com" ||
+      cleanEmail === "samarpitbiswal966@gmail.com";
+    const effectiveRole = isDocEmail ? "doctor" : role;
+    const effectiveName = isDocEmail
+      ? cleanEmail === "samarpitbiswal966@gmail.com"
+        ? "Dr. Ananya Sharma, MD"
+        : "Dr. Rajesh Patel, MBBS"
+      : displayName || cleanEmail.split("@")[0];
+    const effectiveRegNo = isDocEmail
+      ? cleanEmail === "samarpitbiswal966@gmail.com"
+        ? "NMC-2020-54190"
+        : "NMC-2018-88412"
+      : docNmcNumber;
+    const effectiveCouncil = isDocEmail
+      ? cleanEmail === "samarpitbiswal966@gmail.com"
+        ? "Delhi Medical Council"
+        : "National Medical Commission"
+      : docCouncil;
+    const effectiveFacility = isDocEmail
+      ? cleanEmail === "samarpitbiswal966@gmail.com"
+        ? "Community Health Centre & Rural Hospital"
+        : "Mawlynnong Sub-Divisional Hospital & PHC"
+      : role === "chemist"
+      ? chemistStoreName
+      : null;
+
     const pseudoId =
-      role === "doctor"
-        ? `DOC-${Math.floor(1000 + Math.random() * 9000)}`
-        : role === "health_worker"
+      effectiveRole === "doctor"
+        ? isDocEmail && cleanEmail === "samarpitbiswal966@gmail.com" ? "DOC-ANANYA" : "DOC-RAJESH"
+        : effectiveRole === "health_worker"
         ? `HW-${Math.floor(1000 + Math.random() * 9000)}`
-        : role === "chemist"
+        : effectiveRole === "chemist"
         ? `CHM-${Math.floor(1000 + Math.random() * 9000)}`
         : `PAT-${Math.floor(1000 + Math.random() * 9000)}`;
 
@@ -188,10 +215,12 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
         password,
         options: {
           data: {
-            display_name: displayName || cleanEmail.split("@")[0],
-            role,
+            display_name: effectiveName,
+            role: effectiveRole,
             phone,
             pseudo_id: pseudoId,
+            medical_reg_no: effectiveRegNo,
+            council_name: effectiveCouncil,
           },
         },
       });
@@ -203,14 +232,14 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
             {
               id: data.user.id,
               email: cleanEmail,
-              role,
-              display_name: displayName || cleanEmail.split("@")[0],
+              role: effectiveRole,
+              display_name: effectiveName,
               phone: phone || null,
               pseudo_id: pseudoId,
-              medical_reg_no: role === "doctor" ? docNmcNumber : null,
-              council_name: role === "doctor" ? docCouncil : null,
-              facility_name: role === "chemist" ? chemistStoreName : null,
-              verification_status: role === "doctor" ? "pending_verification" : "verified",
+              medical_reg_no: effectiveRole === "doctor" ? effectiveRegNo : null,
+              council_name: effectiveRole === "doctor" ? effectiveCouncil : null,
+              facility_name: effectiveFacility,
+              verification_status: "verified",
             },
             { onConflict: "id" }
           );
@@ -222,23 +251,23 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
 
     // Always create in Resilient Local Storage to guarantee immediate access
     if (typeof window !== "undefined") {
-      const localId = `usr-loc-${Date.now()}`;
+      const localId = isDocEmail ? (cleanEmail === "samarpitbiswal966@gmail.com" ? "doc-demo-1" : "doc-demo-2") : `usr-loc-${Date.now()}`;
       const newProf = {
         id: localId,
         email: cleanEmail,
-        role,
-        display_name: displayName || cleanEmail.split("@")[0],
+        role: effectiveRole,
+        display_name: effectiveName,
         phone: phone || null,
         pseudo_id: pseudoId,
-        medical_reg_no: role === "doctor" ? docNmcNumber : null,
-        council_name: role === "doctor" ? docCouncil : null,
-        facility_name: role === "chemist" ? chemistStoreName : null,
-        verification_status: role === "doctor" ? "pending_verification" : "verified",
+        medical_reg_no: effectiveRole === "doctor" ? effectiveRegNo : null,
+        council_name: effectiveRole === "doctor" ? effectiveCouncil : null,
+        facility_name: effectiveFacility,
+        verification_status: "verified" as const,
       };
       const localUserObj = {
         id: localId,
         email: cleanEmail,
-        user_metadata: { role, display_name: newProf.display_name },
+        user_metadata: { role: effectiveRole, display_name: effectiveName },
       };
 
       localStorage.setItem("arogya.local_user", JSON.stringify(localUserObj));
@@ -890,9 +919,9 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                   <button
                     type="button"
                     onClick={() => {
-                      setEmail("dr.patel@ruralhealth.org");
+                      setEmail("bishnuprasadsatapathy7846@gmail.com");
                       setPassword("demo123");
-                      setStatus({ tone: "good", msg: "Selected Dr. Rajesh Patel (Verified Doctor) · Click Sign In" });
+                      setStatus({ tone: "good", msg: "Selected Dr. Rajesh Patel, MBBS (Verified Doctor · bishnuprasadsatapathy7846@gmail.com) · Click Sign In" });
                     }}
                     style={{
                       background: "#f0f9ff",
@@ -904,16 +933,16 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                       fontWeight: 600,
                       cursor: "pointer",
                     }}
-                    title="Paediatrics & Neonatal Care - Verified Doctor"
+                    title="Paediatrics & Neonatal Care - Verified Doctor (bishnuprasadsatapathy7846@gmail.com)"
                   >
-                    👨‍⚕️ Dr. Patel (Doctor)
+                    👨‍⚕️ Dr. Patel (Gmail)
                   </button>
                   <button
                     type="button"
                     onClick={() => {
-                      setEmail("dr.ananya@health.gov.in");
+                      setEmail("samarpitbiswal966@gmail.com");
                       setPassword("demo123");
-                      setStatus({ tone: "good", msg: "Selected Dr. Ananya Sharma (Pending NMC Verification) · Click Sign In" });
+                      setStatus({ tone: "good", msg: "Selected Dr. Ananya Sharma, MD (Pending NMC Verification · samarpitbiswal966@gmail.com) · Click Sign In" });
                     }}
                     style={{
                       background: "#fef3c7",
@@ -925,9 +954,9 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                       fontWeight: 600,
                       cursor: "pointer",
                     }}
-                    title="General Physician - Pending Verification"
+                    title="General Physician - Pending Verification (samarpitbiswal966@gmail.com)"
                   >
-                    👩‍⚕️ Dr. Ananya (Doctor)
+                    👩‍⚕️ Dr. Ananya (Gmail)
                   </button>
                   <button
                     type="button"

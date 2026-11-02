@@ -62,11 +62,13 @@ const SEED_FOLLOWUPS: PrescriptionFollowUpRequest[] = [
     patientName: "Ramesh Soren",
     doctorName: "Dr. Rajesh Patel, MBBS",
     doctorNmc: "NMC-2018-88412",
+    doctorEmail: "bishnuprasadsatapathy7846@gmail.com",
+    handledByAi: false,
     issueType: "side_effect",
     patientMessage: "Doctor sir, since starting Amlodipine 5mg I am feeling slight dizziness in the morning and ankle swelling. Can you please check and adjust my dose?",
     reportedAt: new Date(Date.now() - 3600000 * 4).toISOString(),
     status: "doctor_revised",
-    doctorReply: "Reviewed your blood pressure history. I have reduced Amlodipine to 2.5mg and added a low-salt dietary advice. Please collect the new tablets from Jan Aushadhi Kendra #7402.",
+    doctorReply: "Direct clinical review by Dr. Rajesh Patel (via registered Gmail/portal): Reviewed your blood pressure history. I have reduced Amlodipine to 2.5mg and added low-salt dietary advice. Please collect the new tablets from Jan Aushadhi Kendra #7402.",
     revisedMedicines: [
       {
         id: "m-amlo-rev",
@@ -103,39 +105,13 @@ const SEED_FOLLOWUPS: PrescriptionFollowUpRequest[] = [
     patientName: "Ramesh Soren",
     doctorName: "Dr. Ananya Sharma, MD",
     doctorNmc: "NMC-2020-54190",
+    doctorEmail: "samarpitbiswal966@gmail.com",
+    handledByAi: false,
     issueType: "dose_change",
     patientMessage: "Dr. Ananya, my throat irritation has settled, but I still have mild body fatigue. How should I adjust my dosage?",
-    reportedAt: new Date(Date.now() - 3600000 * 8).toISOString(),
-    status: "doctor_revised",
-    doctorReply: "Clinical parameters look stable. I have prescribed Multivitamin Zinc supplements and oral rehydration salt for fatigue. Keep hydrated and take tablets post meals.",
-    revisedMedicines: [
-      {
-        id: "m-zinc-rev",
-        name: "Zincovit Generic (Zinc + Multi)",
-        strength: "50mg",
-        form: "tablet",
-        dose: "1 tablet daily after breakfast",
-        foodRelation: "after_food",
-        slots: { morning: true },
-        customTimes: ["08:00"],
-        durationDays: 10,
-        startDate: new Date().toISOString().slice(0, 10),
-        instructions: "Take once daily in morning with water.",
-      },
-    ],
-    suggestedChemist: {
-      id: "ph-02",
-      name: "Community Health Centre Jan Aushadhi Counter",
-      address: "Rural CHC Gate #2, Hospital Road",
-      phone: "+91 94371 67890",
-      distanceKm: 2.1,
-    },
-    totalPriceInr: 22.0,
-    mrpPriceInr: 95.0,
-    savingsPercent: 76.8,
-    batchVerified: true,
-    expirySafeDate: "Jan 2028 (Batch ZN-7714)",
-    doctorAuditStatus: "pending_dispense",
+    reportedAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+    status: "pending_doctor_review",
+    doctorReply: undefined,
   },
 ];
 
@@ -203,6 +179,7 @@ export function saveLocalFollowUp(request: PrescriptionFollowUpRequest): void {
     next = [request, ...current];
   }
   localStorage.setItem(FOLLOWUP_STORAGE_KEY, JSON.stringify(next));
+  window.dispatchEvent(new CustomEvent("arogya:followup:updated", { detail: request }));
 }
 
 export function getFollowUpsForPatient(patientRef: string): PrescriptionFollowUpRequest[] {

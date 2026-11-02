@@ -21,6 +21,7 @@ import {
   type FollowUpIssueType,
   type PrescriptionFollowUpRequest,
   TWO_AVAILABLE_DOCTORS,
+  getDoctorGmailComposeUrl,
 } from "@/lib/prescriptions/types";
 import { useLanguage } from "@/lib/i18n/provider";
 import { ReadAloud } from "./read-aloud";
@@ -145,6 +146,17 @@ export default function PrescriptionTracker({
     }
 
     void syncPrescriptions();
+
+    function onFollowupUpdate() {
+      const refreshed = getLocalFollowUps();
+      setFollowups(refreshed);
+    }
+    window.addEventListener("arogya:followup:updated", onFollowupUpdate);
+    window.addEventListener("storage", onFollowupUpdate);
+    return () => {
+      window.removeEventListener("arogya:followup:updated", onFollowupUpdate);
+      window.removeEventListener("storage", onFollowupUpdate);
+    };
   }, []);
 
   function refreshReminders(updatedList: PatientPrescription[]) {
@@ -209,9 +221,9 @@ export default function PrescriptionTracker({
     setIsSubmittingReport(true);
 
     const chosenDoctor = TWO_AVAILABLE_DOCTORS.find((d) => d.id === selectedDoctorId) || TWO_AVAILABLE_DOCTORS[0];
-    const isPatel = chosenDoctor.id === "doc-rajesh";
     const newFollowupId = `FUP-${Date.now().toString(36).toUpperCase()}`;
 
+    // Direct routing to licensed doctor's queue (NO AI answering)
     const newReq: PrescriptionFollowUpRequest = {
       id: newFollowupId,
       prescriptionId: selectedRxId || "RX-9021",
@@ -219,78 +231,12 @@ export default function PrescriptionTracker({
       patientName: "Ramesh Soren",
       doctorName: chosenDoctor.name,
       doctorNmc: chosenDoctor.nmcNumber,
+      doctorEmail: chosenDoctor.email,
+      handledByAi: false,
       issueType: reportIssueType,
       patientMessage: reportMessage.trim(),
       reportedAt: new Date().toISOString(),
-      status: "doctor_revised",
-      doctorReply: isPatel
-        ? "Reviewed your symptoms and blood pressure history. I have reduced your Amlodipine dose to 2.5mg to relieve dizziness and fatigue, and added low-salt dietary advice. Please collect the verified generic tablets from Jan Aushadhi Kendra #7402."
-        : "Evaluated your clinical report and symptoms. I have prescribed Multivitamin Zinc supplements and oral fluids for recovery. Take tablets post-breakfast with water. Please collect the verified batch from CHC Jan Aushadhi Counter.",
-      revisedMedicines: isPatel
-        ? [
-            {
-              id: `m-amlo-${Date.now().toString(36)}`,
-              name: "Amlodipine (Low Dose)",
-              strength: "2.5mg",
-              form: "tablet",
-              dose: "1 tablet once daily morning",
-              foodRelation: "after_food",
-              slots: { morning: true },
-              customTimes: ["08:00"],
-              durationDays: 14,
-              startDate: new Date().toISOString().slice(0, 10),
-              instructions: "Take 2.5mg half-tablet after food. Elevate legs when resting.",
-            },
-          ]
-        : [
-            {
-              id: `m-zinc-${Date.now().toString(36)}`,
-              name: "Zincovit Generic (Multivitamin)",
-              strength: "50mg",
-              form: "tablet",
-              dose: "1 tablet once daily morning",
-              foodRelation: "after_food",
-              slots: { morning: true },
-              customTimes: ["08:00"],
-              durationDays: 10,
-              startDate: new Date().toISOString().slice(0, 10),
-              instructions: "Take once daily in morning with water.",
-            },
-            {
-              id: `m-para-${Date.now().toString(36)}`,
-              name: "Paracetamol (PMBJP Generic)",
-              strength: "500mg",
-              form: "tablet",
-              dose: "1 tablet only if fever persists",
-              foodRelation: "after_food",
-              slots: { evening: true },
-              customTimes: ["18:00"],
-              durationDays: 3,
-              startDate: new Date().toISOString().slice(0, 10),
-              instructions: "SOS only when fever > 100°F.",
-            },
-          ],
-      suggestedChemist: isPatel
-        ? {
-            id: "ph-01",
-            name: "Pradhan Mantri Jan Aushadhi Kendra #7402",
-            address: "Main Market Road, near Block Office",
-            phone: "+91 94370 12345",
-            distanceKm: 1.2,
-          }
-        : {
-            id: "ph-02",
-            name: "Community Health Centre Dispensary & Jan Aushadhi Store",
-            address: "Rural CHC Gate #2, Hospital Road",
-            phone: "+91 94371 67890",
-            distanceKm: 2.1,
-          },
-      totalPriceInr: isPatel ? 18.0 : 24.5,
-      mrpPriceInr: isPatel ? 85.0 : 120.0,
-      savingsPercent: isPatel ? 78.8 : 79.5,
-      batchVerified: true,
-      expirySafeDate: isPatel ? "Dec 2027 (Batch JAK-9982)" : "Jan 2028 (Batch ZN-7714)",
-      doctorAuditStatus: "pending_dispense",
+      status: "pending_doctor_review",
     };
 
     saveLocalFollowUp(newReq);
@@ -301,7 +247,7 @@ export default function PrescriptionTracker({
     setReportFilePreview(null);
     if (reportFileInputRef.current) reportFileInputRef.current.value = "";
     setIsSubmittingReport(false);
-    setStatusMessage(`Report successfully submitted to ${chosenDoctor.name}! Doctor response and fair-price medicine details are ready below.`);
+    setStatusMessage(`Report delivered to ${chosenDoctor.name}. No AI answers your health query — it is queued for human doctor review and forwarded to ${chosenDoctor.email}.`);
     setActivePatientSection("response");
   }
 
@@ -687,7 +633,26 @@ export default function PrescriptionTracker({
                         <div style={{ fontSize: "11px", fontWeight: 700, color: "#059669", marginTop: "2px" }}>
                           ✓ {doc.nmcNumber} (NMC Verified)
                         </div>
-                        <p style={{ margin: "4px 0 2px", fontSize: "12.5px", color: "var(--foreground, #1e293b)" }}>
+                        <div style={{ margin: "4px 0 2px", fontSize: "12px", color: "#0369a1", fontWeight: 600 }}>
+                          📧 Attached Gmail:{" "}
+                          <span style={{ textDecoration: "underline", wordBreak: "break-all" }}>{doc.email}</span>
+                        </div>
+                        <div
+                          style={{
+                            display: "inline-block",
+                            background: "#fef3c7",
+                            border: "1px solid #fde68a",
+                            color: "#92400e",
+                            fontSize: "10.5px",
+                            fontWeight: 700,
+                            padding: "2px 6px",
+                            borderRadius: "4px",
+                            margin: "2px 0 4px",
+                          }}
+                        >
+                          🛡️ Human Doctor Only · No AI Handling
+                        </div>
+                        <p style={{ margin: "2px 0 2px", fontSize: "12.5px", color: "var(--foreground, #1e293b)" }}>
                           {doc.specialization} · {doc.experience}
                         </p>
                         <p style={{ margin: 0, fontSize: "11.5px", color: "var(--muted, #64748b)" }}>
@@ -885,6 +850,29 @@ export default function PrescriptionTracker({
               )}
             </div>
 
+            {/* Guarantee and Direct Gmail Option */}
+            <div
+              style={{
+                background: "#f0f9ff",
+                border: "1.5px solid #bae6fd",
+                borderRadius: "10px",
+                padding: "12px 16px",
+                fontSize: "12.5px",
+                color: "#0369a1",
+                display: "flex",
+                flexDirection: "column",
+                gap: "6px",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 700 }}>
+                <span>🛡️</span>
+                <span>No AI Medical Handling · Direct Human Doctor Review Guaranteed</span>
+              </div>
+              <p style={{ margin: 0, fontSize: "12px", color: "#0c4a6e" }}>
+                Your clinical query is answered exclusively by licensed human physicians (Dr. Rajesh Patel, MBBS or Dr. Ananya Sharma, MD). If you prefer sending an email directly from your own Gmail account, click &quot;Compose via Gmail&quot; below.
+              </p>
+            </div>
+
             {/* Submit Action */}
             <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
               <button
@@ -902,8 +890,40 @@ export default function PrescriptionTracker({
               >
                 {isSubmittingReport
                   ? "Delivering to Doctor..."
-                  : `🚀 Submit Report to ${TWO_AVAILABLE_DOCTORS.find((d) => d.id === selectedDoctorId)?.name || "Doctor"}`}
+                  : `🚀 Submit to ${TWO_AVAILABLE_DOCTORS.find((d) => d.id === selectedDoctorId)?.name || "Doctor"}`}
               </button>
+
+              {(() => {
+                const targetDoc = TWO_AVAILABLE_DOCTORS.find((d) => d.id === selectedDoctorId) || TWO_AVAILABLE_DOCTORS[0];
+                return (
+                  <a
+                    href={getDoctorGmailComposeUrl(
+                      targetDoc.email,
+                      `[Arogya-Relay Consultation] ${reportIssueType.replace("_", " ")} - ${patientRef || "PT-RAMESH-01"}`,
+                      `Respected ${targetDoc.name},\n\nPrescription Ref: ${selectedRxId || "RX-9021"}\nPatient: Ramesh Soren\nIssue: ${reportIssueType}\n\nSymptoms / Inquiry:\n${reportMessage.trim() || "[Please state your symptoms or questions]"}\n\n(Direct consultation email - Human doctor review, No AI handling)`
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      fontSize: "13px",
+                      padding: "11px 18px",
+                      borderRadius: "10px",
+                      background: "#ffffff",
+                      border: "1.5px solid #0284c7",
+                      color: "#0369a1",
+                      fontWeight: 700,
+                      textDecoration: "none",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <span>✉️</span>
+                    <span>Compose via Gmail ({targetDoc.email})</span>
+                  </a>
+                );
+              })()}
 
               <button
                 type="button"
@@ -1047,9 +1067,9 @@ export default function PrescriptionTracker({
 
                 <div
                   style={{
-                    background: "#ecfdf5",
-                    border: "1px solid #86efac",
-                    color: "#166534",
+                    background: activeFollowup.status === "doctor_revised" ? "#ecfdf5" : "#fffbeb",
+                    border: `1px solid ${activeFollowup.status === "doctor_revised" ? "#86efac" : "#fde68a"}`,
+                    color: activeFollowup.status === "doctor_revised" ? "#166534" : "#92400e",
                     padding: "4px 12px",
                     borderRadius: "20px",
                     fontSize: "12px",
@@ -1059,8 +1079,12 @@ export default function PrescriptionTracker({
                     gap: "6px",
                   }}
                 >
-                  <span>✅</span>
-                  <span>Revised Prescription Confirmed</span>
+                  <span>{activeFollowup.status === "doctor_revised" ? "✅" : "⏳"}</span>
+                  <span>
+                    {activeFollowup.status === "doctor_revised"
+                      ? "Revised Prescription Confirmed (Human Doctor)"
+                      : "Pending Human Doctor Review (AI Disabled)"}
+                  </span>
                 </div>
               </div>
 
@@ -1074,268 +1098,418 @@ export default function PrescriptionTracker({
                   fontSize: "13px",
                 }}
               >
-                <strong style={{ display: "block", color: "var(--muted, #64748b)", fontSize: "11.5px", textTransform: "uppercase" }}>
-                  Your Submitted Symptom / Issue Note:
-                </strong>
-                <p style={{ margin: "4px 0 0", color: "var(--foreground, #1e293b)", fontStyle: "italic" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "6px" }}>
+                  <strong style={{ display: "block", color: "var(--muted, #64748b)", fontSize: "11.5px", textTransform: "uppercase" }}>
+                    Your Submitted Symptom / Issue Note:
+                  </strong>
+                  <span style={{ fontSize: "11.5px", color: "#0369a1", fontWeight: 600 }}>
+                    Assigned to: {activeFollowup.doctorName} (Gmail: {activeFollowup.doctorEmail || (activeFollowup.doctorName.includes("Ananya") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com")})
+                  </span>
+                </div>
+                <p style={{ margin: "6px 0 0", color: "var(--foreground, #1e293b)", fontStyle: "italic" }}>
                   &ldquo;{activeFollowup.patientMessage}&rdquo;
                 </p>
               </div>
 
-              {/* Doctor's Clinical Advice Note with Read Aloud */}
-              <div
-                style={{
-                  background: "#f0f9ff",
-                  border: "1.5px solid #bae6fd",
-                  borderRadius: "12px",
-                  padding: "16px 20px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "10px",
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <strong style={{ fontSize: "14px", color: "#0369a1", display: "flex", alignItems: "center", gap: "6px" }}>
-                    <span>🩺</span>
-                    <span>Doctor&apos;s Advice &amp; Clinical Modification</span>
-                  </strong>
-                  {activeFollowup.doctorReply && <ReadAloud text={activeFollowup.doctorReply} />}
-                </div>
-                <p style={{ margin: 0, fontSize: "13.5px", color: "#0c4a6e", lineHeight: 1.5 }}>
-                  {activeFollowup.doctorReply || "Clinical review complete. Take the prescribed medicines below as scheduled."}
-                </p>
-              </div>
-
-              {/* Revised Medicines Breakdown */}
-              {activeFollowup.revisedMedicines && activeFollowup.revisedMedicines.length > 0 && (
-                <div>
-                  <strong style={{ fontSize: "14px", display: "block", marginBottom: "10px", color: "var(--foreground, #0f172a)" }}>
-                    💊 Revised Medicines &amp; Dosages:
-                  </strong>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                    {activeFollowup.revisedMedicines.map((med) => (
-                      <div
-                        key={med.id}
-                        style={{
-                          background: "var(--surface, #ffffff)",
-                          border: "1px solid #bae6fd",
-                          borderRadius: "10px",
-                          padding: "12px 16px",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          flexWrap: "wrap",
-                          gap: "10px",
-                        }}
-                      >
-                        <div>
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            <strong style={{ fontSize: "14.5px", color: "#0369a1" }}>
-                              {med.name} {med.strength}
-                            </strong>
-                            <span
-                              style={{
-                                background: "#f1f5f9",
-                                padding: "2px 8px",
-                                borderRadius: "6px",
-                                fontSize: "11px",
-                                color: "#475569",
-                                textTransform: "capitalize",
-                              }}
-                            >
-                              {med.form}
-                            </span>
-                          </div>
-                          <p style={{ margin: "3px 0 0", fontSize: "12.5px", color: "var(--muted, #64748b)" }}>
-                            Dose: <strong>{med.dose}</strong> · 🍽️ {med.foodRelation.replace("_", " ")} · {med.instructions}
-                          </p>
-                        </div>
-
-                        <div style={{ display: "flex", gap: "6px", fontSize: "11.5px", fontWeight: 700 }}>
-                          {med.slots.morning && (
-                            <span style={{ background: "#fef3c7", color: "#b45309", padding: "3px 8px", borderRadius: "6px" }}>
-                              ☀️ 08:00 AM
-                            </span>
-                          )}
-                          {med.slots.afternoon && (
-                            <span style={{ background: "#ffedd5", color: "#c2410c", padding: "3px 8px", borderRadius: "6px" }}>
-                              🌤️ 01:00 PM
-                            </span>
-                          )}
-                          {med.slots.evening && (
-                            <span style={{ background: "#ede9fe", color: "#6d28d9", padding: "3px 8px", borderRadius: "6px" }}>
-                              🌆 06:00 PM
-                            </span>
-                          )}
-                          {med.slots.night && (
-                            <span style={{ background: "#e0e7ff", color: "#3730a3", padding: "3px 8px", borderRadius: "6px" }}>
-                              🌙 09:00 PM
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Transparent Fair Price Guarantee (Jan Aushadhi vs Branded) */}
-              <div
-                style={{
-                  background: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)",
-                  border: "1.5px solid #86efac",
-                  borderRadius: "14px",
-                  padding: "18px 22px",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                  gap: "16px",
-                }}
-              >
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ fontSize: "20px" }}>🛡️</span>
-                    <strong style={{ fontSize: "14.5px", color: "#166534" }}>
-                      Transparent Fair Price Guarantee · No Fake / Inflated Rates
-                    </strong>
-                  </div>
-                  <p style={{ margin: "4px 0 0", fontSize: "12.5px", color: "#15803d", maxWidth: "620px" }}>
-                    All medicines listed are backed by PMBJP (Pradhan Mantri Bhartiya Janaushadhi Pariyojana) quality assurance. Direct batch verifier:{" "}
-                    <strong>{activeFollowup.expirySafeDate || "Dec 2027 (Batch JAK-9982)"}</strong> with zero expired products.
-                  </p>
-                </div>
-
+              {activeFollowup.status === "pending_doctor_review" ? (
+                /* Pending Human Doctor Review View - NO AI */
                 <div
                   style={{
-                    background: "#ffffff",
-                    border: "1.5px solid #86efac",
-                    borderRadius: "12px",
-                    padding: "10px 18px",
-                    textAlign: "right",
-                  }}
-                >
-                  <span style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase", display: "block" }}>
-                    Jan Aushadhi Fair Price
-                  </span>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: "8px", justifyContent: "flex-end" }}>
-                    <strong style={{ fontSize: "20px", color: "#166534" }}>
-                      ₹{activeFollowup.totalPriceInr?.toFixed(2) || "18.00"}
-                    </strong>
-                    <span style={{ fontSize: "12px", textDecoration: "line-through", color: "#94a3b8" }}>
-                      ₹{activeFollowup.mrpPriceInr?.toFixed(2) || "85.00"} MRP
-                    </span>
-                  </div>
-                  <span style={{ fontSize: "11px", fontWeight: 700, color: "#15803d" }}>
-                    You Save {activeFollowup.savingsPercent || 78.8}%
-                  </span>
-                </div>
-              </div>
-
-              {/* Nearest Suggested Medicine Shop / Chemist */}
-              {activeFollowup.suggestedChemist && (
-                <div
-                  style={{
-                    background: "var(--surface-muted, #f8fafc)",
-                    border: "1px solid var(--line, #e2e8f0)",
-                    borderRadius: "12px",
-                    padding: "16px 20px",
+                    background: "#fffbeb",
+                    border: "1.5px solid #fde68a",
+                    borderRadius: "14px",
+                    padding: "22px 24px",
                     display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    flexWrap: "wrap",
-                    gap: "12px",
+                    flexDirection: "column",
+                    gap: "16px",
                   }}
                 >
-                  <div>
-                    <span style={{ fontSize: "11px", textTransform: "uppercase", fontWeight: 700, color: "var(--muted, #64748b)" }}>
-                      Nearest Verified Medicine Shop (Doctor Recommended)
-                    </span>
-                    <strong style={{ fontSize: "15px", display: "block", color: "var(--foreground, #0f172a)", marginTop: "2px" }}>
-                      🏪 {activeFollowup.suggestedChemist.name}
-                    </strong>
-                    <p style={{ margin: "2px 0 0", fontSize: "12.5px", color: "var(--muted, #64748b)" }}>
-                      📍 {activeFollowup.suggestedChemist.address} · {activeFollowup.suggestedChemist.distanceKm || 1.2} km away
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+                    <span style={{ fontSize: "34px", lineHeight: 1 }}>⏳</span>
+                    <div>
+                      <strong style={{ fontSize: "16px", color: "#92400e", display: "block" }}>
+                        Awaiting Human Medical Review · AI Answering is Strictly Disabled
+                      </strong>
+                      <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#b45309", lineHeight: 1.5 }}>
+                        To safeguard clinical accuracy and patient health, <strong>no automated AI is allowed to handle or answer queries</strong> on behalf of {activeFollowup.doctorName}. This inquiry is queued exclusively for human evaluation.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      background: "#ffffff",
+                      border: "1px solid #fde68a",
+                      borderRadius: "10px",
+                      padding: "16px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "8px",
+                      fontSize: "13px",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ fontSize: "18px" }}>📧</span>
+                      <span style={{ fontWeight: 600, color: "#1e293b" }}>
+                        Doctor&apos;s Attached Gmail:{" "}
+                        <strong style={{ color: "#0369a1" }}>
+                          {activeFollowup.doctorEmail || (activeFollowup.doctorName.includes("Ananya") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com")}
+                        </strong>
+                      </span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: "12px", color: "#64748b" }}>
+                      You can write directly to the doctor&apos;s personal Gmail box from your email app, or wait for them to record their review in the Doctor Workspace.
                     </p>
                   </div>
 
-                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                    {activeFollowup.suggestedChemist.phone && (
-                      <a
-                        href={`tel:${activeFollowup.suggestedChemist.phone}`}
-                        style={{
-                          background: "#047857",
-                          color: "#ffffff",
-                          padding: "8px 14px",
-                          borderRadius: "8px",
-                          fontSize: "12.5px",
-                          fontWeight: 700,
-                          textDecoration: "none",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "6px",
-                        }}
-                      >
-                        📞 Call Chemist
-                      </a>
-                    )}
-                    {onNavigateToTab && (
-                      <button
-                        type="button"
-                        onClick={() => onNavigateToTab("nearby")}
-                        className="secondary-button"
-                        style={{ fontSize: "12px", padding: "8px 14px" }}
-                      >
-                        ⌖ View Map
-                      </button>
-                    )}
+                  <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+                    <a
+                      href={getDoctorGmailComposeUrl(
+                        activeFollowup.doctorEmail || (activeFollowup.doctorName.includes("Ananya") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com"),
+                        `[Arogya-Relay Case ${activeFollowup.id}] Consultation Inquiry for ${activeFollowup.doctorName}`,
+                        `Respected ${activeFollowup.doctorName},\n\nI have submitted a clinical consultation request on Arogya-Relay.\n\nCase ID: ${activeFollowup.id}\nPrescription Reference: ${activeFollowup.prescriptionId}\nPatient Name: ${activeFollowup.patientName}\n\nSymptoms / Issue Note:\n${activeFollowup.patientMessage}\n\nPlease reply with your medical advice at your earliest convenience.\n\nThank you,\n${activeFollowup.patientName}`
+                      )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        background: "#0369a1",
+                        color: "#ffffff",
+                        padding: "10px 18px",
+                        borderRadius: "8px",
+                        fontWeight: 700,
+                        fontSize: "13px",
+                        textDecoration: "none",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <span>✉️</span>
+                      <span>Open in Gmail to Message {activeFollowup.doctorName} Directly</span>
+                    </a>
+
+                    <a
+                      href={`mailto:${activeFollowup.doctorEmail || (activeFollowup.doctorName.includes("Ananya") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com")}?subject=${encodeURIComponent(`[Arogya-Relay Case ${activeFollowup.id}] Consultation Inquiry`)}&body=${encodeURIComponent(`Respected ${activeFollowup.doctorName},\n\nCase ID: ${activeFollowup.id}\nPrescription: ${activeFollowup.prescriptionId}\nPatient: ${activeFollowup.patientName}\n\nNote:\n${activeFollowup.patientMessage}`)}`}
+                      className="secondary-button"
+                      style={{
+                        padding: "9px 16px",
+                        borderRadius: "8px",
+                        fontSize: "12.5px",
+                        textDecoration: "none",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                      }}
+                    >
+                      <span>📨</span>
+                      <span>Default Email Client</span>
+                    </a>
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "flex-start", paddingTop: "8px", borderTop: "1px dashed #fde68a" }}>
+                    <button
+                      type="button"
+                      onClick={() => setActivePatientSection("submit")}
+                      className="secondary-button"
+                      style={{ fontSize: "12.5px", padding: "8px 16px", borderRadius: "8px" }}
+                    >
+                      ← Submit Another Query
+                    </button>
                   </div>
                 </div>
+              ) : (
+                /* Doctor Has Reviewed View */
+                <>
+                  {/* Doctor's Clinical Advice Note with Read Aloud */}
+                  <div
+                    style={{
+                      background: "#f0f9ff",
+                      border: "1.5px solid #bae6fd",
+                      borderRadius: "12px",
+                      padding: "16px 20px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "10px",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <strong style={{ fontSize: "14px", color: "#0369a1", display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span>🩺</span>
+                        <span>Doctor&apos;s Advice &amp; Clinical Modification (Human Doctor Signed)</span>
+                      </strong>
+                      {activeFollowup.doctorReply && <ReadAloud text={activeFollowup.doctorReply} />}
+                    </div>
+                    <p style={{ margin: 0, fontSize: "13.5px", color: "#0c4a6e", lineHeight: 1.5 }}>
+                      {activeFollowup.doctorReply || "Clinical review complete. Take the prescribed medicines below as scheduled."}
+                    </p>
+                  </div>
+
+                  {/* Doctor Attached Gmail Contact Notice */}
+                  <div
+                    style={{
+                      background: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "10px",
+                      padding: "10px 16px",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                      gap: "8px",
+                      fontSize: "12px",
+                    }}
+                  >
+                    <span style={{ color: "#334155" }}>
+                      📧 Have questions about this revision? Contact <strong>{activeFollowup.doctorName}</strong> directly at{" "}
+                      <strong>{activeFollowup.doctorEmail || (activeFollowup.doctorName.includes("Ananya") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com")}</strong>
+                    </span>
+                    <a
+                      href={getDoctorGmailComposeUrl(
+                        activeFollowup.doctorEmail || (activeFollowup.doctorName.includes("Ananya") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com"),
+                        `[Follow-Up] Question on Prescription ${activeFollowup.prescriptionId}`,
+                        `Respected ${activeFollowup.doctorName},\n\nI have a follow-up question regarding my revised prescription.\n\nThank you,\n${activeFollowup.patientName}`
+                      )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: "#0284c7", fontWeight: 700, textDecoration: "underline" }}
+                    >
+                      Email Doctor on Gmail →
+                    </a>
+                  </div>
+
+                  {/* Revised Medicines Breakdown */}
+                  {activeFollowup.revisedMedicines && activeFollowup.revisedMedicines.length > 0 && (
+                    <div>
+                      <strong style={{ fontSize: "14px", display: "block", marginBottom: "10px", color: "var(--foreground, #0f172a)" }}>
+                        💊 Revised Medicines &amp; Dosages:
+                      </strong>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                        {activeFollowup.revisedMedicines.map((med) => (
+                          <div
+                            key={med.id}
+                            style={{
+                              background: "var(--surface, #ffffff)",
+                              border: "1px solid #bae6fd",
+                              borderRadius: "10px",
+                              padding: "12px 16px",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              flexWrap: "wrap",
+                              gap: "10px",
+                            }}
+                          >
+                            <div>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <strong style={{ fontSize: "14.5px", color: "#0369a1" }}>
+                                  {med.name} {med.strength}
+                                </strong>
+                                <span
+                                  style={{
+                                    background: "#f1f5f9",
+                                    padding: "2px 8px",
+                                    borderRadius: "6px",
+                                    fontSize: "11px",
+                                    color: "#475569",
+                                    textTransform: "capitalize",
+                                  }}
+                                >
+                                  {med.form}
+                                </span>
+                              </div>
+                              <p style={{ margin: "3px 0 0", fontSize: "12.5px", color: "var(--muted, #64748b)" }}>
+                                Dose: <strong>{med.dose}</strong> · 🍽️ {med.foodRelation.replace("_", " ")} · {med.instructions}
+                              </p>
+                            </div>
+
+                            <div style={{ display: "flex", gap: "6px", fontSize: "11.5px", fontWeight: 700 }}>
+                              {med.slots.morning && (
+                                <span style={{ background: "#fef3c7", color: "#b45309", padding: "3px 8px", borderRadius: "6px" }}>
+                                  ☀️ 08:00 AM
+                                </span>
+                              )}
+                              {med.slots.afternoon && (
+                                <span style={{ background: "#ffedd5", color: "#c2410c", padding: "3px 8px", borderRadius: "6px" }}>
+                                  🌤️ 01:00 PM
+                                </span>
+                              )}
+                              {med.slots.evening && (
+                                <span style={{ background: "#ede9fe", color: "#6d28d9", padding: "3px 8px", borderRadius: "6px" }}>
+                                  🌆 06:00 PM
+                                </span>
+                              )}
+                              {med.slots.night && (
+                                <span style={{ background: "#e0e7ff", color: "#3730a3", padding: "3px 8px", borderRadius: "6px" }}>
+                                  🌙 09:00 PM
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Transparent Fair Price Guarantee (Jan Aushadhi vs Branded) */}
+                  <div
+                    style={{
+                      background: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)",
+                      border: "1.5px solid #86efac",
+                      borderRadius: "14px",
+                      padding: "18px 22px",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                      gap: "16px",
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ fontSize: "20px" }}>🛡️</span>
+                        <strong style={{ fontSize: "14.5px", color: "#166534" }}>
+                          Transparent Fair Price Guarantee · No Fake / Inflated Rates
+                        </strong>
+                      </div>
+                      <p style={{ margin: "4px 0 0", fontSize: "12.5px", color: "#15803d", maxWidth: "620px" }}>
+                        All medicines listed are backed by PMBJP (Pradhan Mantri Bhartiya Janaushadhi Pariyojana) quality assurance. Direct batch verifier:{" "}
+                        <strong>{activeFollowup.expirySafeDate || "Dec 2027 (Batch JAK-9982)"}</strong> with zero expired products.
+                      </p>
+                    </div>
+
+                    <div
+                      style={{
+                        background: "#ffffff",
+                        border: "1.5px solid #86efac",
+                        borderRadius: "12px",
+                        padding: "10px 18px",
+                        textAlign: "right",
+                      }}
+                    >
+                      <span style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase", display: "block" }}>
+                        Jan Aushadhi Fair Price
+                      </span>
+                      <div style={{ display: "flex", alignItems: "baseline", gap: "8px", justifyContent: "flex-end" }}>
+                        <strong style={{ fontSize: "20px", color: "#166534" }}>
+                          ₹{activeFollowup.totalPriceInr?.toFixed(2) || "18.00"}
+                        </strong>
+                        <span style={{ fontSize: "12px", textDecoration: "line-through", color: "#94a3b8" }}>
+                          ₹{activeFollowup.mrpPriceInr?.toFixed(2) || "85.00"} MRP
+                        </span>
+                      </div>
+                      <span style={{ fontSize: "11px", fontWeight: 700, color: "#15803d" }}>
+                        You Save {activeFollowup.savingsPercent || 78.8}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Nearest Suggested Medicine Shop / Chemist */}
+                  {activeFollowup.suggestedChemist && (
+                    <div
+                      style={{
+                        background: "var(--surface-muted, #f8fafc)",
+                        border: "1px solid var(--line, #e2e8f0)",
+                        borderRadius: "12px",
+                        padding: "16px 20px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                        gap: "12px",
+                      }}
+                    >
+                      <div>
+                        <span style={{ fontSize: "11px", textTransform: "uppercase", fontWeight: 700, color: "var(--muted, #64748b)" }}>
+                          Nearest Verified Medicine Shop (Doctor Recommended)
+                        </span>
+                        <strong style={{ fontSize: "15px", display: "block", color: "var(--foreground, #0f172a)", marginTop: "2px" }}>
+                          🏪 {activeFollowup.suggestedChemist.name}
+                        </strong>
+                        <p style={{ margin: "2px 0 0", fontSize: "12.5px", color: "var(--muted, #64748b)" }}>
+                          📍 {activeFollowup.suggestedChemist.address} · {activeFollowup.suggestedChemist.distanceKm || 1.2} km away
+                        </p>
+                      </div>
+
+                      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                        {activeFollowup.suggestedChemist.phone && (
+                          <a
+                            href={`tel:${activeFollowup.suggestedChemist.phone}`}
+                            style={{
+                              background: "#047857",
+                              color: "#ffffff",
+                              padding: "8px 14px",
+                              borderRadius: "8px",
+                              fontSize: "12.5px",
+                              fontWeight: 700,
+                              textDecoration: "none",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "6px",
+                            }}
+                          >
+                            📞 Call Chemist
+                          </a>
+                        )}
+                        {onNavigateToTab && (
+                          <button
+                            type="button"
+                            onClick={() => onNavigateToTab("nearby")}
+                            className="secondary-button"
+                            style={{ fontSize: "12px", padding: "8px 14px" }}
+                          >
+                            ⌖ View Map
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Primary Action: Set Alarms from this Report */}
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                      gap: "12px",
+                      borderTop: "1.5px solid var(--line, #e2e8f0)",
+                      paddingTop: "16px",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setActivePatientSection("submit")}
+                      className="secondary-button"
+                      style={{ fontSize: "13px", padding: "10px 18px", borderRadius: "8px" }}
+                    >
+                      ← Submit Another Report
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleImportRevisedMedicinesToAlarms(activeFollowup)}
+                      style={{
+                        background: "#8b5cf6",
+                        color: "#ffffff",
+                        border: "none",
+                        borderRadius: "10px",
+                        padding: "12px 24px",
+                        fontWeight: 700,
+                        fontSize: "14px",
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        boxShadow: "0 4px 12px rgba(139, 92, 246, 0.25)",
+                      }}
+                    >
+                      <span>⏰</span>
+                      <span>Set Daily Alarms from this Prescribed Report →</span>
+                    </button>
+                  </div>
+                </>
               )}
-
-              {/* Primary Action: Set Alarms from this Report */}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                  gap: "12px",
-                  borderTop: "1.5px solid var(--line, #e2e8f0)",
-                  paddingTop: "16px",
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setActivePatientSection("submit")}
-                  className="secondary-button"
-                  style={{ fontSize: "13px", padding: "10px 18px", borderRadius: "8px" }}
-                >
-                  ← Submit Another Report
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleImportRevisedMedicinesToAlarms(activeFollowup)}
-                  style={{
-                    background: "#8b5cf6",
-                    color: "#ffffff",
-                    border: "none",
-                    borderRadius: "10px",
-                    padding: "12px 24px",
-                    fontWeight: 700,
-                    fontSize: "14px",
-                    cursor: "pointer",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    boxShadow: "0 4px 12px rgba(139, 92, 246, 0.25)",
-                  }}
-                >
-                  <span>⏰</span>
-                  <span>Set Daily Alarms from this Prescribed Report →</span>
-                </button>
-              </div>
             </div>
           )}
         </div>

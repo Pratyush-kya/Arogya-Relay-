@@ -14,6 +14,7 @@ import { ReadAloud } from "./read-aloud";
 interface DoctorFollowupManagerProps {
   doctorName?: string;
   doctorNmc?: string;
+  doctorEmail?: string;
 }
 
 const NEARBY_CHEMISTS = [
@@ -43,7 +44,11 @@ const NEARBY_CHEMISTS = [
 export function DoctorFollowupManager({
   doctorName = "Dr. Rajesh Patel, MBBS",
   doctorNmc = "NMC-2018-88412",
+  doctorEmail,
 }: DoctorFollowupManagerProps) {
+  const resolvedEmail =
+    doctorEmail ||
+    (doctorName.toLowerCase().includes("ananya") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com");
   const { effectiveLang } = useLanguage();
   const [followups, setFollowups] = useState<PrescriptionFollowUpRequest[]>([]);
   const [selectedFollowupId, setSelectedFollowupId] = useState<string | null>(null);
@@ -71,7 +76,19 @@ export function DoctorFollowupManager({
     if (req.doctorReply) {
       setDoctorReply(req.doctorReply);
     } else {
-      setDoctorReply("Reviewed your reported symptoms. I have adjusted your dose. Please collect your generic medicines from the Jan Aushadhi Kendra.");
+      setDoctorReply("");
+    }
+    if (req.revisedMedicines && req.revisedMedicines.length > 0) {
+      const med = req.revisedMedicines[0];
+      setRevisedMedName(med.name);
+      setRevisedStrength(med.strength);
+      setRevisedDose(med.dose);
+      setRevisedInstructions(med.instructions || "Take with water after food.");
+    } else {
+      setRevisedMedName("");
+      setRevisedStrength("");
+      setRevisedDose("1 tablet once daily after food");
+      setRevisedInstructions("Take with water after food.");
     }
     if (req.suggestedChemist) {
       setSelectedChemistId(req.suggestedChemist.id);
@@ -83,6 +100,15 @@ export function DoctorFollowupManager({
 
   useEffect(() => {
     reload();
+    function onFollowupUpdate() {
+      reload();
+    }
+    window.addEventListener("arogya:followup:updated", onFollowupUpdate);
+    window.addEventListener("storage", onFollowupUpdate);
+    return () => {
+      window.removeEventListener("arogya:followup:updated", onFollowupUpdate);
+      window.removeEventListener("storage", onFollowupUpdate);
+    };
   }, []);
 
   const selectedReq = followups.find((f) => f.id === selectedFollowupId) || followups[0] || null;
@@ -119,6 +145,8 @@ export function DoctorFollowupManager({
       status: "doctor_revised",
       doctorName,
       doctorNmc,
+      doctorEmail: resolvedEmail,
+      handledByAi: false,
       doctorReply: doctorReply.trim(),
       revisedMedicines: updatedMedicines,
       suggestedChemist: chosenChemist,
@@ -189,9 +217,10 @@ export function DoctorFollowupManager({
         </div>
 
         <div style={{ background: "rgba(255,255,255,0.15)", padding: "10px 16px", borderRadius: "10px", textAlign: "right" }}>
-          <span style={{ fontSize: "11px", textTransform: "uppercase", opacity: 0.8, display: "block" }}>Verified Prescriber</span>
+          <span style={{ fontSize: "11px", textTransform: "uppercase", opacity: 0.8, display: "block" }}>Verified Prescriber (No AI)</span>
           <strong style={{ fontSize: "13px" }}>{doctorName}</strong>
           <span style={{ fontSize: "11px", display: "block", opacity: 0.9 }}>Reg: {doctorNmc}</span>
+          <span style={{ fontSize: "11px", display: "block", color: "#bae6fd", fontWeight: 700, marginTop: "2px" }}>📧 {resolvedEmail}</span>
         </div>
       </div>
 

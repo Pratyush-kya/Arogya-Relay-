@@ -6,10 +6,11 @@ import {
   getLocalFollowUps,
   saveLocalFollowUp,
 } from "@/lib/prescriptions/storage";
-import type {
-  PatientPrescription,
-  PrescriptionFollowUpRequest,
-  FollowUpIssueType,
+import {
+  type PatientPrescription,
+  type PrescriptionFollowUpRequest,
+  type FollowUpIssueType,
+  getDoctorGmailComposeUrl,
 } from "@/lib/prescriptions/types";
 import { useLanguage } from "@/lib/i18n/provider";
 import { ReadAloud } from "./read-aloud";
@@ -58,13 +59,17 @@ export function PatientFollowupCard({
     setSubmitting(true);
 
     const targetRx = prescriptions.find((p) => p.id === selectedRxId);
+    const assignedDoc = targetRx?.doctorName || "Dr. Rajesh Patel, MBBS";
+    const assignedEmail = assignedDoc.toLowerCase().includes("ananya") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com";
     const newReq: PrescriptionFollowUpRequest = {
       id: `FUP-${Date.now().toString(36).toUpperCase()}`,
       prescriptionId: selectedRxId,
       patientRef,
       patientName: "Ramesh Soren",
-      doctorName: targetRx?.doctorName || "Dr. Rajesh Patel, MBBS",
-      doctorNmc: "NMC-2018-88412",
+      doctorName: assignedDoc,
+      doctorNmc: assignedDoc.toLowerCase().includes("ananya") ? "NMC-2020-54190" : "NMC-2018-88412",
+      doctorEmail: assignedEmail,
+      handledByAi: false,
       issueType,
       patientMessage: patientMessage.trim(),
       reportedAt: new Date().toISOString(),
@@ -76,7 +81,7 @@ export function PatientFollowupCard({
     setSubmitting(false);
     setPatientMessage("");
     setModalOpen(false);
-    setStatusNotice("Your follow-up request was delivered to the doctor!");
+    setStatusNotice(`Your follow-up request was delivered directly to ${assignedDoc} (${assignedEmail}). AI handling is disabled.`);
     setTimeout(() => setStatusNotice(null), 6000);
   }
 
@@ -209,10 +214,67 @@ export function PatientFollowupCard({
                 <span style={{ fontSize: "12px", color: "#64748b" }}>
                   Ref: <strong>{activeFollowup.prescriptionId}</strong> · To: <strong>{activeFollowup.doctorName}</strong>
                 </span>
+                <span
+                  style={{
+                    background: "#fef3c7",
+                    border: "1px solid #fde68a",
+                    color: "#92400e",
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    padding: "2px 6px",
+                    borderRadius: "4px",
+                  }}
+                >
+                  🛡️ Human Doctor (No AI)
+                </span>
               </div>
               <span style={{ fontSize: "11px", color: "#94a3b8" }}>
                 {new Date(activeFollowup.reportedAt).toLocaleDateString()}
               </span>
+            </div>
+
+            {/* Doctor Attached Gmail Contact Bar */}
+            <div
+              style={{
+                background: "#f0f9ff",
+                border: "1px solid #bae6fd",
+                borderRadius: "8px",
+                padding: "8px 12px",
+                fontSize: "12px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "8px",
+              }}
+            >
+              <span style={{ color: "#0369a1" }}>
+                📧 Attached Gmail: <strong>{activeFollowup.doctorEmail || (activeFollowup.doctorName.includes("Ananya") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com")}</strong>
+              </span>
+              <a
+                href={getDoctorGmailComposeUrl(
+                  activeFollowup.doctorEmail || (activeFollowup.doctorName.includes("Ananya") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com"),
+                  `[Arogya-Relay] Consultation for ${activeFollowup.doctorName} - Ref: ${activeFollowup.prescriptionId}`,
+                  `Respected ${activeFollowup.doctorName},\n\nPrescription Ref: ${activeFollowup.prescriptionId}\nPatient: ${activeFollowup.patientName}\n\nSymptoms / Inquiry:\n${activeFollowup.patientMessage}\n\nThank you.`
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  background: "#0284c7",
+                  color: "#ffffff",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  padding: "4px 10px",
+                  borderRadius: "6px",
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
+              >
+                <span>✉️</span>
+                <span>Open Gmail</span>
+              </a>
             </div>
 
             {/* Patient Query & Doctor Advice */}
@@ -220,6 +282,12 @@ export function PatientFollowupCard({
               <div style={{ color: "#334155", marginBottom: activeFollowup.doctorReply ? "8px" : "0" }}>
                 <strong style={{ color: "#0f172a" }}>Your Message:</strong> &ldquo;{activeFollowup.patientMessage}&rdquo;
               </div>
+
+              {activeFollowup.status === "pending_doctor_review" && !activeFollowup.doctorReply && (
+                <div style={{ borderTop: "1px dashed #cbd5e1", paddingTop: "8px", color: "#b45309", fontSize: "12px" }}>
+                  ⏳ <strong>Awaiting Human Doctor Review:</strong> AI is strictly disabled for medical safety. {activeFollowup.doctorName} will answer you directly via Gmail or the Doctor Portal.
+                </div>
+              )}
 
               {activeFollowup.doctorReply && (
                 <div style={{ borderTop: "1px dashed #cbd5e1", paddingTop: "8px", color: "#065f46" }}>

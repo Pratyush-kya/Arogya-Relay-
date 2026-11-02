@@ -6,6 +6,7 @@ export interface AvailableDoctor {
   hospital: string;
   experience: string;
   avatar: string;
+  email: string; // Attached Gmail for direct communication without AI
 }
 
 export const TWO_AVAILABLE_DOCTORS: AvailableDoctor[] = [
@@ -17,6 +18,7 @@ export const TWO_AVAILABLE_DOCTORS: AvailableDoctor[] = [
     hospital: "Mawlynnong Sub-Divisional Hospital & PHC",
     experience: "12 Years Experience",
     avatar: "👨‍⚕️",
+    email: "bishnuprasadsatapathy7846@gmail.com",
   },
   {
     id: "doc-ananya",
@@ -26,8 +28,24 @@ export const TWO_AVAILABLE_DOCTORS: AvailableDoctor[] = [
     hospital: "Community Health Centre & Rural Hospital",
     experience: "8 Years Experience",
     avatar: "👩‍⚕️",
+    email: "samarpitbiswal966@gmail.com",
   },
 ];
+
+export function getDoctorGmailComposeUrl(
+  doctorEmail: string,
+  subject: string,
+  body: string
+): string {
+  const params = new URLSearchParams({
+    view: "cm",
+    fs: "1",
+    to: doctorEmail,
+    su: subject,
+    body: body,
+  });
+  return `https://mail.google.com/mail/?${params.toString()}`;
+}
 
 export type MedicineForm = "tablet" | "capsule" | "syrup" | "drops" | "ointment" | "injection";
 export type FoodRelation = "before_food" | "after_food" | "with_food" | "empty_stomach";
@@ -98,6 +116,8 @@ export interface PrescriptionFollowUpRequest {
   patientName: string;
   doctorName: string;
   doctorNmc?: string;
+  doctorEmail?: string;
+  handledByAi?: boolean;
   issueType: FollowUpIssueType;
   patientMessage: string;
   reportedAt: string;

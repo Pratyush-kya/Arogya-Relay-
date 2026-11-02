@@ -304,7 +304,7 @@ export function TopRightUserNav({
           const sample: Profile[] = [
             {
               id: "doc-demo-1",
-              email: "dr.sharma@health.gov.in",
+              email: "samarpitbiswal966@gmail.com",
               display_name: "Dr. Ananya Sharma, MD",
               role: "doctor",
               pseudo_id: "DOC-ANANYA",
@@ -317,7 +317,7 @@ export function TopRightUserNav({
             },
             {
               id: "doc-demo-2",
-              email: "dr.patel@ruralhealth.org",
+              email: "bishnuprasadsatapathy7846@gmail.com",
               display_name: "Dr. Rajesh Patel, MBBS",
               role: "doctor",
               pseudo_id: "DOC-RAJESH",

@@ -5,7 +5,7 @@ import { useLanguage } from "@/lib/i18n/provider";
 import { HealthCampFinder } from "./health-camp-finder";
 import { ReadAloud } from "./read-aloud";
 import PrescriptionTracker from "./prescription-tracker";
-import { TWO_AVAILABLE_DOCTORS } from "@/lib/prescriptions/types";
+import { TWO_AVAILABLE_DOCTORS, getDoctorGmailComposeUrl } from "@/lib/prescriptions/types";
 import DiseaseLibrary from "./disease-library";
 import NearbyCare from "./nearby-care";
 import type { ScreeningRecord } from "@/lib/types";
@@ -382,12 +382,43 @@ export function PatientWorkspace({
                     <div style={{ display: "flex", alignItems: "flex-start", gap: "14px" }}>
                       <span style={{ fontSize: "38px", lineHeight: 1 }}>{doc.avatar}</span>
                       <div style={{ flex: 1 }}>
-                        <strong style={{ fontSize: "15.5px", color: "var(--foreground, #0f172a)", display: "block" }}>
-                          {doc.name}
-                        </strong>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "6px", flexWrap: "wrap" }}>
+                          <strong style={{ fontSize: "15.5px", color: "var(--foreground, #0f172a)" }}>
+                            {doc.name}
+                          </strong>
+                          <span
+                            style={{
+                              background: "#fef3c7",
+                              border: "1px solid #fde68a",
+                              color: "#92400e",
+                              padding: "2px 6px",
+                              borderRadius: "6px",
+                              fontSize: "10.5px",
+                              fontWeight: 700,
+                            }}
+                          >
+                            🛡️ Human Doctor (No AI)
+                          </span>
+                        </div>
                         <span style={{ fontSize: "11px", fontWeight: 700, color: "#059669", display: "block", marginTop: "2px" }}>
                           ✓ {doc.nmcNumber} (NMC Verified)
                         </span>
+                        <div style={{ margin: "4px 0 2px", fontSize: "12px", color: "#0369a1", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}>
+                          <span>📧 Attached Gmail:</span>
+                          <a
+                            href={getDoctorGmailComposeUrl(
+                              doc.email,
+                              `[Arogya-Relay Consultation] Medical Inquiry - Dr. ${doc.name}`,
+                              `Respected ${doc.name},\n\nI am writing to consult you regarding my ongoing treatment.\n\nPatient Name: Ramesh Soren\nPatient Ref: PT-RAMESH-01\nPrescription Ref: RX-9021\n\nSymptoms / Inquiry:\n[Please describe your symptoms or dosage questions here]\n\nThank you.`
+                            )}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: "#0284c7", textDecoration: "underline", wordBreak: "break-all" }}
+                            title="Open Gmail to write directly to doctor (No AI)"
+                          >
+                            {doc.email}
+                          </a>
+                        </div>
                         <p style={{ margin: "4px 0 2px", fontSize: "12.5px", color: "var(--foreground, #1e293b)", fontWeight: 500 }}>
                           {doc.specialization} · {doc.experience}
                         </p>
@@ -397,50 +428,80 @@ export function PatientWorkspace({
                       </div>
                     </div>
 
-                    <div style={{ display: "flex", gap: "8px", borderTop: "1px solid var(--line, #e2e8f0)", paddingTop: "12px" }}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedDoctorId(doc.id);
-                          setPrescriptionSection("submit");
-                          setActiveTab("prescriptions");
-                        }}
-                        className="primary-button"
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px", borderTop: "1px solid var(--line, #e2e8f0)", paddingTop: "12px" }}>
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedDoctorId(doc.id);
+                            setPrescriptionSection("submit");
+                            setActiveTab("prescriptions");
+                          }}
+                          className="primary-button"
+                          style={{
+                            flex: 1,
+                            fontSize: "12.5px",
+                            padding: "8px 12px",
+                            borderRadius: "8px",
+                            fontWeight: 700,
+                            background: "#047857",
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "6px",
+                          }}
+                        >
+                          <span>📤</span>
+                          <span>Submit Report / Dose Change</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedDoctorId(doc.id);
+                            setPrescriptionSection("response");
+                            setActiveTab("prescriptions");
+                          }}
+                          className="secondary-button"
+                          style={{
+                            fontSize: "12px",
+                            padding: "8px 12px",
+                            borderRadius: "8px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          View Status / Reply
+                        </button>
+                      </div>
+
+                      <a
+                        href={getDoctorGmailComposeUrl(
+                          doc.email,
+                          `[Arogya-Relay Direct] Consultation Request for ${doc.name}`,
+                          `Hello ${doc.name},\n\nI need clinical guidance for my ongoing prescription (RX-9021).\n\nPatient: Ramesh Soren\nIssue: Need dose guidance\n\n(Direct consultation request - AI disabled for this case)`
+                        )}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         style={{
-                          flex: 1,
-                          fontSize: "12.5px",
-                          padding: "8px 12px",
-                          borderRadius: "8px",
-                          fontWeight: 700,
-                          background: "#047857",
-                          cursor: "pointer",
                           display: "inline-flex",
                           alignItems: "center",
                           justifyContent: "center",
                           gap: "6px",
-                        }}
-                      >
-                        <span>📤</span>
-                        <span>Submit Report / Dose Change</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedDoctorId(doc.id);
-                          setPrescriptionSection("response");
-                          setActiveTab("prescriptions");
-                        }}
-                        className="secondary-button"
-                        style={{
+                          background: "#ffffff",
+                          border: "1.5px solid #0284c7",
+                          color: "#0369a1",
                           fontSize: "12px",
-                          padding: "8px 12px",
+                          fontWeight: 700,
+                          padding: "7px 12px",
                           borderRadius: "8px",
+                          textDecoration: "none",
                           cursor: "pointer",
                         }}
                       >
-                        View Reply
-                      </button>
+                        <span>✉️</span>
+                        <span>Open Gmail &amp; Write to Doctor Directly (No AI)</span>
+                      </a>
                     </div>
                   </div>
                 ))}
