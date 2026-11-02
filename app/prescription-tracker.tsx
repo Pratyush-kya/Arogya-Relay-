@@ -11,6 +11,7 @@ import {
   syncPrescriptions,
   getLocalFollowUps,
   saveLocalFollowUp,
+  initFollowupRealtimeSync,
   type TodayReminderSlot,
 } from "@/lib/prescriptions/storage";
 import {
@@ -147,13 +148,32 @@ export default function PrescriptionTracker({
 
     void syncPrescriptions();
 
-    function onFollowupUpdate() {
+    const cleanupRealtime = initFollowupRealtimeSync((updatedReq) => {
       const refreshed = getLocalFollowUps();
       setFollowups(refreshed);
+      if (updatedReq && updatedReq.id) {
+        setSelectedFollowupId(updatedReq.id);
+        if (updatedReq.status === "doctor_revised") {
+          setStatusMessage(`📩 Received revised prescription from ${updatedReq.doctorName}!`);
+        }
+      }
+    });
+
+    function onFollowupUpdate(e?: Event) {
+      const refreshed = getLocalFollowUps();
+      setFollowups(refreshed);
+      const detail = (e as CustomEvent)?.detail;
+      if (detail && detail.id) {
+        setSelectedFollowupId(detail.id);
+        if (detail.status === "doctor_revised") {
+          setStatusMessage(`📩 Received revised prescription from ${detail.doctorName}!`);
+        }
+      }
     }
     window.addEventListener("arogya:followup:updated", onFollowupUpdate);
     window.addEventListener("storage", onFollowupUpdate);
     return () => {
+      cleanupRealtime();
       window.removeEventListener("arogya:followup:updated", onFollowupUpdate);
       window.removeEventListener("storage", onFollowupUpdate);
     };

@@ -136,7 +136,10 @@ export function getActiveSupabaseConfig() {
 
   return {
     url: process.env.NEXT_PUBLIC_SUPABASE_URL || "https://tinwzrwomldbbbrwnazn.supabase.co",
-    key: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_i4H4gOhMqL_hkCioArUEPQ_owYL8smN",
+    key:
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnd6cndvbWxkYmJicnduYXpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1MDAwMjIsImV4cCI6MjEwNjA3NjAyMn0.7OPyz68F-y95QRiwrr9Riw0VsjN8mIs7jXvsrsz-lig",
     source: "default",
     orgId: process.env.NEXT_PUBLIC_SUPABASE_ORG_ID || SUPABASE_ORG_ID,
     projectRef: SUPABASE_PROJECT_REF,

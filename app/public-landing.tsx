@@ -942,19 +942,19 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                     onClick={() => {
                       setEmail("samarpitbiswal966@gmail.com");
                       setPassword("demo123");
-                      setStatus({ tone: "good", msg: "Selected Dr. Ananya Sharma, MD (Pending NMC Verification · samarpitbiswal966@gmail.com) · Click Sign In" });
+                      setStatus({ tone: "good", msg: "Selected Dr. Ananya Sharma, MD (Verified Doctor · NMC-2020-54190 · samarpitbiswal966@gmail.com) · Click Sign In" });
                     }}
                     style={{
-                      background: "#fef3c7",
-                      color: "#92400e",
-                      border: "1px solid #fde68a",
+                      background: "#f0fdf4",
+                      color: "#166534",
+                      border: "1px solid #86efac",
                       borderRadius: "6px",
                       padding: "4px 8px",
                       fontSize: "11px",
                       fontWeight: 600,
                       cursor: "pointer",
                     }}
-                    title="General Physician - Pending Verification (samarpitbiswal966@gmail.com)"
+                    title="Internal Medicine & Paediatrics - Verified Doctor (samarpitbiswal966@gmail.com)"
                   >
                     👩‍⚕️ Dr. Ananya (Gmail)
                   </button>

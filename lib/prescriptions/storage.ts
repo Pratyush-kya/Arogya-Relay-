@@ -167,6 +167,42 @@ export function getLocalFollowUps(): PrescriptionFollowUpRequest[] {
   }
 }
 
+let followupRealtimeChannel: ReturnType<ReturnType<typeof createClient>["channel"]> | null = null;
+
+export function initFollowupRealtimeSync(onUpdate?: (req: PrescriptionFollowUpRequest) => void) {
+  if (typeof window === "undefined") return () => {};
+  try {
+    const supabase = createClient();
+    if (!followupRealtimeChannel) {
+      followupRealtimeChannel = supabase.channel("arogya-followups-sync");
+      followupRealtimeChannel
+        .on("broadcast", { event: "followup_updated" }, ({ payload }: { payload: PrescriptionFollowUpRequest }) => {
+          if (payload && payload.id) {
+            const current = getLocalFollowUps();
+            const idx = current.findIndex((f) => f.id === payload.id);
+            let next: PrescriptionFollowUpRequest[];
+            if (idx >= 0) {
+              next = [...current];
+              next[idx] = payload;
+            } else {
+              next = [payload, ...current];
+            }
+            localStorage.setItem(FOLLOWUP_STORAGE_KEY, JSON.stringify(next));
+            window.dispatchEvent(new CustomEvent("arogya:followup:updated", { detail: payload }));
+            if (onUpdate) onUpdate(payload);
+          }
+        })
+        .subscribe();
+    }
+  } catch {
+    // Offline resilience
+  }
+
+  return () => {
+    // Keep channel alive
+  };
+}
+
 export function saveLocalFollowUp(request: PrescriptionFollowUpRequest): void {
   if (typeof window === "undefined") return;
   const current = getLocalFollowUps();
@@ -180,6 +216,19 @@ export function saveLocalFollowUp(request: PrescriptionFollowUpRequest): void {
   }
   localStorage.setItem(FOLLOWUP_STORAGE_KEY, JSON.stringify(next));
   window.dispatchEvent(new CustomEvent("arogya:followup:updated", { detail: request }));
+
+  // Broadcast to all devices/browsers in Realtime via Supabase
+  try {
+    const supabase = createClient();
+    const ch = followupRealtimeChannel || supabase.channel("arogya-followups-sync");
+    void ch.send({
+      type: "broadcast",
+      event: "followup_updated",
+      payload: request,
+    });
+  } catch {
+    // Offline resilience
+  }
 }
 
 export function getFollowUpsForPatient(patientRef: string): PrescriptionFollowUpRequest[] {

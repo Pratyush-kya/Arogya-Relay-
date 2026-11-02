@@ -6,6 +6,7 @@ import {
   saveLocalFollowUp,
   getLocalPrescriptions,
   saveLocalPrescription,
+  initFollowupRealtimeSync,
 } from "@/lib/prescriptions/storage";
 import type { PrescriptionFollowUpRequest, ScheduledMedicine } from "@/lib/prescriptions/types";
 import { useLanguage } from "@/lib/i18n/provider";
@@ -41,6 +42,54 @@ const NEARBY_CHEMISTS = [
   },
 ];
 
+interface ClinicalPreset {
+  id: string;
+  label: string;
+  icon: string;
+  medicineName: string;
+  strength: string;
+  dose: string;
+  instructions: string;
+  doctorReply: string;
+  price: number;
+}
+
+const CLINICAL_PRESETS: ClinicalPreset[] = [
+  {
+    id: "cough_respiratory",
+    label: "Acute Cough & Respiratory Relief",
+    icon: "🫁",
+    medicineName: "Amoxicillin + Clavulanate (Augmentin generic)",
+    strength: "625mg",
+    dose: "1 tablet twice daily after food",
+    instructions: "Complete full 5-day course. Stop smoking immediately. Warm saline gargles & steam inhalation twice daily.",
+    doctorReply: "Clinical review: Persistent cough and pleuritic chest discomfort in a chronic smoker warrant broad-spectrum antimicrobial coverage. Complete the full 5-day course. Strictly cease smoking. If fever >101°F or hemoptysis develops, report to emergency immediately.",
+    price: 45.0,
+  },
+  {
+    id: "hypertension_adjust",
+    label: "Hypertension / Low Dose Step-down",
+    icon: "❤️",
+    medicineName: "Amlodipine (Low Dose)",
+    strength: "2.5mg",
+    dose: "1 tablet once daily morning",
+    instructions: "Take half tablet (2.5mg) with water after breakfast. Monitor BP weekly.",
+    doctorReply: "Clinical review: Reviewed blood pressure history and peripheral swelling. Reducing Amlodipine from 5mg to 2.5mg. Maintain low-sodium diet and elevate legs while resting.",
+    price: 18.0,
+  },
+  {
+    id: "fatigue_recovery",
+    label: "Post-Infection Fatigue & Tonic",
+    icon: "🌿",
+    medicineName: "Jan Aushadhi Multivitamin with Zinc & C",
+    strength: "1 tablet",
+    dose: "1 tablet once daily after lunch",
+    instructions: "Take with water after lunch for 10 days. Maintain 2.5L daily hydration.",
+    doctorReply: "Clinical review: Throat irritation resolved. Added generic multivitamin and mineral regimen to support recovery. Drink plenty of clean fluids and ensure adequate rest.",
+    price: 22.0,
+  },
+];
+
 export function DoctorFollowupManager({
   doctorName = "Dr. Rajesh Patel, MBBS",
   doctorNmc = "NMC-2018-88412",
@@ -53,7 +102,11 @@ export function DoctorFollowupManager({
   const [followups, setFollowups] = useState<PrescriptionFollowUpRequest[]>([]);
   const [selectedFollowupId, setSelectedFollowupId] = useState<string | null>(null);
 
-  // Revision state
+  // Queue Filters
+  const [filterMode, setFilterMode] = useState<"assigned" | "pending" | "revised" | "all">("assigned");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Revision Form State
   const [doctorReply, setDoctorReply] = useState("");
   const [revisedMedName, setRevisedMedName] = useState("Amlodipine (Low Dose)");
   const [revisedStrength, setRevisedStrength] = useState("2.5mg");
@@ -63,12 +116,45 @@ export function DoctorFollowupManager({
   const [calculatedPrice, setCalculatedPrice] = useState<number>(18.0);
   const [statusNotice, setStatusNotice] = useState<string | null>(null);
 
-  function reload() {
+  const isAnanya =
+    resolvedEmail.includes("samarpitbiswal966") || doctorName.toLowerCase().includes("ananya");
+  const isRajesh =
+    resolvedEmail.includes("bishnuprasadsatapathy7846") ||
+    doctorName.toLowerCase().includes("rajesh") ||
+    doctorName.toLowerCase().includes("patel");
+
+  function isAssignedToCurrentDoctor(req: PrescriptionFollowUpRequest): boolean {
+    if (isAnanya) {
+      return (
+        Boolean(req.doctorEmail?.includes("samarpitbiswal966")) ||
+        req.doctorName.toLowerCase().includes("ananya")
+      );
+    }
+    if (isRajesh) {
+      return (
+        Boolean(req.doctorEmail?.includes("bishnuprasadsatapathy7846")) ||
+        req.doctorName.toLowerCase().includes("rajesh") ||
+        req.doctorName.toLowerCase().includes("patel")
+      );
+    }
+    return true;
+  }
+
+  function reload(currentSelectedId?: string | null) {
     const list = getLocalFollowUps();
     setFollowups(list);
-    if (list.length > 0 && !selectedFollowupId) {
-      setSelectedFollowupId(list[0].id);
-      loadForm(list[0]);
+
+    // Maintain or auto-select an appropriate followup
+    const targetId = currentSelectedId || selectedFollowupId;
+    if (targetId && list.some((f) => f.id === targetId)) {
+      const match = list.find((f) => f.id === targetId);
+      if (match) loadForm(match);
+    } else if (list.length > 0) {
+      // Prioritize an assigned pending item
+      const assignedPending = list.find((f) => isAssignedToCurrentDoctor(f) && f.status !== "doctor_revised");
+      const chosen = assignedPending || list.find(isAssignedToCurrentDoctor) || list[0];
+      setSelectedFollowupId(chosen.id);
+      loadForm(chosen);
     }
   }
 
@@ -85,9 +171,10 @@ export function DoctorFollowupManager({
       setRevisedDose(med.dose);
       setRevisedInstructions(med.instructions || "Take with water after food.");
     } else {
-      setRevisedMedName("");
-      setRevisedStrength("");
-      setRevisedDose("1 tablet once daily after food");
+      // Default to sensible starting value
+      setRevisedMedName("Amlodipine (Low Dose)");
+      setRevisedStrength("2.5mg");
+      setRevisedDose("1 tablet once daily morning");
       setRevisedInstructions("Take with water after food.");
     }
     if (req.suggestedChemist) {
@@ -98,20 +185,67 @@ export function DoctorFollowupManager({
     }
   }
 
+  function applyPreset(preset: ClinicalPreset) {
+    setRevisedMedName(preset.medicineName);
+    setRevisedStrength(preset.strength);
+    setRevisedDose(preset.dose);
+    setRevisedInstructions(preset.instructions);
+    setDoctorReply(preset.doctorReply);
+    setCalculatedPrice(preset.price);
+  }
+
   useEffect(() => {
     reload();
+
+    // Supabase Realtime cross-device subscription
+    const cleanupRealtime = initFollowupRealtimeSync(() => {
+      reload();
+    });
+
     function onFollowupUpdate() {
       reload();
     }
     window.addEventListener("arogya:followup:updated", onFollowupUpdate);
     window.addEventListener("storage", onFollowupUpdate);
     return () => {
+      cleanupRealtime();
       window.removeEventListener("arogya:followup:updated", onFollowupUpdate);
       window.removeEventListener("storage", onFollowupUpdate);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const selectedReq = followups.find((f) => f.id === selectedFollowupId) || followups[0] || null;
+  // Filter calculations
+  const assignedList = followups.filter(isAssignedToCurrentDoctor);
+  const pendingList = followups.filter((f) => f.status !== "doctor_revised");
+  const revisedList = followups.filter((f) => f.status === "doctor_revised");
+
+  let baseList: PrescriptionFollowUpRequest[] = followups;
+  if (filterMode === "assigned") {
+    baseList = assignedList.length > 0 ? assignedList : followups;
+  } else if (filterMode === "pending") {
+    baseList = pendingList;
+  } else if (filterMode === "revised") {
+    baseList = revisedList;
+  }
+
+  const normalizedSearch = searchQuery.trim().toLowerCase();
+  const visibleFollowups = baseList.filter((req) => {
+    if (!normalizedSearch) return true;
+    return (
+      req.patientName.toLowerCase().includes(normalizedSearch) ||
+      req.patientRef.toLowerCase().includes(normalizedSearch) ||
+      req.prescriptionId.toLowerCase().includes(normalizedSearch) ||
+      req.patientMessage.toLowerCase().includes(normalizedSearch)
+    );
+  });
+
+  const selectedReq =
+    visibleFollowups.find((f) => f.id === selectedFollowupId) ||
+    followups.find((f) => f.id === selectedFollowupId) ||
+    visibleFollowups[0] ||
+    followups[0] ||
+    null;
 
   function handleSelectFollowup(req: PrescriptionFollowUpRequest) {
     setSelectedFollowupId(req.id);
@@ -170,9 +304,11 @@ export function DoctorFollowupManager({
       saveLocalPrescription(targetRx);
     }
 
-    reload();
-    setStatusNotice(`✓ Updated prescription revision and suggested chemist for Patient ${selectedReq.patientName}!`);
-    setTimeout(() => setStatusNotice(null), 5000);
+    reload(selectedReq.id);
+    setStatusNotice(
+      `✓ Prescription revision & Jan Aushadhi fair price signed by ${doctorName}! Response delivered to Patient ${selectedReq.patientName}. Patient will see your advice in Section 2 and can activate daily alarms.`
+    );
+    setTimeout(() => setStatusNotice(null), 6000);
   }
 
   function handleVerifyChemistAudit(req: PrescriptionFollowUpRequest) {
@@ -182,7 +318,7 @@ export function DoctorFollowupManager({
       doctorAuditNotes: `Verified by ${doctorName} (${doctorNmc}) on ${new Date().toLocaleTimeString()}: Chemist dispensed exact chemical bio-equivalent at verified price.`,
     };
     saveLocalFollowUp(updated);
-    reload();
+    reload(req.id);
     setStatusNotice(`✓ Chemist dispensing audit verified for ${req.patientName}!`);
     setTimeout(() => setStatusNotice(null), 5000);
   }
@@ -200,27 +336,41 @@ export function DoctorFollowupManager({
           justifyContent: "space-between",
           alignItems: "center",
           flexWrap: "wrap",
-          gap: "12px",
+          gap: "14px",
+          boxShadow: "0 6px 20px rgba(6, 95, 70, 0.15)",
         }}
       >
         <div>
-          <span style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px", opacity: 0.9 }}>
-            CLINICAL FOLLOW-UP &amp; DOSAGE COMMAND
-          </span>
-          <h2 style={{ fontSize: "22px", fontWeight: 800, margin: "4px 0", color: "#ffffff" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+            <span style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px", opacity: 0.9 }}>
+              CLINICAL FOLLOW-UP &amp; DOSAGE COMMAND
+            </span>
+            <span
+              style={{
+                background: "rgba(255,255,255,0.2)",
+                padding: "2px 8px",
+                borderRadius: "12px",
+                fontSize: "10.5px",
+                fontWeight: 700,
+              }}
+            >
+              🟢 Realtime Synced
+            </span>
+          </div>
+          <h2 style={{ fontSize: "22px", fontWeight: 800, margin: "2px 0 6px", color: "#ffffff" }}>
             Patient Prescription Follow-ups ({followups.length})
           </h2>
-          <p style={{ margin: 0, fontSize: "13.5px", opacity: 0.9, maxWidth: "600px" }}>
-            Review patient symptom messages, adjust medicine doses, suggest the closest verified Jan Aushadhi chemist,
-            and audit whether the chemist dispensed the accurate medication.
+          <p style={{ margin: 0, fontSize: "13.5px", opacity: 0.9, maxWidth: "620px", lineHeight: 1.4 }}>
+            Review patient symptoms, prescribe revised dosage modifications, recommend closest verified Jan Aushadhi
+            chemist, and audit accurate medicine dispensing.
           </p>
         </div>
 
-        <div style={{ background: "rgba(255,255,255,0.15)", padding: "10px 16px", borderRadius: "10px", textAlign: "right" }}>
+        <div style={{ background: "rgba(255,255,255,0.15)", padding: "12px 18px", borderRadius: "12px", textAlign: "right" }}>
           <span style={{ fontSize: "11px", textTransform: "uppercase", opacity: 0.8, display: "block" }}>Verified Prescriber (No AI)</span>
-          <strong style={{ fontSize: "13px" }}>{doctorName}</strong>
-          <span style={{ fontSize: "11px", display: "block", opacity: 0.9 }}>Reg: {doctorNmc}</span>
-          <span style={{ fontSize: "11px", display: "block", color: "#bae6fd", fontWeight: 700, marginTop: "2px" }}>📧 {resolvedEmail}</span>
+          <strong style={{ fontSize: "14px" }}>{doctorName}</strong>
+          <span style={{ fontSize: "11.5px", display: "block", opacity: 0.9 }}>Reg: {doctorNmc}</span>
+          <span style={{ fontSize: "11.5px", display: "block", color: "#bae6fd", fontWeight: 700, marginTop: "2px" }}>📧 {resolvedEmail}</span>
         </div>
       </div>
 
@@ -230,31 +380,157 @@ export function DoctorFollowupManager({
             background: "#ecfdf5",
             border: "1.5px solid #a7f3d0",
             color: "#065f46",
-            padding: "10px 16px",
+            padding: "12px 18px",
             borderRadius: "10px",
-            fontSize: "13px",
+            fontSize: "13.5px",
             fontWeight: 700,
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
           }}
         >
-          {statusNotice}
+          <span>✓</span>
+          <span>{statusNotice}</span>
         </div>
       )}
+
+      {/* Filter Tabs & Search Bar */}
+      <div
+        style={{
+          background: "#ffffff",
+          borderRadius: "12px",
+          padding: "12px 16px",
+          border: "1px solid #e2e8f0",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "12px",
+        }}
+      >
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          <button
+            type="button"
+            onClick={() => setFilterMode("assigned")}
+            style={{
+              padding: "7px 14px",
+              borderRadius: "8px",
+              border: filterMode === "assigned" ? "1.5px solid #059669" : "1px solid #cbd5e1",
+              background: filterMode === "assigned" ? "#ecfdf5" : "#ffffff",
+              color: filterMode === "assigned" ? "#065f46" : "#475569",
+              fontSize: "12.5px",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            👨‍⚕️ Assigned to Me ({assignedList.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterMode("pending")}
+            style={{
+              padding: "7px 14px",
+              borderRadius: "8px",
+              border: filterMode === "pending" ? "1.5px solid #d97706" : "1px solid #cbd5e1",
+              background: filterMode === "pending" ? "#fffbeb" : "#ffffff",
+              color: filterMode === "pending" ? "#b45309" : "#475569",
+              fontSize: "12.5px",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            ⏳ Needs Review ({pendingList.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterMode("revised")}
+            style={{
+              padding: "7px 14px",
+              borderRadius: "8px",
+              border: filterMode === "revised" ? "1.5px solid #2563eb" : "1px solid #cbd5e1",
+              background: filterMode === "revised" ? "#eff6ff" : "#ffffff",
+              color: filterMode === "revised" ? "#1e40af" : "#475569",
+              fontSize: "12.5px",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            ✅ Revised ({revisedList.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterMode("all")}
+            style={{
+              padding: "7px 14px",
+              borderRadius: "8px",
+              border: filterMode === "all" ? "1.5px solid #475569" : "1px solid #cbd5e1",
+              background: filterMode === "all" ? "#f1f5f9" : "#ffffff",
+              color: filterMode === "all" ? "#0f172a" : "#475569",
+              fontSize: "12.5px",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            📋 All Reports ({followups.length})
+          </button>
+        </div>
+
+        <div style={{ minWidth: "220px" }}>
+          <input
+            type="text"
+            placeholder="Search patient, Rx or issue..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "7px 12px",
+              borderRadius: "8px",
+              border: "1px solid #cbd5e1",
+              fontSize: "12.5px",
+              boxSizing: "border-box",
+            }}
+          />
+        </div>
+      </div>
 
       {/* Main 2-Column Layout: Left Requests List, Right Detail & Revision Editor */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "20px" }}>
         {/* Left Column: Follow-up Queue */}
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          <h3 style={{ margin: "0 0 4px", fontSize: "15px", color: "#0f172a", fontWeight: 700 }}>
-            Incoming Follow-up Messages
-          </h3>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h3 style={{ margin: 0, fontSize: "15px", color: "#0f172a", fontWeight: 700 }}>
+              Incoming Queue ({visibleFollowups.length})
+            </h3>
+            <span style={{ fontSize: "11px", color: "#64748b" }}>
+              {filterMode === "assigned" ? `Filtered for ${doctorName}` : "Showing filtered view"}
+            </span>
+          </div>
 
-          {followups.length === 0 ? (
-            <div style={{ background: "#ffffff", padding: "24px", borderRadius: "12px", border: "1px dashed #cbd5e1", textAlign: "center" }}>
-              <p style={{ color: "#64748b", margin: 0, fontSize: "13.5px" }}>No pending patient follow-up requests</p>
+          {visibleFollowups.length === 0 ? (
+            <div style={{ background: "#ffffff", padding: "28px 20px", borderRadius: "12px", border: "1px dashed #cbd5e1", textAlign: "center" }}>
+              <span style={{ fontSize: "28px", display: "block", marginBottom: "6px" }}>📭</span>
+              <p style={{ color: "#475569", margin: "0 0 8px", fontSize: "13.5px", fontWeight: 600 }}>
+                No follow-up requests in this view
+              </p>
+              <button
+                type="button"
+                onClick={() => setFilterMode("all")}
+                style={{
+                  background: "#f1f5f9",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "6px",
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                  cursor: "pointer",
+                }}
+              >
+                View All Clinic Reports ({followups.length})
+              </button>
             </div>
           ) : (
-            followups.map((req) => {
-              const isSelected = req.id === selectedFollowupId;
+            visibleFollowups.map((req) => {
+              const isSelected = req.id === selectedReq?.id;
+              const isAssigned = isAssignedToCurrentDoctor(req);
               return (
                 <div
                   key={req.id}
@@ -265,16 +541,24 @@ export function DoctorFollowupManager({
                     borderRadius: "12px",
                     padding: "14px 16px",
                     cursor: "pointer",
-                    boxShadow: isSelected ? "0 4px 12px rgba(5,150,105,0.1)" : "none",
+                    boxShadow: isSelected ? "0 4px 12px rgba(5,150,105,0.12)" : "none",
                     display: "flex",
                     flexDirection: "column",
                     gap: "8px",
+                    transition: "all 0.15s ease",
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <strong style={{ fontSize: "14px", color: "#0f172a" }}>
-                      👤 {req.patientName} ({req.patientRef})
-                    </strong>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <strong style={{ fontSize: "14px", color: "#0f172a" }}>
+                        👤 {req.patientName} ({req.patientRef})
+                      </strong>
+                      {isAssigned && (
+                        <span style={{ fontSize: "10px", background: "#ecfdf5", color: "#047857", fontWeight: 800, padding: "1px 6px", borderRadius: "4px" }}>
+                          YOU
+                        </span>
+                      )}
+                    </div>
                     <span
                       style={{
                         fontSize: "10.5px",
@@ -304,20 +588,26 @@ export function DoctorFollowupManager({
                     </span>
                   </div>
 
-                  <div style={{ fontSize: "12px", color: "#475569" }}>
-                    <strong>Issue:</strong> {req.issueType.replace("_", " ").toUpperCase()} · Rx: {req.prescriptionId}
+                  <div style={{ fontSize: "12px", color: "#475569", display: "flex", justifyContent: "space-between" }}>
+                    <span><strong>Issue:</strong> {req.issueType.replace("_", " ").toUpperCase()}</span>
+                    <span>Rx: {req.prescriptionId}</span>
                   </div>
 
                   <p style={{ margin: 0, fontSize: "12.5px", color: "#334155", fontStyle: "italic", lineHeight: 1.35 }}>
-                    &ldquo;{req.patientMessage.slice(0, 80)}...&rdquo;
+                    &ldquo;{req.patientMessage.slice(0, 85)}{req.patientMessage.length > 85 ? "..." : ""}&rdquo;
                   </p>
+
+                  <div style={{ fontSize: "11px", color: "#64748b", borderTop: "1px dashed #e2e8f0", paddingTop: "6px", display: "flex", justifyContent: "space-between" }}>
+                    <span>To: {req.doctorName}</span>
+                    <span>{new Date(req.reportedAt).toLocaleDateString()}</span>
+                  </div>
                 </div>
               );
             })
           )}
         </div>
 
-        {/* Right Column: Active Request Review, Dose Adjustment & Chemist Audit */}
+        {/* Right Column: Active Request Review, 1-Click Presets, Dose Adjustment & Chemist Audit */}
         {selectedReq && (
           <div
             style={{
@@ -346,13 +636,52 @@ export function DoctorFollowupManager({
               </div>
 
               {/* Patient Message Callout */}
-              <div style={{ background: "#fffbeb", border: "1px solid #fde68a", padding: "10px 14px", borderRadius: "8px", marginTop: "10px" }}>
-                <span style={{ fontSize: "11px", fontWeight: 700, color: "#92400e", textTransform: "uppercase", display: "block" }}>
-                  Patient Stated Issue:
-                </span>
-                <p style={{ margin: "2px 0 0", fontSize: "13px", color: "#78350f", lineHeight: 1.4 }}>
+              <div style={{ background: "#fffbeb", border: "1px solid #fde68a", padding: "12px 14px", borderRadius: "10px", marginTop: "10px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "11px", fontWeight: 700, color: "#92400e", textTransform: "uppercase" }}>
+                    Patient Stated Issue / Symptoms:
+                  </span>
+                  <span style={{ fontSize: "11px", color: "#b45309", fontWeight: 600 }}>
+                    Assigned: {selectedReq.doctorName}
+                  </span>
+                </div>
+                <p style={{ margin: "4px 0 0", fontSize: "13.5px", color: "#78350f", lineHeight: 1.45, fontStyle: "italic" }}>
                   &ldquo;{selectedReq.patientMessage}&rdquo;
                 </p>
+              </div>
+            </div>
+
+            {/* Quick 1-Click Clinical Presets */}
+            <div>
+              <span style={{ display: "block", fontSize: "11.5px", fontWeight: 800, color: "#047857", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>
+                ⚡ Quick 1-Click Clinical Presets:
+              </span>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                {CLINICAL_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => applyPreset(preset)}
+                    style={{
+                      background: "#f8fafc",
+                      border: "1px solid #cbd5e1",
+                      borderRadius: "8px",
+                      padding: "6px 12px",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      color: "#1e293b",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      transition: "all 0.15s ease",
+                    }}
+                    title={preset.instructions}
+                  >
+                    <span>{preset.icon}</span>
+                    <span>{preset.label}</span>
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -411,6 +740,7 @@ export function DoctorFollowupManager({
                   required
                   value={doctorReply}
                   onChange={(e) => setDoctorReply(e.target.value)}
+                  placeholder="Explain dosage changes, red-flag symptoms, and clinical advice..."
                   style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "13px", lineHeight: 1.4, boxSizing: "border-box" }}
                 />
               </div>
@@ -458,15 +788,20 @@ export function DoctorFollowupManager({
                   color: "#ffffff",
                   border: "none",
                   borderRadius: "8px",
-                  padding: "11px 18px",
-                  fontSize: "13.5px",
+                  padding: "12px 20px",
+                  fontSize: "14px",
                   fontWeight: 700,
                   cursor: "pointer",
                   boxShadow: "0 4px 12px rgba(5,150,105,0.25)",
                   marginTop: "6px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
                 }}
               >
-                ✓ Sign &amp; Send Revised Prescription to Patient
+                <span>✓</span>
+                <span>Sign &amp; Send Revised Prescription to Patient</span>
               </button>
             </form>
 
