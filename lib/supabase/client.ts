@@ -102,6 +102,16 @@ export const DEFAULT_DEMO_USERS: Profile[] = [
     phone: "+91 98765 43210",
   },
   {
+    id: "chem-demo-7402",
+    email: "pratyushrath50@gmail.com",
+    display_name: "PMBJP Jan Aushadhi Kendra #7402",
+    role: "chemist",
+    pseudo_id: "PHARM-7402",
+    facility_name: "PMBJP Kendra #7402 - Block Market",
+    address: "Main Market Road, near Block Office",
+    phone: "+91 94370 12345",
+  },
+  {
     id: "chem-demo-1",
     email: "jan.aushadhi.kendra@pharma.org",
     display_name: "Jan Aushadhi Kendra #1084",

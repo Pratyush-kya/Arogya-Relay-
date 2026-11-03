@@ -961,6 +961,27 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                   <button
                     type="button"
                     onClick={() => {
+                      setEmail("pratyushrath50@gmail.com");
+                      setPassword("demo123");
+                      setStatus({ tone: "good", msg: "Selected PMBJP Jan Aushadhi Kendra #7402 (Chemist · pratyushrath50@gmail.com) · Click Sign In" });
+                    }}
+                    style={{
+                      background: "#f0fdf4",
+                      color: "#15803d",
+                      border: "1px solid #86efac",
+                      borderRadius: "6px",
+                      padding: "4px 8px",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                    title="PMBJP Jan Aushadhi Kendra #7402 - Chemist (pratyushrath50@gmail.com)"
+                  >
+                    🏪 Kendra #7402 (Chemist)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
                       setEmail("jan.aushadhi.kendra@pharma.org");
                       setPassword("demo123");
                       setStatus({ tone: "good", msg: "Selected Jan Aushadhi Kendra (Chemist) · Click Sign In" });

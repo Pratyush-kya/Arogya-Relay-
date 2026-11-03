@@ -79,6 +79,66 @@ export interface AdherenceLog {
   loggedAt: string;
 }
 
+export interface AvailableChemist {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  email: string;
+  distanceKm: number;
+}
+
+export const NEARBY_CHEMISTS: AvailableChemist[] = [
+  {
+    id: "ph-01",
+    name: "Pradhan Mantri Jan Aushadhi Kendra #7402",
+    address: "Main Market Road, near Block Office",
+    phone: "+91 94370 12345",
+    email: "pratyushrath50@gmail.com",
+    distanceKm: 1.2,
+  },
+  {
+    id: "ph-02",
+    name: "Community Red Cross Generic Dispensary",
+    address: "Hospital Road, Civil Lines",
+    phone: "+91 94371 67890",
+    email: "redcross.dispensary@health.org",
+    distanceKm: 2.4,
+  },
+  {
+    id: "ph-03",
+    name: "Jan Aushadhi Kendra #1084",
+    address: "Sub-Divisional Hospital Complex",
+    phone: "+91 98610 54321",
+    email: "jan.aushadhi.kendra@pharma.org",
+    distanceKm: 3.1,
+  },
+];
+
+export function getChemistGmailComposeUrl(
+  chemistEmail: string,
+  subject: string,
+  body: string
+): string {
+  const params = new URLSearchParams({
+    view: "cm",
+    fs: "1",
+    to: chemistEmail,
+    su: subject,
+    body: body,
+  });
+  return `https://mail.google.com/mail/?${params.toString()}`;
+}
+
+export type FulfillmentMode = "store_pickup" | "home_delivery";
+export type FulfillmentStatus =
+  | "awaiting_patient_choice"
+  | "order_confirmed"
+  | "packed_ready"
+  | "out_for_delivery"
+  | "ready_for_pickup"
+  | "dispensed";
+
 export interface PatientPrescription {
   id: string;
   patientRef: string;
@@ -92,13 +152,12 @@ export interface PatientPrescription {
   synced: boolean;
   totalPriceInr?: number;
   mrpPriceInr?: number;
-  suggestedChemist?: {
-    id: string;
-    name: string;
-    address: string;
-    phone?: string;
-    distanceKm?: number;
-  };
+  suggestedChemist?: AvailableChemist;
+  fulfillmentMode?: FulfillmentMode;
+  fulfillmentStatus?: FulfillmentStatus;
+  deliveryAddress?: string;
+  deliveryFeeInr?: number;
+  finalTotalInr?: number;
 }
 
 export type FollowUpIssueType =
@@ -124,13 +183,13 @@ export interface PrescriptionFollowUpRequest {
   status: "pending_doctor_review" | "doctor_revised" | "dispensed";
   doctorReply?: string;
   revisedMedicines?: ScheduledMedicine[];
-  suggestedChemist?: {
-    id: string;
-    name: string;
-    address: string;
-    phone?: string;
-    distanceKm?: number;
-  };
+  suggestedChemist?: AvailableChemist;
+  fulfillmentMode?: FulfillmentMode;
+  fulfillmentStatus?: FulfillmentStatus;
+  deliveryAddress?: string;
+  deliveryFeeInr?: number;
+  finalTotalInr?: number;
+  orderConfirmedAt?: string;
   totalPriceInr?: number;
   mrpPriceInr?: number;
   savingsPercent?: number;

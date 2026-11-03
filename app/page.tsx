@@ -197,6 +197,7 @@ export default function Home({
             cleanEmail.includes("doctor");
           const isChemistEmail =
             cleanEmail === "jan.aushadhi.kendra@pharma.org" ||
+            cleanEmail === "pratyushrath50@gmail.com" ||
             cleanEmail.includes("chemist");
           const isRootAdmin = cleanEmail === "pratyushkiranrath4@gmail.com";
 
@@ -219,6 +220,17 @@ export default function Home({
                     council_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Delhi Medical Council" : "National Medical Commission",
                     specialization: cleanEmail === "samarpitbiswal966@gmail.com" ? "Internal Medicine & Paediatrics" : "General Medicine & Cardiology",
                     facility_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Community Health Centre & Rural Hospital" : "Mawlynnong Sub-Divisional Hospital & PHC",
+                    verification_status: "verified",
+                  }
+                : isChemistEmail
+                ? {
+                    ...(p || ({} as Profile)),
+                    id: data.user.id,
+                    email: cleanEmail,
+                    role: "chemist",
+                    display_name: cleanEmail === "pratyushrath50@gmail.com" ? "PMBJP Jan Aushadhi Kendra #7402" : "Jan Aushadhi Kendra #1084",
+                    facility_name: cleanEmail === "pratyushrath50@gmail.com" ? "PMBJP Kendra #7402 - Block Market" : "Kendra Dispensary - North Ridge",
+                    address: cleanEmail === "pratyushrath50@gmail.com" ? "Main Market Road, near Block Office" : "Market Complex, Sector 4",
                     verification_status: "verified",
                   }
                 : p || ({ id: data.user.id, email: cleanEmail, role: r, display_name: cleanEmail.split("@")[0] } as Profile);
@@ -264,6 +276,7 @@ export default function Home({
                   cleanEmail.includes("doctor");
                 const isChemistEmail =
                   cleanEmail === "jan.aushadhi.kendra@pharma.org" ||
+                  cleanEmail === "pratyushrath50@gmail.com" ||
                   cleanEmail.includes("chemist");
                 const isRootAdmin = cleanEmail === "pratyushkiranrath4@gmail.com";
 
@@ -282,6 +295,15 @@ export default function Home({
                       council_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Delhi Medical Council" : "National Medical Commission",
                       specialization: cleanEmail === "samarpitbiswal966@gmail.com" ? "Internal Medicine & Paediatrics" : "General Medicine & Cardiology",
                       facility_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Community Health Centre & Rural Hospital" : "Mawlynnong Sub-Divisional Hospital & PHC",
+                      verification_status: "verified",
+                    }
+                  : isChemistEmail
+                  ? {
+                      ...p,
+                      role: "chemist",
+                      display_name: cleanEmail === "pratyushrath50@gmail.com" ? "PMBJP Jan Aushadhi Kendra #7402" : "Jan Aushadhi Kendra #1084",
+                      facility_name: cleanEmail === "pratyushrath50@gmail.com" ? "PMBJP Kendra #7402 - Block Market" : "Kendra Dispensary - North Ridge",
+                      address: cleanEmail === "pratyushrath50@gmail.com" ? "Main Market Road, near Block Office" : "Market Complex, Sector 4",
                       verification_status: "verified",
                     }
                   : p;
@@ -354,6 +376,7 @@ export default function Home({
             cleanEmail.includes("doctor");
           const isChemistEmail =
             cleanEmail === "jan.aushadhi.kendra@pharma.org" ||
+            cleanEmail === "pratyushrath50@gmail.com" ||
             cleanEmail.includes("chemist");
           const isRootAdmin = cleanEmail === "pratyushkiranrath4@gmail.com";
 
@@ -376,6 +399,17 @@ export default function Home({
                     council_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Delhi Medical Council" : "National Medical Commission",
                     specialization: cleanEmail === "samarpitbiswal966@gmail.com" ? "Internal Medicine & Paediatrics" : "General Medicine & Cardiology",
                     facility_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Community Health Centre & Rural Hospital" : "Mawlynnong Sub-Divisional Hospital & PHC",
+                    verification_status: "verified",
+                  }
+                : isChemistEmail
+                ? {
+                    ...(p || ({} as Profile)),
+                    id: session.user.id,
+                    email: cleanEmail,
+                    role: "chemist",
+                    display_name: cleanEmail === "pratyushrath50@gmail.com" ? "PMBJP Jan Aushadhi Kendra #7402" : "Jan Aushadhi Kendra #1084",
+                    facility_name: cleanEmail === "pratyushrath50@gmail.com" ? "PMBJP Kendra #7402 - Block Market" : "Kendra Dispensary - North Ridge",
+                    address: cleanEmail === "pratyushrath50@gmail.com" ? "Main Market Road, near Block Office" : "Market Complex, Sector 4",
                     verification_status: "verified",
                   }
                 : p || ({ id: session.user.id, email: cleanEmail, role: r, display_name: cleanEmail.split("@")[0] } as Profile);

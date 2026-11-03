@@ -8,7 +8,11 @@ import {
   saveLocalPrescription,
   initFollowupRealtimeSync,
 } from "@/lib/prescriptions/storage";
-import type { PrescriptionFollowUpRequest, ScheduledMedicine } from "@/lib/prescriptions/types";
+import {
+  type PrescriptionFollowUpRequest,
+  type ScheduledMedicine,
+  NEARBY_CHEMISTS,
+} from "@/lib/prescriptions/types";
 import { useLanguage } from "@/lib/i18n/provider";
 import { ReadAloud } from "./read-aloud";
 
@@ -18,29 +22,6 @@ interface DoctorFollowupManagerProps {
   doctorEmail?: string;
 }
 
-const NEARBY_CHEMISTS = [
-  {
-    id: "ph-01",
-    name: "Pradhan Mantri Jan Aushadhi Kendra #7402",
-    address: "Main Market Road, near Block Office",
-    phone: "+91 94370 12345",
-    distanceKm: 1.2,
-  },
-  {
-    id: "ph-02",
-    name: "Community Red Cross Generic Dispensary",
-    address: "Hospital Road, Civil Lines",
-    phone: "+91 94371 67890",
-    distanceKm: 2.4,
-  },
-  {
-    id: "ph-03",
-    name: "Jan Aushadhi Kendra #1084",
-    address: "Sub-Divisional Hospital Complex",
-    phone: "+91 98610 54321",
-    distanceKm: 3.1,
-  },
-];
 
 interface ClinicalPreset {
   id: string;
@@ -284,6 +265,11 @@ export function DoctorFollowupManager({
       doctorReply: doctorReply.trim(),
       revisedMedicines: updatedMedicines,
       suggestedChemist: chosenChemist,
+      fulfillmentMode: selectedReq.fulfillmentMode || "store_pickup",
+      fulfillmentStatus: selectedReq.fulfillmentStatus || "awaiting_patient_choice",
+      deliveryAddress: selectedReq.deliveryAddress || "North Ridge Hamlet #12",
+      deliveryFeeInr: selectedReq.deliveryFeeInr ?? 0.0,
+      finalTotalInr: calculatedPrice + (selectedReq.fulfillmentMode === "home_delivery" ? (selectedReq.deliveryFeeInr ?? 30.0) : 0.0),
       totalPriceInr: calculatedPrice,
       mrpPriceInr: Math.round(calculatedPrice * 4.2),
       savingsPercent: 76.5,
