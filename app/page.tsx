@@ -706,26 +706,6 @@ export default function Home({
     );
   }
 
-  // DEDICATED SEPARATE FULL-SCREEN: Chemist & Jan Aushadhi Dispensary Workstation
-  if (viewMode === "chemist" || activeRole === "chemist") {
-    return (
-      <ChemistDispensary
-        onSignOut={handleSignOut}
-        chemistName={currentProfile?.display_name || "Jan Aushadhi Kendra #1084"}
-        onBackToDashboard={
-          activeRole !== "chemist"
-            ? () => {
-                setViewMode("dashboard");
-                if (typeof window !== "undefined" && (window.location.hash.startsWith("#chem") || window.location.hash.startsWith("#pharm") || window.location.hash.startsWith("#disp"))) {
-                  window.history.pushState("", document.title, window.location.pathname + window.location.search);
-                }
-              }
-            : undefined
-        }
-      />
-    );
-  }
-
   // DEDICATED SEPARATE FULL-SCREEN: System Administrator Governance Console
   if (viewMode === "admin" || activeRole === "admin") {
     return (
@@ -762,9 +742,6 @@ export default function Home({
         <DoctorWorkspace
           currentUser={currentUser}
           currentProfile={currentProfile}
-          screenings={screenings}
-          onDoctorEvaluate={handleDoctorEvaluate}
-          onOpenHealthPass={(r) => setHealthPassRecord(r)}
           onSignOut={handleSignOut}
         />
         {healthPassRecord && (

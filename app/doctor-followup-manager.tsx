@@ -86,6 +86,7 @@ export function DoctorFollowupManager({
   // Queue Filters
   const [filterMode, setFilterMode] = useState<"assigned" | "pending" | "revised" | "all">("assigned");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showHistoryView, setShowHistoryView] = useState(false);
 
   // Revision Form State
   const [doctorReply, setDoctorReply] = useState("");
@@ -292,9 +293,9 @@ export function DoctorFollowupManager({
 
     reload(selectedReq.id);
     setStatusNotice(
-      `✓ Prescription revision & Jan Aushadhi fair price signed by ${doctorName}! Response delivered to Patient ${selectedReq.patientName}. Patient will see your advice in Section 2 and can activate daily alarms.`
+      `✓ Prescription revision & Jan Aushadhi fair price signed by ${doctorName}! Notification dispatched to Patient ${selectedReq.patientName}. Patient received in-app alert with nearest Jan Aushadhi Kendra (${chosenChemist.name}) and 1-click WhatsApp/SMS link.`
     );
-    setTimeout(() => setStatusNotice(null), 6000);
+    setTimeout(() => setStatusNotice(null), 7000);
   }
 
   function handleVerifyChemistAudit(req: PrescriptionFollowUpRequest) {
@@ -394,16 +395,19 @@ export function DoctorFollowupManager({
           gap: "12px",
         }}
       >
-        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
           <button
             type="button"
-            onClick={() => setFilterMode("assigned")}
+            onClick={() => {
+              setShowHistoryView(false);
+              setFilterMode("assigned");
+            }}
             style={{
               padding: "7px 14px",
               borderRadius: "8px",
-              border: filterMode === "assigned" ? "1.5px solid #059669" : "1px solid #cbd5e1",
-              background: filterMode === "assigned" ? "#ecfdf5" : "#ffffff",
-              color: filterMode === "assigned" ? "#065f46" : "#475569",
+              border: !showHistoryView && filterMode === "assigned" ? "1.5px solid #059669" : "1px solid #cbd5e1",
+              background: !showHistoryView && filterMode === "assigned" ? "#ecfdf5" : "#ffffff",
+              color: !showHistoryView && filterMode === "assigned" ? "#065f46" : "#475569",
               fontSize: "12.5px",
               fontWeight: 700,
               cursor: "pointer",
@@ -413,13 +417,16 @@ export function DoctorFollowupManager({
           </button>
           <button
             type="button"
-            onClick={() => setFilterMode("pending")}
+            onClick={() => {
+              setShowHistoryView(false);
+              setFilterMode("pending");
+            }}
             style={{
               padding: "7px 14px",
               borderRadius: "8px",
-              border: filterMode === "pending" ? "1.5px solid #d97706" : "1px solid #cbd5e1",
-              background: filterMode === "pending" ? "#fffbeb" : "#ffffff",
-              color: filterMode === "pending" ? "#b45309" : "#475569",
+              border: !showHistoryView && filterMode === "pending" ? "1.5px solid #d97706" : "1px solid #cbd5e1",
+              background: !showHistoryView && filterMode === "pending" ? "#fffbeb" : "#ffffff",
+              color: !showHistoryView && filterMode === "pending" ? "#b45309" : "#475569",
               fontSize: "12.5px",
               fontWeight: 700,
               cursor: "pointer",
@@ -429,35 +436,44 @@ export function DoctorFollowupManager({
           </button>
           <button
             type="button"
-            onClick={() => setFilterMode("revised")}
-            style={{
-              padding: "7px 14px",
-              borderRadius: "8px",
-              border: filterMode === "revised" ? "1.5px solid #2563eb" : "1px solid #cbd5e1",
-              background: filterMode === "revised" ? "#eff6ff" : "#ffffff",
-              color: filterMode === "revised" ? "#1e40af" : "#475569",
-              fontSize: "12.5px",
-              fontWeight: 700,
-              cursor: "pointer",
+            onClick={() => {
+              setShowHistoryView(false);
+              setFilterMode("all");
             }}
-          >
-            ✅ Revised ({revisedList.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilterMode("all")}
             style={{
               padding: "7px 14px",
               borderRadius: "8px",
-              border: filterMode === "all" ? "1.5px solid #475569" : "1px solid #cbd5e1",
-              background: filterMode === "all" ? "#f1f5f9" : "#ffffff",
-              color: filterMode === "all" ? "#0f172a" : "#475569",
+              border: !showHistoryView && filterMode === "all" ? "1.5px solid #475569" : "1px solid #cbd5e1",
+              background: !showHistoryView && filterMode === "all" ? "#f1f5f9" : "#ffffff",
+              color: !showHistoryView && filterMode === "all" ? "#0f172a" : "#475569",
               fontSize: "12.5px",
               fontWeight: 700,
               cursor: "pointer",
             }}
           >
             📋 All Reports ({followups.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowHistoryView(!showHistoryView)}
+            style={{
+              padding: "7px 14px",
+              borderRadius: "8px",
+              border: showHistoryView ? "1.5px solid #2563eb" : "1px solid #93c5fd",
+              background: showHistoryView ? "#eff6ff" : "#f0f9ff",
+              color: showHistoryView ? "#1e40af" : "#0369a1",
+              fontSize: "12.5px",
+              fontWeight: 700,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            <span>📜 Sent Prescriptions Track</span>
+            <span style={{ background: showHistoryView ? "#2563eb" : "#0284c7", color: "#ffffff", padding: "1px 6px", borderRadius: "10px", fontSize: "11px" }}>
+              {revisedList.length}
+            </span>
           </button>
         </div>
 
@@ -479,8 +495,195 @@ export function DoctorFollowupManager({
         </div>
       </div>
 
-      {/* Main 2-Column Layout: Left Requests List, Right Detail & Revision Editor */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "20px" }}>
+      {/* VIEW A: PRESCRIPTION HISTORY & SENT TRACK */}
+      {showHistoryView ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <div
+            style={{
+              background: "#ffffff",
+              borderRadius: "14px",
+              padding: "16px 20px",
+              border: "1.5px solid #cbd5e1",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "12px",
+            }}
+          >
+            <div>
+              <h3 style={{ margin: 0, fontSize: "16.5px", color: "#0f172a", fontWeight: 800 }}>
+                📜 Prescription History &amp; Sent Track ({revisedList.length})
+              </h3>
+              <p style={{ margin: "2px 0 0", fontSize: "12.5px", color: "#64748b" }}>
+                Audit log of all sent clinical prescriptions, patient notification dispatch, and Jan Aushadhi fulfillment records.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowHistoryView(false)}
+              style={{
+                background: "#047857",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "8px",
+                padding: "8px 16px",
+                fontSize: "12.5px",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              ← Back to Consultation Queue
+            </button>
+          </div>
+
+          {revisedList.length === 0 ? (
+            <div style={{ background: "#ffffff", padding: "40px 20px", borderRadius: "12px", border: "1px dashed #cbd5e1", textAlign: "center" }}>
+              <span style={{ fontSize: "36px", display: "block", marginBottom: "8px" }}>📭</span>
+              <p style={{ color: "#475569", margin: 0, fontSize: "14px", fontWeight: 600 }}>
+                No sent prescriptions recorded yet.
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: "grid", gap: "14px" }}>
+              {revisedList.map((item) => (
+                <div
+                  key={item.id}
+                  style={{
+                    background: "#ffffff",
+                    borderRadius: "14px",
+                    border: "1.5px solid #e2e8f0",
+                    padding: "18px 20px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "14px",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "10px", borderBottom: "1px solid #f1f5f9", paddingBottom: "10px" }}>
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <strong style={{ fontSize: "15px", color: "#0f172a" }}>👤 {item.patientName}</strong>
+                        <span style={{ fontSize: "11px", background: "#f1f5f9", color: "#475569", padding: "2px 8px", borderRadius: "6px" }}>
+                          ID: {item.patientRef}
+                        </span>
+                        <span style={{ fontSize: "11px", background: "#e0f2fe", color: "#0369a1", padding: "2px 8px", borderRadius: "6px" }}>
+                          Rx: {item.prescriptionId}
+                        </span>
+                      </div>
+                      <span style={{ fontSize: "12px", color: "#64748b", marginTop: "2px", display: "block" }}>
+                        Sent by <strong>{item.doctorName}</strong> ({item.doctorNmc || "NMC Verified"}) · Reported: {new Date(item.reportedAt).toLocaleString()}
+                      </span>
+                    </div>
+
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                      <span style={{ background: "#ecfdf5", color: "#065f46", border: "1px solid #a7f3d0", fontSize: "11.5px", fontWeight: 700, padding: "3px 10px", borderRadius: "20px" }}>
+                        ✓ Notification Dispatched to Patient
+                      </span>
+                      <span style={{ background: "#f0fdf4", color: "#166534", border: "1px solid #86efac", fontSize: "11.5px", fontWeight: 700, padding: "3px 10px", borderRadius: "20px" }}>
+                        📱 WhatsApp / SMS Ready
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "14px" }}>
+                    {/* Medicines & Guidance */}
+                    <div style={{ background: "#f8fafc", padding: "12px 14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                      <span style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", color: "#047857", display: "block", marginBottom: "4px" }}>
+                        Prescribed Medicines &amp; Doses
+                      </span>
+                      {item.revisedMedicines?.map((m) => (
+                        <div key={m.id} style={{ fontSize: "13px", color: "#1e293b", marginBottom: "4px" }}>
+                          <strong>{m.name} {m.strength}</strong> — {m.dose}
+                          <div style={{ fontSize: "11.5px", color: "#64748b" }}>{m.instructions}</div>
+                        </div>
+                      ))}
+                      {item.doctorReply && (
+                        <p style={{ margin: "6px 0 0", fontSize: "12px", color: "#334155", fontStyle: "italic", borderTop: "1px dashed #cbd5e1", paddingTop: "4px" }}>
+                          &ldquo;{item.doctorReply}&rdquo;
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Jan Aushadhi Chemist & Pricing */}
+                    <div style={{ background: "#f0fdf4", padding: "12px 14px", borderRadius: "10px", border: "1px solid #bbf7d0" }}>
+                      <span style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", color: "#166534", display: "block", marginBottom: "4px" }}>
+                        Jan Aushadhi Kendra Assigned
+                      </span>
+                      <strong style={{ fontSize: "13.5px", color: "#166534", display: "block" }}>
+                        🏪 {item.suggestedChemist?.name || "PMBJP Jan Aushadhi Kendra #7402"}
+                      </strong>
+                      <span style={{ fontSize: "12px", color: "#15803d", display: "block" }}>
+                        📍 {item.suggestedChemist?.address || "Mawlynnong Main Road"} ({item.suggestedChemist?.distanceKm || 1.2} km)
+                      </span>
+                      <span style={{ fontSize: "11.5px", color: "#166534", display: "block", marginTop: "2px" }}>
+                        📞 {item.suggestedChemist?.phone || "+91 94370 12345"} · 📧 {item.suggestedChemist?.email || "pratyushrath50@gmail.com"}
+                      </span>
+                      <div style={{ marginTop: "6px", display: "flex", alignItems: "baseline", gap: "6px" }}>
+                        <strong style={{ fontSize: "15px", color: "#166534" }}>₹{item.totalPriceInr || 18.0}</strong>
+                        <span style={{ fontSize: "11px", color: "#15803d" }}>(Jan Aushadhi Fair Price Lock)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px", borderTop: "1px solid #f1f5f9", paddingTop: "8px" }}>
+                    <div style={{ fontSize: "12px", color: "#475569" }}>
+                      <strong>Audit Status:</strong>{" "}
+                      {item.doctorAuditStatus === "dispense_verified" ? (
+                        <span style={{ color: "#15803d", fontWeight: 700 }}>✓ Verified by Doctor</span>
+                      ) : (
+                        <span style={{ color: "#b45309" }}>Pending Patient Pickup</span>
+                      )}
+                    </div>
+
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      {item.doctorAuditStatus !== "dispense_verified" && (
+                        <button
+                          type="button"
+                          onClick={() => handleVerifyChemistAudit(item)}
+                          style={{
+                            background: "#eff6ff",
+                            color: "#1d4ed8",
+                            border: "1px solid #93c5fd",
+                            padding: "6px 12px",
+                            borderRadius: "6px",
+                            fontSize: "12px",
+                            fontWeight: 700,
+                            cursor: "pointer",
+                          }}
+                        >
+                          Verify Chemist Dispense ✓
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowHistoryView(false);
+                          handleSelectFollowup(item);
+                        }}
+                        style={{
+                          background: "#ffffff",
+                          color: "#334155",
+                          border: "1px solid #cbd5e1",
+                          padding: "6px 12px",
+                          borderRadius: "6px",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Open in Editor ✏️
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        /* VIEW B: 2-COLUMN MAIN WORKSTATION */
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "20px" }}>
         {/* Left Column: Follow-up Queue */}
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -858,6 +1061,7 @@ export function DoctorFollowupManager({
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

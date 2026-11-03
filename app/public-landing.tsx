@@ -961,48 +961,6 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                   <button
                     type="button"
                     onClick={() => {
-                      setEmail("pratyushrath50@gmail.com");
-                      setPassword("demo123");
-                      setStatus({ tone: "good", msg: "Selected PMBJP Jan Aushadhi Kendra #7402 (Chemist · pratyushrath50@gmail.com) · Click Sign In" });
-                    }}
-                    style={{
-                      background: "#f0fdf4",
-                      color: "#15803d",
-                      border: "1px solid #86efac",
-                      borderRadius: "6px",
-                      padding: "4px 8px",
-                      fontSize: "11px",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                    }}
-                    title="PMBJP Jan Aushadhi Kendra #7402 - Chemist (pratyushrath50@gmail.com)"
-                  >
-                    🏪 Kendra #7402 (Chemist)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEmail("jan.aushadhi.kendra@pharma.org");
-                      setPassword("demo123");
-                      setStatus({ tone: "good", msg: "Selected Jan Aushadhi Kendra (Chemist) · Click Sign In" });
-                    }}
-                    style={{
-                      background: "#faf5ff",
-                      color: "#7e22ce",
-                      border: "1px solid #e9d5ff",
-                      borderRadius: "6px",
-                      padding: "4px 8px",
-                      fontSize: "11px",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                    }}
-                    title="Jan Aushadhi Dispensary - Chemist"
-                  >
-                    🏪 Kendra #1084 (Chemist)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
                       setEmail("citizen.ramesh@gmail.com");
                       setPassword("demo123");
                       setStatus({ tone: "good", msg: "Selected Ramesh Soren (Citizen / Patient) · Click Sign In" });
@@ -1034,11 +992,10 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                 <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "6px" }}>
                   Select Your Account Role
                 </label>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
                   {[
                     { id: "patient", icon: "👤", label: "Citizen / Patient" },
                     { id: "doctor", icon: "🩺", label: "Doctor" },
-                    { id: "chemist", icon: "🏪", label: "Chemist" },
                   ].map((item) => (
                     <button
                       key={item.id}
@@ -1158,23 +1115,6 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                       style={{ width: "100%", padding: "7px 10px", borderRadius: "6px", border: "1px solid #86efac", fontSize: "12px", boxSizing: "border-box" }}
                     />
                   </div>
-                </div>
-              )}
-
-              {/* Conditional Chemist Details */}
-              {role === "chemist" && (
-                <div style={{ background: "#faf5ff", border: "1px solid #e9d5ff", padding: "10px", borderRadius: "8px" }}>
-                  <label style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "#7e22ce", marginBottom: "3px" }}>
-                    Jan Aushadhi Kendra Store Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={chemistStoreName}
-                    onChange={(e) => setChemistStoreName(e.target.value)}
-                    placeholder="e.g. PMBJP Kendra North Ridge #108"
-                    style={{ width: "100%", padding: "7px 10px", borderRadius: "6px", border: "1px solid #d8b4fe", fontSize: "12px", boxSizing: "border-box" }}
-                  />
                 </div>
               )}
 
@@ -1312,7 +1252,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
             </button>
           </div>
 
-          {/* Card 3: Chemist */}
+          {/* Card 3: Jan Aushadhi Kendras */}
           <div
             style={{
               background: "#ffffff",
@@ -1326,26 +1266,26 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
           >
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
               <span style={{ fontSize: "24px" }}>🏪</span>
-              <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>Jan Aushadhi Chemist</h4>
+              <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>Jan Aushadhi Kendras</h4>
             </div>
             <p style={{ margin: "0 0 16px", fontSize: "13px", color: "#64748b", lineHeight: 1.5, flex: 1 }}>
-              Prescription QR scanner with single-use cryptographic token burn, guaranteed 100% non-expired batch stock, and zero fake or inflated medicine prices.
+              Direct integration with nearest verified PMBJP Kendras (Kendra #7402 · pratyushrath50@gmail.com). Transparent 70%+ savings, non-expired batch assurance, and direct pickup or doorstep fulfillment.
             </p>
             <button
               type="button"
-              onClick={() => selectRoleAndFocus("chemist")}
+              onClick={() => selectRoleAndFocus("patient")}
               style={{
                 padding: "8px 12px",
                 borderRadius: "6px",
-                border: "1px solid #e9d5ff",
-                background: "#faf5ff",
-                color: "#7e22ce",
+                border: "1px solid #86efac",
+                background: "#f0fdf4",
+                color: "#15803d",
                 fontSize: "12.5px",
                 fontWeight: 700,
                 cursor: "pointer",
               }}
             >
-              Select Chemist Role ↑
+              Access Patient Portal ↑
             </button>
           </div>
         </div>

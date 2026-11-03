@@ -1304,6 +1304,103 @@ export default function PrescriptionTracker({
               ) : (
                 /* Doctor Has Reviewed View */
                 <>
+                  {/* Realtime In-App Notification Banner with 1-Click WhatsApp / SMS Trigger */}
+                  <div
+                    style={{
+                      background: "linear-gradient(135deg, #065f46 0%, #047857 100%)",
+                      color: "#ffffff",
+                      borderRadius: "14px",
+                      padding: "16px 20px",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                      gap: "12px",
+                      boxShadow: "0 4px 16px rgba(4, 120, 87, 0.2)",
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ fontSize: "20px" }}>🔔</span>
+                        <strong style={{ fontSize: "15px" }}>
+                          New Prescription Received from {activeFollowup.doctorName}
+                        </strong>
+                        <span
+                          style={{
+                            background: "rgba(255,255,255,0.22)",
+                            padding: "2px 8px",
+                            borderRadius: "12px",
+                            fontSize: "11px",
+                            fontWeight: 700,
+                          }}
+                        >
+                          🟢 Delivered &amp; Synced
+                        </span>
+                      </div>
+                      <p style={{ margin: "4px 0 0", fontSize: "12.5px", opacity: 0.95, lineHeight: 1.4 }}>
+                        Your doctor has clinically reviewed your symptoms, modified your medicine dosage, and attached the nearest Jan Aushadhi Kendra ({activeFollowup.suggestedChemist?.name || "PMBJP Jan Aushadhi Kendra #7402"}) with locked fair pricing.
+                      </p>
+                    </div>
+
+                    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                      <a
+                        href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                          `*Arogya-Relay Prescription Notification*\n\n` +
+                          `👨‍⚕️ *Doctor:* ${activeFollowup.doctorName} (${activeFollowup.doctorNmc || "NMC Verified"})\n` +
+                          `👤 *Patient:* ${activeFollowup.patientName} (${activeFollowup.patientRef})\n` +
+                          `📋 *Prescription Ref:* ${activeFollowup.prescriptionId}\n\n` +
+                          `💬 *Doctor Advice:* ${activeFollowup.doctorReply || "Follow prescribed dosages."}\n\n` +
+                          `💊 *Prescribed Medicine:* ${activeFollowup.revisedMedicines?.[0]?.name || "Generic Medicine"} (${activeFollowup.revisedMedicines?.[0]?.strength || ""}) - ${activeFollowup.revisedMedicines?.[0]?.dose || ""}\n` +
+                          `💰 *Jan Aushadhi Fair Price:* ₹${activeFollowup.totalPriceInr || 18.0} (MRP ₹${activeFollowup.mrpPriceInr || 85.0})\n\n` +
+                          `📍 *Nearest Chemist:* ${activeFollowup.suggestedChemist?.name || "PMBJP Jan Aushadhi Kendra #7402"}\n` +
+                          `Address: ${activeFollowup.suggestedChemist?.address || "Mawlynnong Main Road"}\n` +
+                          `Distance: ${activeFollowup.suggestedChemist?.distanceKm || 1.2} km\n` +
+                          `Phone: ${activeFollowup.suggestedChemist?.phone || "+91 94370 12345"}\n` +
+                          `Email: ${activeFollowup.suggestedChemist?.email || "pratyushrath50@gmail.com"}`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          background: "#25d366",
+                          color: "#ffffff",
+                          padding: "8px 14px",
+                          borderRadius: "8px",
+                          fontWeight: 700,
+                          fontSize: "12px",
+                          textDecoration: "none",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          boxShadow: "0 2px 6px rgba(37, 211, 102, 0.3)",
+                        }}
+                      >
+                        <span>💬</span>
+                        <span>Open in WhatsApp</span>
+                      </a>
+
+                      <a
+                        href={`sms:?body=${encodeURIComponent(
+                          `Arogya-Relay: Dr. ${activeFollowup.doctorName} prescribed ${activeFollowup.revisedMedicines?.[0]?.name || "Medicine"} (${activeFollowup.revisedMedicines?.[0]?.dose || ""}). Nearest chemist: ${activeFollowup.suggestedChemist?.name || "Jan Aushadhi Kendra"} (₹${activeFollowup.totalPriceInr || 18.0}). Ph: ${activeFollowup.suggestedChemist?.phone || "+91 94370 12345"}`
+                        )}`}
+                        style={{
+                          background: "#ffffff",
+                          color: "#047857",
+                          padding: "8px 14px",
+                          borderRadius: "8px",
+                          fontWeight: 700,
+                          fontSize: "12px",
+                          textDecoration: "none",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                        }}
+                      >
+                        <span>📱</span>
+                        <span>Send via SMS</span>
+                      </a>
+                    </div>
+                  </div>
+
                   {/* Doctor's Clinical Advice Note with Read Aloud */}
                   <div
                     style={{
