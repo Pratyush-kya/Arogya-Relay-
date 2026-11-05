@@ -842,20 +842,18 @@ export default function PrescriptionTracker({
                 <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--foreground, #0f172a)" }}>
                   📄 Attach Prescription Slip or Lab Report (File Upload / 1-Click Sample)
                 </span>
-                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
                   <button
                     type="button"
                     onClick={() => {
                       setReportFilePreview("/sample-prescription-slip.png");
                       setSelectedDoctorId("doc-rajesh");
-                      setSelectedRxId("RX-9021");
+                      setSelectedRxId("RX-HTN-4011");
                       setReportIssueType("dose_change");
-                      if (!reportMessage.trim()) {
-                        setReportMessage(
-                          "Doctor sir, since starting Tab. Amlodipine 5mg from my visit, I am experiencing morning dizziness, lightheadedness when standing up, and slight swelling in my ankles. My BP measured today at the local sub-centre was 132/84 mmHg. Please review and adjust my medicine dose."
-                        );
-                      }
-                      setStatusMessage("Attached official sample prescription slip (Dr. Bishnu Prasad Satapathy · RX-9021)!");
+                      setReportMessage(
+                        "Respected Dr. Bishnu Prasad Satapathy sir,\n\nI am taking Tab. Telmisartan 40mg + Amlodipine 5mg daily in the morning as prescribed. Since yesterday, I have been experiencing significant morning dizziness and lightheadedness when standing up from bed.\n\nMy home digital BP monitor readings:\n- Morning (sitting): 102/68 mmHg, Pulse: 78 bpm (feels too low / dizzy)\n- Evening: 128/82 mmHg, Pulse: 74 bpm\n- No chest pain, shortness of breath, or leg swelling.\n\nCould you please evaluate if the Amlodipine dose should be tapered or if I should switch the timing to bedtime? Attaching my recent clinical slip and BP log for your review."
+                      );
+                      setStatusMessage("Loaded Disease 1: Dr. Bishnu Prasad Satapathy (Hypertension / Dizziness) & attached official slip!");
                     }}
                     style={{
                       background: "#047857",
@@ -872,14 +870,44 @@ export default function PrescriptionTracker({
                     }}
                   >
                     <span>⚡</span>
-                    <span>1-Click Load Official Slip</span>
+                    <span>1-Click Load Case 1 (Dr. Bishnu)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReportFilePreview("/respiratory-chest-slip.png");
+                      setSelectedDoctorId("doc-ananya");
+                      setSelectedRxId("RX-RESP-881");
+                      setReportIssueType("symptom_worsened");
+                      setReportMessage(
+                        "Respected Dr. Samarpit Biswal sir,\n\nI am writing regarding a worsening dry cough, throat irritation, and night-time chest tightness/wheezing that started 4 days ago following sudden weather change.\n\nCurrent Clinical Observations & Home Vitals:\n- SpO2 on room air: 96%\n- Body Temperature: 100.4°F (relieved only for 3 hours with paracetamol)\n- Pulse rate: 90 bpm, Respiratory rate: 21 breaths/min\n- Paroxysmal dry cough, especially severe between 2:00 AM and 5:00 AM.\n- Audible mild expiratory wheeze when breathing out deeply.\n- No blood in sputum, no severe breathlessness at rest.\n\nThe standard OTC Ambroxol cough syrup is not relieving the airway spasm. Could you please review and prescribe an appropriate bronchodilator inhaler (such as Duolin / Levosalbutamol) or adjust the medication course? I am attaching my recent outpatient consultation slip for your review."
+                      );
+                      setStatusMessage("Loaded Disease 2: Dr. Samarpit Biswal (Respiratory / Wheezing) & attached official slip!");
+                    }}
+                    style={{
+                      background: "#0369a1",
+                      color: "#ffffff",
+                      border: "none",
+                      padding: "5px 12px",
+                      borderRadius: "6px",
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "5px",
+                    }}
+                  >
+                    <span>⚡</span>
+                    <span>1-Click Load Case 2 (Dr. Samarpit)</span>
                   </button>
 
                   <a
                     href="/sample-prescription.pdf"
                     target="_blank"
                     rel="noopener noreferrer"
-                    download="Dr_Bishnu_Prasad_Satapathy_Prescription_RX-9021.pdf"
+                    download="Dr_Bishnu_Prasad_Satapathy_Prescription_RX-HTN-4011.pdf"
                     style={{
                       background: "#e0f2fe",
                       color: "#0369a1",
@@ -895,7 +923,30 @@ export default function PrescriptionTracker({
                     }}
                   >
                     <span>📥</span>
-                    <span>Download PDF</span>
+                    <span>PDF Case 1</span>
+                  </a>
+
+                  <a
+                    href="/respiratory-chest-prescription.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download="Dr_Samarpit_Biswal_Prescription_RX-RESP-881.pdf"
+                    style={{
+                      background: "#fee2e2",
+                      color: "#b91c1c",
+                      border: "1px solid #fecaca",
+                      padding: "5px 12px",
+                      borderRadius: "6px",
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      textDecoration: "none",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "5px",
+                    }}
+                  >
+                    <span>📥</span>
+                    <span>PDF Case 2</span>
                   </a>
 
                   {reportFilePreview && (
@@ -993,8 +1044,8 @@ export default function PrescriptionTracker({
                   <a
                     href={getDoctorGmailComposeUrl(
                       targetDoc.email,
-                      `[Arogya-Relay Consultation] ${reportIssueType.replace("_", " ")} - ${patientRef || "PT-RAMESH-01"}`,
-                      `Respected ${targetDoc.name},\n\nPrescription Ref: ${selectedRxId || "RX-9021"}\nPatient: Ramesh Soren\nIssue: ${reportIssueType}\n\nSymptoms / Inquiry:\n${reportMessage.trim() || "[Please state your symptoms or questions]"}\n\n(Direct consultation email - Human doctor review, No AI handling)`
+                      `[Arogya-Relay Consultation] ${reportIssueType.replace("_", " ")} - ${patientRef || "PT-CITIZEN"}`,
+                      `Respected ${targetDoc.name},\n\nPrescription Ref: ${selectedRxId || "RX-NEW"}\nPatient: ${currentUserProfile?.display_name || "Citizen Patient"}\nIssue: ${reportIssueType}\n\nSymptoms / Inquiry:\n${reportMessage.trim() || "[Please state your symptoms or questions]"}\n\n(Direct consultation email - Human doctor review, No AI handling)`
                     )}
                     target="_blank"
                     rel="noopener noreferrer"

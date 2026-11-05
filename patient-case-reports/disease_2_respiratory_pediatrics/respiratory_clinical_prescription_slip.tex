@@ -1,0 +1,143 @@
+\documentclass[9pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=0.6cm,top=0.4cm,bottom=0.4cm]{geometry}
+\usepackage{amsmath}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tcolorbox}
+\usepackage{tabularx}
+\usepackage{enumitem}
+
+\definecolor{primary}{RGB}{185, 28, 28}
+\definecolor{primarydark}{RGB}{153, 27, 27}
+\definecolor{accent}{RGB}{2, 132, 199}
+\definecolor{lightgray}{RGB}{248, 250, 252}
+\definecolor{linegray}{RGB}{226, 232, 240}
+\definecolor{darktext}{RGB}{15, 23, 42}
+\definecolor{warningbg}{RGB}{254, 242, 242}
+
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+
+% ── Outer Border ─────────────────────────────────────────────────────────────
+\begin{tcolorbox}[
+    colback=white,
+    colframe=primary,
+    arc=3mm,
+    boxrule=1.5pt,
+    left=8pt, right=8pt, top=5pt, bottom=5pt
+]
+
+% ── Hospital Header ──────────────────────────────────────────────────────────
+\begin{center}
+    {\scriptsize\textbf{\color{primarydark}ALL INDIA INSTITUTE OF MEDICAL SCIENCES (AIIMS) BHUBANESWAR}}\\[1pt]
+    {\scriptsize\textbf{\color{accent}APEX TRAUMA CENTRE $\cdot$ DEPARTMENT OF INTERNAL MEDICINE \& PAEDIATRICS}}\\[2pt]
+    {\Large\textbf{\color{primary}AIIMS BHUBANESWAR CLINICAL SERVICES}}\\[1pt]
+    {\footnotesize Sijua, Patrapada, Bhubaneswar, Odisha 751019 $\cdot$ 24x7 Emergency Helpline: 0674-2476789}\\[1pt]
+    {\scriptsize\textbf{SPECIALIZED CLINICAL ENCOUNTER \& RESPIRATORY CONSULTATION SLIP (OPD-PULM)}}
+\end{center}
+
+\vspace{-6pt}
+\noindent\textcolor{primary}{\rule{\linewidth}{1.2pt}}
+
+% ── Doctor Credentials Banner ────────────────────────────────────────────────
+\vspace{1pt}
+\begin{tabularx}{\linewidth}{@{}Xr@{}}
+    \textbf{\large Dr. Samarpit Biswal, MD} & \textbf{Date:} 05 November 2026 \\
+    Consultant Physician (Internal Medicine \& Paediatrics) & \textbf{Time:} Urgent Evening Review \\
+    Reg. No: \textbf{\color{primarydark}OMC-2020-54190} (Odisha Medical Council) & \textbf{Clinical Priority:} \textbf{\color{primary}URGENT REVIEW} \\
+    AIIMS Bhubaneswar (Apex Trauma Centre) & \textbf{Prescription ID:} \textbf{\color{accent}RX-RESP-881} \\
+\end{tabularx}
+
+\vspace{1pt}
+\noindent\textcolor{linegray}{\rule{\linewidth}{0.6pt}}
+
+% ── Patient Demographics & Vitals ────────────────────────────────────────────
+\vspace{1pt}
+\begin{tcolorbox}[colback=lightgray, colframe=linegray, arc=2mm, boxrule=0.5pt, left=6pt, right=6pt, top=3pt, bottom=3pt]
+    \begin{tabularx}{\linewidth}{@{}p{3.8cm}p{2.6cm}p{3.2cm}X@{}}
+        \textbf{Patient:} Citizen Registered Encounter & \textbf{Age/Sex:} 16 Y / Male & \textbf{Category:} Urgent Walk-in & \textbf{Ref:} \textbf{PT-RESP-881} \\
+        \textbf{Blood Pressure:} 118/76 mmHg & \textbf{Pulse Rate:} 90 bpm & \textbf{Resp. Rate:} 21 /min & \textbf{SpO$_2$:} 96\% (Room Air) \\
+    \end{tabularx}
+\end{tcolorbox}
+
+% ── Chief Complaints & Clinical Assessment ──────────────────────────────────
+\vspace{1pt}
+\noindent\textbf{\color{primarydark}CHIEF COMPLAINTS \& CLINICAL ASSESSMENT:}
+\begin{itemize}[leftmargin=14pt, topsep=1pt, itemsep=0.5pt]
+    \item \textbf{Presenting Symptoms:} Severe paroxysmal coughing for 4 days, night-time coughing bouts, mild expiratory wheeze, low-grade fever ($100.4^\circ$F).
+    \item \textbf{Chest Auscultation:} Bilateral end-expiratory polyphonic rhonchi, prolonged expiratory phase. No localized crackles or bronchial breathing.
+    \item \textbf{Throat Examination:} Mild posterior pharyngeal erythema, no follicular tonsillitis, cervical lymph nodes soft and non-tender.
+    \item \textbf{Provisional Diagnosis:} \textbf{Acute Hyper-Reactive Airway Disease / Tracheobronchitis with Bronchospasm}; Rule out atypical bacterial superinfection.
+\end{itemize}
+
+\vspace{1pt}
+\noindent\textcolor{primary}{\rule{\linewidth}{0.8pt}}
+
+% ── Urgent Diagnostic Workup ─────────────────────────────────────────────────
+\vspace{1pt}
+\noindent\textbf{\color{primarydark}DIAGNOSTIC INVESTIGATIONS ORDERED:}
+\begin{enumerate}[leftmargin=14pt, topsep=1pt, itemsep=0.5pt]
+    \item \textbf{Complete Blood Count (CBC) \& Absolute Eosinophil Count (AEC):} Rule out allergic bronchospasm vs bacterial leukocytosis.
+    \item \textbf{Chest X-Ray (PA View):} Check bronchial wall thickening, rule out focal pneumonic consolidation.
+    \item \textbf{SpO$_2$ Pulse Oximetry Monitoring:} Check room air oxygen saturation every 6 hours; report if $< 94\%$.
+\end{enumerate}
+
+\vspace{1pt}
+\noindent\textcolor{linegray}{\rule{\linewidth}{0.6pt}}
+
+% ── Rx Prescribed Medications ────────────────────────────────────────────────
+\vspace{1pt}
+{\LARGE\textbf{\color{primary}R\raisebox{-0.2ex}{x}}} \hfill {\scriptsize\textit{\color{darktext}Affordable PMBJP Jan Aushadhi Formulations Specified}}
+
+\vspace{1pt}
+\begin{tabularx}{\linewidth}{|r|X|c|c|X|}
+\hline
+\textbf{\#} & \textbf{Prescribed Formulation} & \textbf{Strength} & \textbf{Timings} & \textbf{Instructions \& Duration} \\
+\hline
+1 & \textbf{Levosalbutamol + Ipratropium} \newline \textit{(Duolin Inhaler MDI + Spacer)} & 50/20 mcg & \textbf{TID / SOS} (8am/2pm/9pm) & 2 puffs 3 times daily via spacer. Relieves airway bronchospasm $\times$ 5 Days. \\
+\hline
+2 & \textbf{Tab. Amoxicillin + Clavulanic Acid} \newline \textit{(PMBJP Generic Formulation)} & 625 mg & \textbf{BD} (Post-meals) & 1 tablet twice daily after meals for bacterial coverage $\times$ 5 Days. \\
+\hline
+3 & \textbf{Syp. Ambroxol + Levocetirizine} \newline \textit{(Mucolytic Expectorant \& Antihistamine)} & 100 ml & \textbf{BD} (Morning \& Night) & 10 ml twice daily with warm water. Thins secretions $\times$ 5 Days. \\
+\hline
+4 & \textbf{Tab. Paracetamol} \newline \textit{(Antipyretic Analgesic)} & 500 mg & \textbf{SOS} (Post-food) & 1 tablet only if fever $> 100^\circ$F or body ache persists (max 3/day). \\
+\hline
+\end{tabularx}
+
+% ── Critical Warning & Red Flags ─────────────────────────────────────────────
+\vspace{2pt}
+\begin{tcolorbox}[colback=warningbg, colframe=primary, arc=2mm, boxrule=0.8pt, left=5pt, right=5pt, top=2pt, bottom=2pt]
+    \textbf{\color{primarydark}[CRITICAL RED FLAGS -- VISIT AIIMS APEX TRAUMA CENTRE / ER IMMEDIATELY]:}
+    \begin{itemize}[leftmargin=12pt, topsep=1pt, itemsep=0pt]
+        \item If you experience \textbf{severe breathing difficulty}, inability to speak in full sentences, blueness around lips/fingertips, or SpO$_2$ drops below 93\%, visit AIIMS ER immediately.
+        \item Stay hydrated with warm fluids. Avoid cold drinks, exposure to dust, and smoke fumes.
+    \end{itemize}
+\end{tcolorbox}
+
+\vspace{2pt}
+
+% ── Footer with Seal and Signature ───────────────────────────────────────────
+\begin{tabularx}{\linewidth}{@{}Xr@{}}
+    \begin{tcolorbox}[colback=white, colframe=primary!40, arc=2mm, width=8.5cm, boxrule=0.6pt, left=5pt, right=5pt, top=2pt, bottom=2pt]
+        {\scriptsize\textbf{\color{primarydark}JAN AUSHADHI FAIR PRICE DISPENSING:}}\\
+        {\tiny Dispensed via PMBJP Jan Aushadhi \& AMRIT Pharmacy -- AIIMS Bhubaneswar Campus, Sijua, Patrapada. Government Toll-Free Helpline: 1800-180-8080. Affordable generic essential medicines guaranteed.}
+    \end{tcolorbox}
+    &
+    \begin{minipage}{6.5cm}
+        \centering
+        \vspace{1pt}
+        \textit{\color{primarydark}\Large Dr. Samarpit Biswal}\\[-4pt]
+        \rule{5.5cm}{0.8pt}\\[2pt]
+        \textbf{\small Dr. Samarpit Biswal, MD}\\
+        {\footnotesize Reg. No: OMC-2020-54190}\\
+        {\scriptsize Consultant Physician (Internal Medicine \& Paediatrics)}\\
+        {\tiny AIIMS Bhubaneswar (Apex Trauma Centre) $\cdot$ Govt. of India}
+    \end{minipage}
+\end{tabularx}
+
+\end{tcolorbox}
+
+\end{document}

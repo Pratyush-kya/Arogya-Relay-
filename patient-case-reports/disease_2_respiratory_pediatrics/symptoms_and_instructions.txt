@@ -1,0 +1,54 @@
+================================================================================
+AROGYA-RELAY: CLINICAL CASE 2 — ACUTE RESPIRATORY INFECTION & WHEEZING
+Target Doctor: Dr. Samarpit Biswal, MD (AIIMS Bhubaneswar - Apex Trauma Centre)
+================================================================================
+
+[FIELD 1: SELECT ASSIGNED MEDICAL OFFICER]
+👉 Select: "Dr. Samarpit Biswal, MD"
+   - Specialization: Internal Medicine & Paediatrics (8 Years Experience)
+   - Council Reg No: OMC-2020-54190
+   - Hospital: AIIMS Bhubaneswar (Apex Trauma Centre)
+   - Verified Direct Email: samarpitbiswal966@gmail.com
+
+--------------------------------------------------------------------------------
+[FIELD 2: REFERENCE PRESCRIPTION / DIAGNOSIS]
+👉 Select:
+   "General Medical Consultation / New Symptoms"
+   (OR choose any existing prescription from your list if already loaded)
+
+--------------------------------------------------------------------------------
+[FIELD 3: REASON FOR CONTACT / ISSUE TYPE]
+👉 Select:
+   "📉 Symptoms Worsening / Feeling Worse"
+
+--------------------------------------------------------------------------------
+[FIELD 4: DESCRIBE YOUR SYMPTOMS / SPECIFIC QUESTION FOR DOCTOR]
+👉 Copy & paste the exact text below into the text box:
+--------------------------------------------------------------------------------
+Respected Dr. Samarpit Biswal sir,
+
+I am writing regarding a worsening dry cough, throat irritation, and night-time chest tightness/wheezing that started 4 days ago following sudden weather change.
+
+Current Clinical Observations & Home Vitals:
+- SpO2 on room air: 96%
+- Body Temperature: 100.4°F (relieved only for 3 hours with paracetamol)
+- Pulse rate: 90 bpm, Respiratory rate: 21 breaths/min
+- Paroxysmal dry cough, especially severe between 2:00 AM and 5:00 AM.
+- Audible mild expiratory wheeze when breathing out deeply.
+- No blood in sputum, no severe breathlessness at rest.
+
+The standard OTC Ambroxol cough syrup is not relieving the airway spasm. Could you please review and prescribe an appropriate bronchodilator inhaler (such as Duolin / Levosalbutamol) or adjust the medication course? I am attaching my recent outpatient consultation slip for your review.
+--------------------------------------------------------------------------------
+
+[FIELD 5: ATTACH PRESCRIPTION SLIP OR LAB REPORT]
+👉 Click "Browse..." / File Input and upload either file located in this same folder:
+   - PDF Format: respiratory_clinical_prescription_slip.pdf
+   - Image Format: respiratory_clinical_prescription_slip.png
+
+--------------------------------------------------------------------------------
+[WHAT HAPPENS NEXT]
+1. Click the button: "🚀 Submit to Dr. Samarpit Biswal, MD"
+2. The case will be immediately routed to Dr. Samarpit Biswal's Doctor Workspace queue.
+3. When you log in with Dr. Samarpit's account (or switch to Doctor Workspace), the case will appear right at the top of the queue for clinical evaluation, dosage adjustment, and Jan Aushadhi Kendra pharmacy lock.
+4. An optional "✉️ Compose via Gmail (samarpitbiswal966@gmail.com)" direct link is also available for zero-AI human doctor review.
+================================================================================

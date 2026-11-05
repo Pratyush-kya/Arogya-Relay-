@@ -1,0 +1,143 @@
+\documentclass[9pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=0.6cm,top=0.4cm,bottom=0.4cm]{geometry}
+\usepackage{amsmath}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tcolorbox}
+\usepackage{tabularx}
+\usepackage{enumitem}
+
+\definecolor{primary}{RGB}{4, 120, 87}
+\definecolor{primarydark}{RGB}{6, 95, 70}
+\definecolor{accent}{RGB}{2, 132, 199}
+\definecolor{lightgray}{RGB}{248, 250, 252}
+\definecolor{linegray}{RGB}{226, 232, 240}
+\definecolor{darktext}{RGB}{15, 23, 42}
+\definecolor{warningbg}{RGB}{254, 242, 242}
+
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+
+% ── Outer Border ─────────────────────────────────────────────────────────────
+\begin{tcolorbox}[
+    colback=white,
+    colframe=primary,
+    arc=3mm,
+    boxrule=1.5pt,
+    left=8pt, right=8pt, top=5pt, bottom=5pt
+]
+
+% ── Hospital Header ──────────────────────────────────────────────────────────
+\begin{center}
+    {\scriptsize\textbf{\color{primarydark}GOVERNMENT OF ODISHA $\cdot$ DEPARTMENT OF HEALTH \& FAMILY WELFARE}}\\[1pt]
+    {\scriptsize\textbf{\color{accent}NATIONAL HEALTH MISSION (NHM) $\cdot$ NON-COMMUNICABLE DISEASE (NCD) DIVISION}}\\[2pt]
+    {\Large\textbf{\color{primary}CAPITAL HOSPITAL BHUBANESWAR \& DHH KHURDA}}\\[1pt]
+    {\footnotesize Department of General Medicine \& Cardiology $\cdot$ Unit-6, Bhubaneswar, Odisha 751001 $\cdot$ Helpline: 104}\\[1pt]
+    {\scriptsize\textbf{OUTPATIENT CLINICAL ENCOUNTER \& PRESCRIPTION SLIP (OPD-MEDICINE)}}
+\end{center}
+
+\vspace{-6pt}
+\noindent\textcolor{primary}{\rule{\linewidth}{1.2pt}}
+
+% ── Doctor Credentials Banner ────────────────────────────────────────────────
+\vspace{1pt}
+\begin{tabularx}{\linewidth}{@{}Xr@{}}
+    \textbf{\large Dr. Bishnu Prasad Satapathy, MBBS} & \textbf{Date:} 05 November 2026 \\
+    Consultant Physician \& Medical Officer (General Medicine \& Cardiology) & \textbf{Time:} 10:30 AM IST \\
+    Reg. No: \textbf{\color{primarydark}OMC-2018-88412} (Odisha Medical Council) & \textbf{OPD Token:} \#MED-142 \\
+    Capital Hospital Campus, Unit-6, Bhubaneswar & \textbf{Prescription ID:} \textbf{\color{accent}RX-HTN-4011} \\
+\end{tabularx}
+
+\vspace{1pt}
+\noindent\textcolor{linegray}{\rule{\linewidth}{0.6pt}}
+
+% ── Patient Demographics & Vitals ────────────────────────────────────────────
+\vspace{1pt}
+\begin{tcolorbox}[colback=lightgray, colframe=linegray, arc=2mm, boxrule=0.5pt, left=6pt, right=6pt, top=3pt, bottom=3pt]
+    \begin{tabularx}{\linewidth}{@{}p{3.8cm}p{2.6cm}p{3.2cm}X@{}}
+        \textbf{Patient:} Citizen Registered Encounter & \textbf{Age/Sex:} 48 Y / Male & \textbf{Category:} General OPD & \textbf{Ref:} \textbf{PT-HTN-4011} \\
+        \textbf{Blood Pressure:} 146/92 mmHg & \textbf{Pulse Rate:} 80 bpm & \textbf{Blood Sugar (RBS):} 118 mg/dL & \textbf{SpO$_2$:} 98\% (Room Air) \\
+    \end{tabularx}
+\end{tcolorbox}
+
+% ── Chief Complaints & Clinical Assessment ──────────────────────────────────
+\vspace{1pt}
+\noindent\textbf{\color{primarydark}CHIEF COMPLAINTS \& CLINICAL ASSESSMENT:}
+\begin{itemize}[leftmargin=14pt, topsep=1pt, itemsep=0.5pt]
+    \item \textbf{Presenting Symptoms:} Occasional occipital headache, mild morning lightheadedness, fluctuating blood pressure on home monitoring.
+    \item \textbf{Cardiovascular Examination:} S1, S2 heard; regular rhythm, no murmurs. Bilateral breath sounds clear. No pedal edema.
+    \item \textbf{Cardiometabolic Risk Profile:} Sedentary occupation, BMI 26.2 kg/m$^2$, family history of hypertension. Non-diabetic.
+    \item \textbf{Provisional Diagnosis:} \textbf{Stage 1 Essential Systemic Hypertension}; mild orthostatic dizziness under review.
+\end{itemize}
+
+\vspace{1pt}
+\noindent\textcolor{primary}{\rule{\linewidth}{0.8pt}}
+
+% ── Diagnostic Investigations Ordered ────────────────────────────────────────
+\vspace{1pt}
+\noindent\textbf{\color{primarydark}DIAGNOSTIC WORKUP ORDERED (ROUTINE HYPERTENSION PANEL):}
+\begin{enumerate}[leftmargin=14pt, topsep=1pt, itemsep=0.5pt]
+    \item \textbf{12-Lead ECG:} Baseline cardiac rhythm and LVH screening (Completed: Normal Sinus Rhythm).
+    \item \textbf{Serum Creatinine \& Electrolytes (Na$^+$, K$^+$):} Renal function check prior to RAS blocker titration.
+    \item \textbf{Fasting Lipid Profile \& HbA1c:} Comprehensive cardiometabolic baseline.
+    \item \textbf{Daily Home BP Log:} Record morning (sitting) and evening BP for 7 consecutive days.
+\end{enumerate}
+
+\vspace{1pt}
+\noindent\textcolor{linegray}{\rule{\linewidth}{0.6pt}}
+
+% ── Rx Prescribed Medications ────────────────────────────────────────────────
+\vspace{1pt}
+{\LARGE\textbf{\color{primary}R\raisebox{-0.2ex}{x}}} \hfill {\scriptsize\textit{\color{darktext}Affordable PMBJP Jan Aushadhi Generic Formulations Specified}}
+
+\vspace{1pt}
+\begin{tabularx}{\linewidth}{|r|X|c|c|X|}
+\hline
+\textbf{\#} & \textbf{Prescribed Formulation} & \textbf{Strength} & \textbf{Timings} & \textbf{Instructions \& Duration} \\
+\hline
+1 & \textbf{Tab. Telmisartan} \newline \textit{(Angiotensin II Receptor Blocker)} & 40 mg & \textbf{OD} (Morning post-breakfast) & 1 tablet once daily morning after breakfast. BP control $\times$ 30 Days. \\
+\hline
+2 & \textbf{Tab. Amlodipine} \newline \textit{(Dihydropyridine Calcium Channel Blocker)} & 5 mg & \textbf{OD} (Morning / Adjust if dizzy) & 1 tablet once daily. Review dose if morning dizziness occurs $\times$ 30 Days. \\
+\hline
+3 & \textbf{Tab. Atorvastatin} \newline \textit{(Cardiovascular Lipid Stabilizer)} & 10 mg & \textbf{HS} (At Bedtime) & 1 tablet at night after food for cardiovascular protection $\times$ 30 Days. \\
+\hline
+\end{tabularx}
+
+% ── Lifestyle & Dietary Advice ──────────────────────────────────────────────
+\vspace{2pt}
+\begin{tcolorbox}[colback=lightgray, colframe=primary!30, arc=2mm, boxrule=0.6pt, left=5pt, right=5pt, top=2pt, bottom=2pt]
+    \textbf{\color{primarydark}NON-PHARMACOLOGICAL LIFESTYLE PRESCRIPTION (DASH DIET):}
+    \begin{itemize}[leftmargin=12pt, topsep=1pt, itemsep=0pt]
+        \item \textbf{Sodium Restriction:} Strictly reduce table salt intake to $< 4\text{g/day}$ (avoid pickles, papad, packaged chips, and extra raw salt).
+        \item \textbf{Physical Activity:} 30 minutes of brisk walking 5 days a week.
+        \item \textbf{Postural Care:} If morning dizziness occurs, sit on the edge of the bed for 1 minute before standing up rapidly.
+    \end{itemize}
+\end{tcolorbox}
+
+\vspace{2pt}
+
+% ── Footer with Seal and Signature ───────────────────────────────────────────
+\begin{tabularx}{\linewidth}{@{}Xr@{}}
+    \begin{tcolorbox}[colback=white, colframe=primary!40, arc=2mm, width=8.5cm, boxrule=0.6pt, left=5pt, right=5pt, top=2pt, bottom=2pt]
+        {\scriptsize\textbf{\color{primarydark}JAN AUSHADHI FAIR PRICE DISPENSING:}}\\
+        {\tiny Dispensed via PMBJP Jan Aushadhi Kendra -- Capital Hospital Campus, Unit-6, Bhubaneswar / DHH Khurda. Government Toll-Free Helpline: 1800-180-8080. Quality guaranteed under WHO-GMP generic standards.}
+    \end{tcolorbox}
+    &
+    \begin{minipage}{6.5cm}
+        \centering
+        \vspace{1pt}
+        \textit{\color{primarydark}\Large Dr. Bishnu Prasad Satapathy}\\[-4pt]
+        \rule{5.5cm}{0.8pt}\\[2pt]
+        \textbf{\small Dr. Bishnu Prasad Satapathy, MBBS}\\
+        {\footnotesize Reg. No: OMC-2018-88412}\\
+        {\scriptsize Consultant Physician \& Medical Officer}\\
+        {\tiny Capital Hospital Bhubaneswar / DHH Khurda $\cdot$ Govt. of Odisha}
+    \end{minipage}
+\end{tabularx}
+
+\end{tcolorbox}
+
+\end{document}

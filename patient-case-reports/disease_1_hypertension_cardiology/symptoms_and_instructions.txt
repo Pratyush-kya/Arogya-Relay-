@@ -1,0 +1,52 @@
+================================================================================
+AROGYA-RELAY: CLINICAL CASE 1 — ESSENTIAL HYPERTENSION & MORNING DIZZINESS
+Target Doctor: Dr. Bishnu Prasad Satapathy, MBBS (Capital Hospital Bhubaneswar)
+================================================================================
+
+[FIELD 1: SELECT ASSIGNED MEDICAL OFFICER]
+👉 Select: "Dr. Bishnu Prasad Satapathy, MBBS"
+   - Specialization: General Medicine & Cardiology (12 Years Experience)
+   - Council Reg No: OMC-2018-88412
+   - Hospital: Capital Hospital Bhubaneswar / DHH Khurda
+   - Verified Direct Email: bishnuprasadsatapathy7846@gmail.com
+
+--------------------------------------------------------------------------------
+[FIELD 2: REFERENCE PRESCRIPTION / DIAGNOSIS]
+👉 Select:
+   "General Medical Consultation / New Symptoms"
+   (OR choose any existing prescription from your list if already loaded)
+
+--------------------------------------------------------------------------------
+[FIELD 3: REASON FOR CONTACT / ISSUE TYPE]
+👉 Select:
+   "🔄 Dose Adjustment (Need higher / lower strength)"
+   (OR "⚠️ Side Effects (Dizziness, nausea, rash, etc.)")
+
+--------------------------------------------------------------------------------
+[FIELD 4: DESCRIBE YOUR SYMPTOMS / SPECIFIC QUESTION FOR DOCTOR]
+👉 Copy & paste the exact text below into the text box:
+--------------------------------------------------------------------------------
+Respected Dr. Bishnu Prasad Satapathy sir,
+
+I am taking Tab. Telmisartan 40mg + Amlodipine 5mg daily in the morning as prescribed. Since yesterday, I have been experiencing significant morning dizziness and lightheadedness when standing up from bed.
+
+My home digital BP monitor readings:
+- Morning (sitting): 102/68 mmHg, Pulse: 78 bpm (feels too low / dizzy)
+- Evening: 128/82 mmHg, Pulse: 74 bpm
+- No chest pain, shortness of breath, or leg swelling.
+
+Could you please evaluate if the Amlodipine dose should be tapered or if I should switch the timing to bedtime? Attaching my recent clinical slip and BP log for your review.
+--------------------------------------------------------------------------------
+
+[FIELD 5: ATTACH PRESCRIPTION SLIP OR LAB REPORT]
+👉 Click "Browse..." / File Input and upload either file located in this same folder:
+   - PDF Format: hypertension_clinical_prescription_slip.pdf
+   - Image Format: hypertension_clinical_prescription_slip.png
+
+--------------------------------------------------------------------------------
+[WHAT HAPPENS NEXT]
+1. Click the button: "🚀 Submit to Dr. Bishnu Prasad Satapathy, MBBS"
+2. The case will be instantly transmitted to Dr. Bishnu Prasad Satapathy's Doctor Workspace queue.
+3. When you log in with Dr. Bishnu's account (or switch to Doctor Workspace), the case will appear at the top of the queue for review, medicine dose modification, and Jan Aushadhi Kendra pharmacy lock.
+4. An optional "✉️ Compose via Gmail (bishnuprasadsatapathy7846@gmail.com)" direct link is also available for zero-AI human doctor review.
+================================================================================
