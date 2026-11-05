@@ -45,12 +45,44 @@ export function getLocalPrescriptions(): PatientPrescription[] {
       return r;
     });
 
-    if (modified) {
-      localStorage.setItem(PRESCRIPTION_STORAGE_KEY, JSON.stringify(sanitized));
-      return sanitized;
+    // Deduplicate identical duplicate prescriptions (e.g. from repeat imports of same doctor response)
+    const deduplicated: PatientPrescription[] = [];
+    for (const rx of sanitized) {
+      const medSig = (rx.medicines || [])
+        .map((m) => `${m.name.toLowerCase().trim()}-${m.strength.toLowerCase().trim()}`)
+        .sort()
+        .join(";");
+      const existing = deduplicated.find((d) => {
+        const dSig = (d.medicines || [])
+          .map((m) => `${m.name.toLowerCase().trim()}-${m.strength.toLowerCase().trim()}`)
+          .sort()
+          .join(";");
+        return dSig === medSig;
+      });
+
+      if (!existing) {
+        deduplicated.push(rx);
+      } else {
+        modified = true;
+        // Merge adherence logs and keep the more complete/recent one
+        if ((rx.adherenceLogs && rx.adherenceLogs.length > (existing.adherenceLogs?.length || 0)) || new Date(rx.createdAt).getTime() > new Date(existing.createdAt).getTime()) {
+          const idx = deduplicated.indexOf(existing);
+          deduplicated[idx] = {
+            ...rx,
+            adherenceLogs: [...(rx.adherenceLogs || []), ...(existing.adherenceLogs || [])].filter(
+              (log, i, arr) => arr.findIndex((x) => x.scheduledTime === log.scheduledTime && x.medicineId === log.medicineId) === i
+            ),
+          };
+        }
+      }
     }
 
-    return sanitized;
+    if (modified) {
+      localStorage.setItem(PRESCRIPTION_STORAGE_KEY, JSON.stringify(deduplicated));
+      return deduplicated;
+    }
+
+    return deduplicated;
   } catch {
     return [];
   }
@@ -300,39 +332,85 @@ export function logAdherence(
 
 export interface TodayReminderSlot {
   prescriptionId: string;
+  doctorName?: string;
   medicine: ScheduledMedicine;
-  timeSlot: string; // "08:00", "13:00", "18:00", "21:00"
+  timeSlot: string; // "07:30", "08:00", "08:30", "13:00", "18:00", "21:00"
   slotName: "Morning" | "Afternoon" | "Evening" | "Night";
   taken: boolean;
   status?: "taken" | "skipped" | "snoozed";
+  startDate?: string;
+  endDate?: string;
+  durationDays?: number;
+  dayNumber?: number;
 }
 
 export function getTodayReminders(prescriptions: PatientPrescription[]): TodayReminderSlot[] {
   const slots: TodayReminderSlot[] = [];
   const adherence = getLocalAdherence();
   const todayDateStr = new Date().toISOString().slice(0, 10);
+  const now = new Date();
 
-  const slotTimeMap: Record<string, { time: string; name: "Morning" | "Afternoon" | "Evening" | "Night" }> = {
-    morning: { time: "08:00", name: "Morning" },
-    afternoon: { time: "13:00", name: "Afternoon" },
-    evening: { time: "18:00", name: "Evening" },
-    night: { time: "21:00", name: "Night" },
+  // Helper to determine clinical staggered timing based on food relation
+  const getSlotTime = (slot: "morning" | "afternoon" | "evening" | "night", foodRelation?: string, existingCountInSlot: number = 0): { time: string; name: "Morning" | "Afternoon" | "Evening" | "Night" } => {
+    if (slot === "morning") {
+      if (foodRelation === "empty_stomach") return { time: "07:00", name: "Morning" };
+      if (foodRelation === "before_food") return { time: "07:30", name: "Morning" };
+      if (foodRelation === "after_food") {
+        return existingCountInSlot > 0 ? { time: "08:30", name: "Morning" } : { time: "08:00", name: "Morning" };
+      }
+      return existingCountInSlot > 0 ? { time: "08:30", name: "Morning" } : { time: "08:00", name: "Morning" };
+    }
+    if (slot === "afternoon") {
+      return foodRelation === "before_food" ? { time: "12:30", name: "Afternoon" } : { time: "13:00", name: "Afternoon" };
+    }
+    if (slot === "evening") {
+      return { time: "18:00", name: "Evening" };
+    }
+    // night
+    return foodRelation === "before_food" ? { time: "20:30", name: "Night" } : { time: "21:00", name: "Night" };
   };
+
+  const slotMorningCounts = { morning: 0, afternoon: 0, evening: 0, night: 0 };
+  const seenMedicineSignatures = new Set<string>();
 
   for (const pres of prescriptions) {
     for (const med of pres.medicines) {
+      // De-duplicate duplicate prescriptions prescribing the exact same medicine
+      const normalizedMedKey = `${med.name.toLowerCase().trim()}-${med.strength.toLowerCase().trim()}`;
+      if (seenMedicineSignatures.has(normalizedMedKey)) {
+        continue;
+      }
+      seenMedicineSignatures.add(normalizedMedKey);
+
       const timesToCheck: { time: string; name: "Morning" | "Afternoon" | "Evening" | "Night" }[] = [];
 
-      if (med.slots.morning) timesToCheck.push(slotTimeMap.morning);
-      if (med.slots.afternoon) timesToCheck.push(slotTimeMap.afternoon);
-      if (med.slots.evening) timesToCheck.push(slotTimeMap.evening);
-      if (med.slots.night) timesToCheck.push(slotTimeMap.night);
+      if (med.slots.morning) {
+        timesToCheck.push(getSlotTime("morning", med.foodRelation, slotMorningCounts.morning++));
+      }
+      if (med.slots.afternoon) {
+        timesToCheck.push(getSlotTime("afternoon", med.foodRelation, slotMorningCounts.afternoon++));
+      }
+      if (med.slots.evening) {
+        timesToCheck.push(getSlotTime("evening", med.foodRelation, slotMorningCounts.evening++));
+      }
+      if (med.slots.night) {
+        timesToCheck.push(getSlotTime("night", med.foodRelation, slotMorningCounts.night++));
+      }
 
       if (timesToCheck.length === 0 && med.customTimes && med.customTimes.length > 0) {
         for (const ct of med.customTimes) {
           timesToCheck.push({ time: ct, name: "Morning" });
         }
       }
+
+      // Calculate Course Dates
+      const startStr = med.startDate || pres.createdAt?.slice(0, 10) || todayDateStr;
+      const duration = med.durationDays || 14;
+      const startMs = new Date(startStr).getTime();
+      const endMs = startMs + Math.max(0, duration - 1) * 86400000;
+      const endStr = new Date(endMs).toISOString().slice(0, 10);
+      const daysSinceStart = Math.floor((now.getTime() - startMs) / 86400000);
+      const dayNumber = Math.max(1, Math.min(duration, daysSinceStart + 1));
 
       for (const t of timesToCheck) {
         const scheduledTimeKey = `${todayDateStr}T${t.time}:00`;
@@ -342,11 +420,16 @@ export function getTodayReminders(prescriptions: PatientPrescription[]): TodayRe
 
         slots.push({
           prescriptionId: pres.id,
+          doctorName: pres.doctorName,
           medicine: med,
           timeSlot: t.time,
           slotName: t.name,
           taken: log?.status === "taken",
           status: log?.status,
+          startDate: startStr,
+          endDate: endStr,
+          durationDays: duration,
+          dayNumber,
         });
       }
     }

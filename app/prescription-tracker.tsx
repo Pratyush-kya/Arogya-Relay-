@@ -87,6 +87,10 @@ export default function PrescriptionTracker({
     instructions?: string;
   } | null>(null);
 
+  // Custom Alarm Time Edit State
+  const [editingSlotId, setEditingSlotId] = useState<string | null>(null);
+  const [customTimeInput, setCustomTimeInput] = useState<string>("08:00");
+
   // Doctor Authoring State
   const [patientRef, setPatientRef] = useState("PT-CITIZEN");
   const [doctorName, setDoctorName] = useState("Dr. Bishnu Prasad Satapathy, MBBS");
@@ -255,6 +259,22 @@ export default function PrescriptionTracker({
     setStatusMessage(`Marked ${item.medicine.name} as skipped.`);
   }
 
+  function handleUpdateSlotTime(slot: TodayReminderSlot, newTime: string) {
+    if (!newTime) return;
+    const current = getLocalPrescriptions();
+    const targetRx = current.find((p) => p.id === slot.prescriptionId);
+    if (targetRx) {
+      const med = targetRx.medicines.find((m) => m.id === slot.medicine.id);
+      if (med) {
+        med.customTimes = [newTime];
+        saveLocalPrescription(targetRx);
+        refreshReminders(getLocalPrescriptions());
+        setStatusMessage(`⏰ Alarm time for ${med.name} updated to ${newTime}!`);
+      }
+    }
+    setEditingSlotId(null);
+  }
+
   // Handle report file attachment
   async function handleReportFileUpload(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -321,14 +341,23 @@ export default function PrescriptionTracker({
   function handleImportRevisedMedicinesToAlarms(fup: PrescriptionFollowUpRequest) {
     if (!fup.revisedMedicines || fup.revisedMedicines.length === 0) return;
 
-    const newPrescription: PatientPrescription = {
-      id: `RX-REV-${Date.now().toString(36).toUpperCase()}`,
+    const currentPrescriptions = getLocalPrescriptions();
+    // Check if prescription already exists for this consultation to avoid duplicate alarms
+    const existing = currentPrescriptions.find(
+      (p) => p.id === fup.prescriptionId || (p.doctorName && p.doctorName.toLowerCase() === fup.doctorName.toLowerCase())
+    );
+
+    const prescriptionId = existing ? existing.id : (fup.prescriptionId && fup.prescriptionId !== "RX-NEW" ? fup.prescriptionId : `RX-${Date.now().toString(36).toUpperCase()}`);
+
+    const updatedPrescription: PatientPrescription = {
+      ...(existing || {}),
+      id: prescriptionId,
       patientRef: fup.patientRef || currentUserProfile?.display_name || "PT-CITIZEN",
       doctorName: fup.doctorName,
       diagnosis: `Revised Regimen via Follow-Up (${fup.issueType.replace("_", " ")})`,
       medicines: fup.revisedMedicines,
-      adherenceLogs: [],
-      createdAt: new Date().toISOString(),
+      adherenceLogs: existing?.adherenceLogs || [],
+      createdAt: existing?.createdAt || new Date().toISOString(),
       synced: false,
       totalPriceInr: fup.totalPriceInr,
       mrpPriceInr: fup.mrpPriceInr,
@@ -340,17 +369,17 @@ export default function PrescriptionTracker({
       finalTotalInr: fup.finalTotalInr,
     };
 
-    saveLocalPrescription(newPrescription);
+    saveLocalPrescription(updatedPrescription);
     const updated = getLocalPrescriptions();
     refreshReminders(updated);
     setStatusMessage("✅ Revised medicines imported into your schedule! Daily medication alarms are now active.");
     setActivePatientSection("alarms");
 
     // Trigger audio reminder chime for first imported dose
-    if (newPrescription.medicines.length > 0) {
+    if (updatedPrescription.medicines.length > 0) {
       triggerMedicineNotification(
-        newPrescription.medicines[0].name,
-        newPrescription.medicines[0].dose,
+        updatedPrescription.medicines[0].name,
+        updatedPrescription.medicines[0].dose,
         "Medication alarms activated."
       );
     }
@@ -2268,10 +2297,15 @@ export default function PrescriptionTracker({
 
           {/* Reminders List */}
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ fontSize: "15.5px", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
-                <span>⏰ Daily Medication Schedule</span>
-              </h3>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+              <div>
+                <h3 style={{ fontSize: "15.5px", margin: "0 0 3px", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span>⏰ Daily Medication Schedule &amp; Alarms</span>
+                </h3>
+                <span style={{ fontSize: "12px", color: "var(--muted, #64748b)" }}>
+                  📅 Today: {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+                </span>
+              </div>
 
               {isPatientView && (
                 <button
@@ -2338,9 +2372,12 @@ export default function PrescriptionTracker({
                     ? "With meal"
                     : "Empty stomach";
 
+                const slotKey = `${slot.prescriptionId}-${slot.medicine.id}-${slot.timeSlot}-${idx}`;
+                const isEditingThis = editingSlotId === slotKey;
+
                 return (
                   <div
-                    key={`${slot.prescriptionId}-${slot.medicine.id}-${slot.timeSlot}-${idx}`}
+                    key={slotKey}
                     style={{
                       background: slot.taken ? "rgba(16, 185, 129, 0.05)" : "var(--surface, #ffffff)",
                       border: slot.taken ? "1.5px solid rgba(16, 185, 129, 0.4)" : "1.5px solid var(--line, #e2e8f0)",
@@ -2350,31 +2387,83 @@ export default function PrescriptionTracker({
                       alignItems: "center",
                       justifyContent: "space-between",
                       flexWrap: "wrap",
-                      gap: "12px",
+                      gap: "14px",
                       opacity: slot.status === "skipped" ? 0.6 : 1,
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.02)",
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", flex: "1 1 320px" }}>
+                      {/* Time Slot Display & Editor */}
                       <div
                         style={{
-                          width: "60px",
+                          minWidth: "75px",
                           textAlign: "center",
-                          padding: "8px 4px",
+                          padding: "8px 6px",
                           background: slot.taken ? "rgba(16, 185, 129, 0.15)" : "var(--surface-muted, #f1f5f9)",
                           borderRadius: "10px",
                           fontWeight: "bold",
                           fontSize: "14px",
+                          border: "1px solid var(--line, #e2e8f0)",
+                          flexShrink: 0,
                         }}
                       >
                         <span style={{ fontSize: "10px", display: "block", textTransform: "uppercase", color: "var(--muted, #64748b)" }}>
                           {slot.slotName}
                         </span>
-                        {slot.timeSlot}
+                        <span style={{ fontSize: "15px", color: "var(--foreground, #0f172a)" }}>
+                          {slot.timeSlot}
+                        </span>
+                        {!isEditingThis ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingSlotId(slotKey);
+                              setCustomTimeInput(slot.timeSlot);
+                            }}
+                            style={{
+                              display: "block",
+                              margin: "4px auto 0",
+                              background: "none",
+                              border: "none",
+                              fontSize: "10px",
+                              color: "#0369a1",
+                              cursor: "pointer",
+                              textDecoration: "underline",
+                              padding: 0,
+                            }}
+                          >
+                            ✏️ Edit Time
+                          </button>
+                        ) : (
+                          <div style={{ marginTop: "4px", display: "flex", flexDirection: "column", gap: "2px" }}>
+                            <input
+                              type="time"
+                              value={customTimeInput}
+                              onChange={(e) => setCustomTimeInput(e.target.value)}
+                              style={{ fontSize: "11px", padding: "2px", width: "70px" }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateSlotTime(slot, customTimeInput)}
+                              style={{ background: "#047857", color: "#fff", border: "none", borderRadius: "3px", fontSize: "10px", padding: "2px" }}
+                            >
+                              Save
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingSlotId(null)}
+                              style={{ background: "#cbd5e1", color: "#334155", border: "none", borderRadius: "3px", fontSize: "10px", padding: "2px" }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        )}
                       </div>
 
-                      <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <strong style={{ fontSize: "15px", color: "var(--foreground, #0f172a)" }}>
+                      {/* Medicine Info & Prescribed Date Range */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                          <strong style={{ fontSize: "15.5px", color: "var(--foreground, #0f172a)" }}>
                             {slot.medicine.name} {slot.medicine.strength}
                           </strong>
                           <span
@@ -2385,29 +2474,59 @@ export default function PrescriptionTracker({
                               background: "var(--surface-muted, #f1f5f9)",
                               color: "var(--muted, #64748b)",
                               textTransform: "capitalize",
+                              fontWeight: 600,
                             }}
                           >
                             {slot.medicine.form}
                           </span>
                         </div>
-                        <p style={{ margin: "4px 0 0", fontSize: "12.5px", color: "var(--muted, #64748b)" }}>
-                          Dose: <strong>{slot.medicine.dose}</strong> · 🍽️ {foodLabel} · {slot.medicine.instructions}
+
+                        <p style={{ margin: "2px 0 0", fontSize: "13px", color: "var(--foreground, #1e293b)" }}>
+                          Dose: <strong>{slot.medicine.dose}</strong> · 🍽️ <strong>{foodLabel}</strong> · {slot.medicine.instructions}
                         </p>
+
+                        {/* Date Tracking & Doctor Attribution Badges */}
+                        <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap", marginTop: "4px", fontSize: "11.5px" }}>
+                          <span
+                            style={{
+                              background: "#f0fdf4",
+                              border: "1px solid #bbf7d0",
+                              color: "#166534",
+                              padding: "2px 8px",
+                              borderRadius: "6px",
+                              fontWeight: 600,
+                            }}
+                          >
+                            🗓️ Course: Day {slot.dayNumber || 1} of {slot.durationDays || 14} ({slot.startDate || "Active"} → {slot.endDate || "Ongoing"})
+                          </span>
+                          <span
+                            style={{
+                              background: "#f8fafc",
+                              border: "1px solid #e2e8f0",
+                              color: "#475569",
+                              padding: "2px 8px",
+                              borderRadius: "6px",
+                            }}
+                          >
+                            👨‍⚕️ {slot.doctorName || "Assigned Medical Officer"} · Ref: {slot.prescriptionId}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    {/* Actions */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
                       {slot.taken ? (
                         <span
                           style={{
                             display: "inline-flex",
                             alignItems: "center",
-                            gap: "4px",
-                            padding: "6px 14px",
+                            gap: "5px",
+                            padding: "7px 16px",
                             borderRadius: "8px",
                             background: "rgba(16, 185, 129, 0.12)",
                             color: "#059669",
-                            fontSize: "12.5px",
+                            fontSize: "13px",
                             fontWeight: "700",
                           }}
                         >
@@ -2421,7 +2540,7 @@ export default function PrescriptionTracker({
                             type="button"
                             onClick={() => handleTakeDose(slot)}
                             className="primary-button"
-                            style={{ fontSize: "12.5px", padding: "7px 16px", borderRadius: "8px", fontWeight: 700 }}
+                            style={{ fontSize: "12.5px", padding: "8px 16px", borderRadius: "8px", fontWeight: 700 }}
                           >
                             ✓ Mark Taken
                           </button>
@@ -2429,7 +2548,7 @@ export default function PrescriptionTracker({
                             type="button"
                             onClick={() => handleSkipDose(slot)}
                             className="secondary-button"
-                            style={{ fontSize: "12px", padding: "7px 12px", borderRadius: "8px" }}
+                            style={{ fontSize: "12px", padding: "8px 12px", borderRadius: "8px" }}
                           >
                             Skip
                           </button>
