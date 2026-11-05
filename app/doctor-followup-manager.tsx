@@ -93,7 +93,7 @@ export function DoctorFollowupManager({
   const [revisedStrength, setRevisedStrength] = useState("2.5mg");
   const [revisedDose, setRevisedDose] = useState("1 tablet once daily morning");
   const [revisedInstructions, setRevisedInstructions] = useState("Take after breakfast with water. Monitor BP.");
-  const [selectedChemistId, setSelectedChemistId] = useState<string>("ph-01");
+  const [selectedChemistId, setSelectedChemistId] = useState<string>(NEARBY_CHEMISTS[0]?.id || "ph-cuttack-scb");
   const [calculatedPrice, setCalculatedPrice] = useState<number>(18.0);
   const [statusNotice, setStatusNotice] = useState<string | null>(null);
 
@@ -625,13 +625,13 @@ export function DoctorFollowupManager({
                         Jan Aushadhi Kendra Assigned
                       </span>
                       <strong style={{ fontSize: "13.5px", color: "#166534", display: "block" }}>
-                        🏪 {item.suggestedChemist?.name || "PMBJP Jan Aushadhi Kendra #7402"}
+                        🏪 {item.suggestedChemist?.name || NEARBY_CHEMISTS[0].name}
                       </strong>
                       <span style={{ fontSize: "12px", color: "#15803d", display: "block" }}>
-                        📍 {item.suggestedChemist?.address || "Main Market Road, near Block Office"} ({item.suggestedChemist?.distanceKm || 1.2} km)
+                        📍 {item.suggestedChemist?.address || NEARBY_CHEMISTS[0].address} ({item.suggestedChemist?.distanceKm || 1.1} km)
                       </span>
                       <span style={{ fontSize: "11.5px", color: "#166534", display: "block", marginTop: "2px" }}>
-                        📞 {item.suggestedChemist?.phone || "+91 94370 12345"} · 📧 {item.suggestedChemist?.email || "janaushadhi.kendra7402@gov.in"}
+                        📞 {item.suggestedChemist?.phone || "1800-180-8080 (Jan Aushadhi Helpline)"} · 📧 {item.suggestedChemist?.email || "pmbjp.scbcuttack@gov.in"}
                       </span>
                       <div style={{ marginTop: "6px", display: "flex", alignItems: "baseline", gap: "6px" }}>
                         <strong style={{ fontSize: "15px", color: "#166534" }}>₹{item.totalPriceInr || 18.0}</strong>
@@ -710,25 +710,30 @@ export function DoctorFollowupManager({
           </div>
 
           {visibleFollowups.length === 0 ? (
-            <div style={{ background: "#ffffff", padding: "28px 20px", borderRadius: "12px", border: "1px dashed #cbd5e1", textAlign: "center" }}>
-              <span style={{ fontSize: "28px", display: "block", marginBottom: "6px" }}>📭</span>
-              <p style={{ color: "#475569", margin: "0 0 8px", fontSize: "13.5px", fontWeight: 600 }}>
-                No follow-up requests in this view
+            <div style={{ background: "#ffffff", padding: "32px 20px", borderRadius: "12px", border: "1.5px dashed #cbd5e1", textAlign: "center" }}>
+              <span style={{ fontSize: "32px", display: "block", marginBottom: "8px" }}>📭</span>
+              <p style={{ color: "#0f172a", margin: "0 0 4px", fontSize: "14px", fontWeight: 700 }}>
+                No Patient Consultations in Queue
               </p>
-              <button
-                type="button"
-                onClick={() => setFilterMode("all")}
-                style={{
-                  background: "#f1f5f9",
-                  border: "1px solid #cbd5e1",
-                  borderRadius: "6px",
-                  padding: "6px 12px",
-                  fontSize: "12px",
-                  cursor: "pointer",
-                }}
-              >
-                View All Clinic Reports ({followups.length})
-              </button>
+              <p style={{ color: "#64748b", margin: "0 0 12px", fontSize: "12px", lineHeight: 1.4 }}>
+                When patients submit a medical inquiry or report to {doctorName}, it will appear here in real-time.
+              </p>
+              {followups.length > 0 && filterMode !== "all" && (
+                <button
+                  type="button"
+                  onClick={() => setFilterMode("all")}
+                  style={{
+                    background: "#f1f5f9",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: "6px",
+                    padding: "6px 12px",
+                    fontSize: "12px",
+                    cursor: "pointer",
+                  }}
+                >
+                  View All Clinic Reports ({followups.length})
+                </button>
+              )}
             </div>
           ) : (
             visibleFollowups.map((req) => {
@@ -1071,6 +1076,31 @@ export function DoctorFollowupManager({
                 </button>
               )}
             </div>
+          </div>
+        )}
+
+        {!selectedReq && (
+          <div
+            style={{
+              background: "#ffffff",
+              border: "1.5px dashed #cbd5e1",
+              borderRadius: "16px",
+              padding: "48px 24px",
+              textAlign: "center",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: "360px",
+            }}
+          >
+            <span style={{ fontSize: "44px", marginBottom: "12px" }}>🩺</span>
+            <h3 style={{ margin: "0 0 6px", fontSize: "16px", color: "#0f172a", fontWeight: 700 }}>
+              No Consultation Selected
+            </h3>
+            <p style={{ margin: 0, fontSize: "13px", color: "#64748b", maxWidth: "420px", lineHeight: 1.5 }}>
+              Select a patient consultation from the incoming queue on the left to review symptoms, modify medication doses, and sign a prescription with a verified Jan Aushadhi Kendra.
+            </p>
           </div>
         )}
       </div>

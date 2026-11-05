@@ -89,6 +89,24 @@ export default function NearbyCare() {
     setPos({ lat, lng, accuracy });
     setLocState(accuracy <= 100 ? "accurate" : "approximate");
 
+    // Check if the user is in the Cuttack-Bhubaneswar Twin-City corridor (~24km apart)
+    const isTwinCityCorridor = lat >= 20.15 && lat <= 20.60 && lng >= 85.50 && lng <= 86.10;
+    const isCuttackExplicit = (cityName || "").toLowerCase().includes("cuttack");
+    let preferredDistrict: string | null = null;
+    try {
+      preferredDistrict = localStorage.getItem("arogya.preferred_district");
+    } catch {}
+
+    if ((isTwinCityCorridor && preferredDistrict === "Cuttack") || isCuttackExplicit) {
+      setSelectedPreset("cuttack");
+      setActiveDistrict("Cuttack");
+      setLocNote(`Auto-detected: Cuttack (SCB Medical College & Sishu Bhawan zone via ${sourceName}).`);
+      try {
+        localStorage.setItem("arogya.preferred_district", "Cuttack");
+      } catch {}
+      return;
+    }
+
     // Find the closest preset among LOCATION_PRESETS
     let closest = LOCATION_PRESETS[0];
     let minD = Infinity;
@@ -131,12 +149,12 @@ export default function NearbyCare() {
       try {
         let data: { lat?: number; lng?: number; city?: string; region?: string } | null = null;
         try {
-          const res = await fetch("/api/detect-location", { signal: AbortSignal.timeout(3500) });
+          const res = await fetch("/api/detect-location", { signal: AbortSignal.timeout(4500) });
           if (res.ok) data = await res.json();
         } catch {}
 
         if (!data || !data.lat || !data.lng) {
-          const res = await fetch("https://ipwho.is/", { signal: AbortSignal.timeout(3500) });
+          const res = await fetch("https://ipwho.is/", { signal: AbortSignal.timeout(4500) });
           if (res.ok) {
             const raw = await res.json();
             if (raw.success && raw.latitude && raw.longitude) {
@@ -180,7 +198,7 @@ export default function NearbyCare() {
         resolved = true;
         tryIpFallback("Browser GPS timed out");
       }
-    }, 4000);
+    }, 8000);
 
     navigator.geolocation.getCurrentPosition(
       (p) => {
@@ -190,7 +208,7 @@ export default function NearbyCare() {
         applyDetectedLocation(
           p.coords.latitude,
           p.coords.longitude,
-          p.coords.accuracy || 80,
+          p.coords.accuracy || 50,
           "Device GPS",
         );
       },
@@ -205,9 +223,9 @@ export default function NearbyCare() {
         await tryIpFallback(reason);
       },
       {
-        enableHighAccuracy: false,
-        timeout: 3800,
-        maximumAge: 60000,
+        enableHighAccuracy: true,
+        timeout: 7500,
+        maximumAge: 0,
       },
     );
   }, [applyDetectedLocation]);
@@ -220,7 +238,20 @@ export default function NearbyCare() {
     setPos({ lat: p.lat, lng: p.lng, accuracy: 200 });
     setLocState("approximate");
     setLocNote(`Location set to ${p.label} (${p.district} District)`);
+    try {
+      localStorage.setItem("arogya.preferred_district", p.district);
+    } catch {}
   }, []);
+
+  // Restore preferred district if previously chosen
+  useEffect(() => {
+    try {
+      const savedDistrict = localStorage.getItem("arogya.preferred_district");
+      if (savedDistrict === "Cuttack") {
+        setPreset("cuttack");
+      }
+    } catch {}
+  }, [setPreset]);
 
   const handleDistrictChange = useCallback((districtName: string) => {
     setActiveDistrict(districtName);
@@ -645,6 +676,85 @@ export default function NearbyCare() {
             {locState === "acquiring" ? "Detecting Location..." : "Auto-Detect My GPS"}
           </button>
         </div>
+
+        {/* Twin-City Corridor Disambiguation Bar */}
+        {(activeDistrict === "Khordha" || selectedPreset === "bhubaneswar") && (
+          <div
+            style={{
+              background: "#ecfdf5",
+              border: "1.5px solid #a7f3d0",
+              borderRadius: "10px",
+              padding: "10px 16px",
+              marginBottom: "14px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "8px",
+            }}
+          >
+            <span style={{ fontSize: "12.5px", color: "#065f46" }}>
+              📍 Located in <strong>Cuttack</strong> instead of Bhubaneswar? (ISP IPs often route via Bhubaneswar)
+            </span>
+            <button
+              type="button"
+              onClick={() => setPreset("cuttack")}
+              style={{
+                background: "#047857",
+                color: "#ffffff",
+                border: "none",
+                padding: "6px 14px",
+                borderRadius: "8px",
+                fontSize: "12px",
+                fontWeight: 700,
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                boxShadow: "0 2px 6px rgba(4, 120, 87, 0.2)",
+              }}
+            >
+              <span>👉 Switch to Cuttack (SCB Medical College &amp; Hospital)</span>
+            </button>
+          </div>
+        )}
+
+        {activeDistrict === "Cuttack" && (
+          <div
+            style={{
+              background: "#f0fdf4",
+              border: "1.5px solid #86efac",
+              borderRadius: "10px",
+              padding: "10px 16px",
+              marginBottom: "14px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "8px",
+            }}
+          >
+            <span style={{ fontSize: "12.5px", color: "#166534" }}>
+              ✓ <strong>Cuttack Active:</strong> Showing SCB Medical College, Sishu Bhawan, and Cuttack Jan Aushadhi Kendras.
+            </span>
+            <button
+              type="button"
+              onClick={() => setPreset("bhubaneswar")}
+              style={{
+                background: "#ffffff",
+                color: "#0369a1",
+                border: "1px solid #bae6fd",
+                padding: "5px 12px",
+                borderRadius: "6px",
+                fontSize: "11.5px",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Switch to Bhubaneswar Central
+            </button>
+          </div>
+        )}
 
         {/* Quick Regional Presets */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "16px" }}>

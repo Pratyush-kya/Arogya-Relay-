@@ -55,38 +55,7 @@ const SEED_PRESCRIPTIONS: PatientPrescription[] = [
   },
 ];
 
-const SEED_FOLLOWUPS: PrescriptionFollowUpRequest[] = [
-  {
-    id: "FUP-101",
-    prescriptionId: "RX-9021",
-    patientRef: "PT-RAMESH-01",
-    patientName: "Ramesh Soren",
-    doctorName: "Dr. Bishnu Prasad Satapathy, MBBS",
-    doctorNmc: "OMC-2018-88412",
-    doctorEmail: "bishnuprasadsatapathy7846@gmail.com",
-    handledByAi: false,
-    issueType: "side_effect",
-    patientMessage: "Doctor sir, since starting Amlodipine 5mg I am feeling slight dizziness in the morning and ankle swelling. Can you please check and adjust my dose?",
-    reportedAt: new Date(Date.now() - 3600000 * 4).toISOString(),
-    status: "pending_doctor_review",
-    doctorReply: undefined,
-  },
-  {
-    id: "FUP-102",
-    prescriptionId: "RX-9022",
-    patientRef: "PT-RAMESH-01",
-    patientName: "Ramesh Soren",
-    doctorName: "Dr. Samarpit Biswal, MD",
-    doctorNmc: "OMC-2020-54190",
-    doctorEmail: "samarpitbiswal966@gmail.com",
-    handledByAi: false,
-    issueType: "dose_change",
-    patientMessage: "Dr. Samarpit, my throat irritation has settled, but I still have mild body fatigue. How should I adjust my dosage?",
-    reportedAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-    status: "pending_doctor_review",
-    doctorReply: undefined,
-  },
-];
+const SEED_FOLLOWUPS: PrescriptionFollowUpRequest[] = [];
 
 export function getLocalPrescriptions(): PatientPrescription[] {
   if (typeof window === "undefined") return SEED_PRESCRIPTIONS;
@@ -167,29 +136,25 @@ export function getLocalFollowUps(): PrescriptionFollowUpRequest[] {
       }
     } catch {}
 
-    // Sanitize any cached items:
-    // 1. Purge legacy dummy doctor replies from prior seeds
-    // 2. Fix old mock names ("Rajesh", "Patel", "Ananya")
-    // 3. Keep names synchronized with active doctor profile
+    // Purge legacy demo cases (Ramesh Soren, PT-RAMESH-01, FUP-101, FUP-102, RX-REV-MVUM27HG, etc.)
     let modified = false;
-    const sanitized = parsed.map((item: PrescriptionFollowUpRequest) => {
-      const next = { ...item };
+    const realUserCases = parsed.filter((item: PrescriptionFollowUpRequest) => {
+      const isDemo =
+        item.id === "FUP-101" ||
+        item.id === "FUP-102" ||
+        item.patientRef === "PT-RAMESH-01" ||
+        item.patientName === "Ramesh Soren" ||
+        item.prescriptionId === "RX-REV-MVUM27HG" ||
+        (item.patientMessage && item.patientMessage.includes("Amlodipine 5mg I am feeling slight dizziness"));
+      return !isDemo;
+    });
 
-      // Eradicate old pre-baked dummy reply from FUP-101
-      if (
-        next.id === "FUP-101" &&
-        next.doctorReply &&
-        (next.doctorReply.includes("Direct clinical review by Dr.") ||
-          next.doctorReply.includes("Amlodipine to 2.5mg and advised low-sodium"))
-      ) {
-        next.doctorReply = undefined;
-        next.status = "pending_doctor_review";
-        next.revisedMedicines = undefined;
-        next.suggestedChemist = undefined;
-        next.totalPriceInr = undefined;
-        next.mrpPriceInr = undefined;
-        modified = true;
-      }
+    if (realUserCases.length !== parsed.length) {
+      modified = true;
+    }
+
+    const sanitized = realUserCases.map((item: PrescriptionFollowUpRequest) => {
+      const next = { ...item };
 
       // Eradicate legacy fake doctor names
       if (

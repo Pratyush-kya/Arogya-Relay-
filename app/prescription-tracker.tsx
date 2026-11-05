@@ -255,12 +255,21 @@ export default function PrescriptionTracker({
     const chosenDoctor = allDocs.find((d) => d.id === selectedDoctorId) || allDocs[0];
     const newFollowupId = `FUP-${Date.now().toString(36).toUpperCase()}`;
 
+    const resolvedPatientName =
+      currentUserProfile?.display_name ||
+      currentUserProfile?.full_name ||
+      "Citizen Patient";
+
+    const resolvedPatientRef =
+      currentUserProfile?.pseudo_id ||
+      `PT-${(currentUserProfile?.id || Date.now().toString(36)).slice(0, 8).toUpperCase()}`;
+
     // Direct routing to licensed doctor's queue (NO AI answering)
     const newReq: PrescriptionFollowUpRequest = {
       id: newFollowupId,
-      prescriptionId: selectedRxId || "RX-9021",
-      patientRef: patientRef || "PT-RAMESH-01",
-      patientName: "Ramesh Soren",
+      prescriptionId: selectedRxId || `RX-${Date.now().toString(36).toUpperCase()}`,
+      patientRef: resolvedPatientRef,
+      patientName: resolvedPatientName,
       doctorName: chosenDoctor.name,
       doctorNmc: chosenDoctor.nmcNumber,
       doctorEmail: chosenDoctor.email,
@@ -451,7 +460,7 @@ export default function PrescriptionTracker({
     setIsFulfillmentConfirmed(true);
     setConfirmingFulfillment(false);
 
-    const chemistEmail = fup.suggestedChemist?.email || "janaushadhi.kendra7402@gov.in";
+    const chemistEmail = fup.suggestedChemist?.email || "pmbjp.scbcuttack@gov.in";
     setStatusMessage(
       `✓ Order confirmed! ${fup.suggestedChemist?.name || "PMBJP Jan Aushadhi Kendra"} (${chemistEmail}) has been notified for ${
         fulfillmentMode === "home_delivery" ? "Home Delivery" : "Store Pickup"
@@ -1340,7 +1349,7 @@ export default function PrescriptionTracker({
                         </span>
                       </div>
                       <p style={{ margin: "4px 0 0", fontSize: "12.5px", opacity: 0.95, lineHeight: 1.4 }}>
-                        Your doctor has clinically reviewed your symptoms, modified your medicine dosage, and attached the nearest Jan Aushadhi Kendra ({activeFollowup.suggestedChemist?.name || "PMBJP Jan Aushadhi Kendra #7402"}) with locked fair pricing.
+                        Your doctor has clinically reviewed your symptoms, modified your medicine dosage, and attached the nearest verified Jan Aushadhi Kendra ({activeFollowup.suggestedChemist?.name || NEARBY_CHEMISTS[0].name}) with locked fair pricing.
                       </p>
                     </div>
 
@@ -1354,11 +1363,10 @@ export default function PrescriptionTracker({
                           `💬 *Doctor Advice:* ${activeFollowup.doctorReply || "Follow prescribed dosages."}\n\n` +
                           `💊 *Prescribed Medicine:* ${activeFollowup.revisedMedicines?.[0]?.name || "Generic Medicine"} (${activeFollowup.revisedMedicines?.[0]?.strength || ""}) - ${activeFollowup.revisedMedicines?.[0]?.dose || ""}\n` +
                           `💰 *Jan Aushadhi Fair Price:* ₹${activeFollowup.totalPriceInr || 18.0} (MRP ₹${activeFollowup.mrpPriceInr || 85.0})\n\n` +
-                          `📍 *Nearest Chemist:* ${activeFollowup.suggestedChemist?.name || "PMBJP Jan Aushadhi Kendra #7402"}\n` +
-                          `Address: ${activeFollowup.suggestedChemist?.address || "Main Market Road, near Block Office"}\n` +
-                          `Distance: ${activeFollowup.suggestedChemist?.distanceKm || 1.2} km\n` +
-                          `Phone: ${activeFollowup.suggestedChemist?.phone || "+91 94370 12345"}\n` +
-                          `Email: ${activeFollowup.suggestedChemist?.email || "janaushadhi.kendra7402@gov.in"}`
+                          `📍 *Dispensing Pharmacy:* ${activeFollowup.suggestedChemist?.name || NEARBY_CHEMISTS[0].name}\n` +
+                          `Address: ${activeFollowup.suggestedChemist?.address || NEARBY_CHEMISTS[0].address}\n` +
+                          `Helpline: ${activeFollowup.suggestedChemist?.phone || "1800-180-8080 (Jan Aushadhi Helpline)"}\n` +
+                          `Email: ${activeFollowup.suggestedChemist?.email || "pmbjp.scbcuttack@gov.in"}`
                         )}`}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -1382,7 +1390,7 @@ export default function PrescriptionTracker({
 
                       <a
                         href={`sms:?body=${encodeURIComponent(
-                          `Arogya-Relay: Dr. ${activeFollowup.doctorName} prescribed ${activeFollowup.revisedMedicines?.[0]?.name || "Medicine"} (${activeFollowup.revisedMedicines?.[0]?.dose || ""}). Nearest chemist: ${activeFollowup.suggestedChemist?.name || "Jan Aushadhi Kendra"} (₹${activeFollowup.totalPriceInr || 18.0}). Ph: ${activeFollowup.suggestedChemist?.phone || "+91 94370 12345"}`
+                          `Arogya-Relay: Dr. ${activeFollowup.doctorName} prescribed ${activeFollowup.revisedMedicines?.[0]?.name || "Medicine"} (${activeFollowup.revisedMedicines?.[0]?.dose || ""}). Chemist: ${activeFollowup.suggestedChemist?.name || "Jan Aushadhi Kendra"}. Helpline: 1800-180-8080`
                         )}`}
                         style={{
                           background: "#ffffff",
@@ -1665,7 +1673,7 @@ export default function PrescriptionTracker({
                               Chemist Official Email:
                             </span>
                             <strong style={{ fontSize: "13px", color: "#0369a1" }}>
-                              {activeFollowup.suggestedChemist.email || "janaushadhi.kendra7402@gov.in"}
+                              {activeFollowup.suggestedChemist.email || "pmbjp.scbcuttack@gov.in"}
                             </strong>
                           </div>
                         </div>
@@ -1673,7 +1681,7 @@ export default function PrescriptionTracker({
                         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                           <a
                             href={getChemistGmailComposeUrl(
-                              activeFollowup.suggestedChemist.email || "janaushadhi.kendra7402@gov.in",
+                              activeFollowup.suggestedChemist.email || "pmbjp.scbcuttack@gov.in",
                               `[Arogya-Relay Prescription ${activeFollowup.prescriptionId}] Order Inquiry for ${activeFollowup.patientName}`,
                               `Respected Jan Aushadhi Chemist,\n\nI have a verified prescription from ${activeFollowup.doctorName}.\n\nPatient Name: ${activeFollowup.patientName}\nPrescription Reference: ${activeFollowup.prescriptionId}\nFulfillment Mode: ${fulfillmentMode === "home_delivery" ? "Home Delivery to " + deliveryAddress : "Store Pickup"}\n\nPlease prepare the prescribed medicines for fulfillment.\n\nThank you,\n${activeFollowup.patientName}`
                             )}
@@ -1697,7 +1705,7 @@ export default function PrescriptionTracker({
                           </a>
 
                           <a
-                            href={`mailto:${activeFollowup.suggestedChemist.email || "janaushadhi.kendra7402@gov.in"}?subject=${encodeURIComponent(
+                            href={`mailto:${activeFollowup.suggestedChemist.email || "pmbjp.scbcuttack@gov.in"}?subject=${encodeURIComponent(
                               `[Arogya-Relay Prescription ${activeFollowup.prescriptionId}] Order Inquiry`
                             )}&body=${encodeURIComponent(
                               `Patient: ${activeFollowup.patientName}\nPrescription: ${activeFollowup.prescriptionId}\nDoctor: ${activeFollowup.doctorName}\nMode: ${fulfillmentMode === "home_delivery" ? "Home Delivery" : "Store Pickup"}`

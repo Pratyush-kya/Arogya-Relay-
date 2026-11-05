@@ -17,11 +17,13 @@ import { useLanguage } from "@/lib/i18n/provider";
 
 interface PatientFollowupCardProps {
   patientRef?: string;
+  patientName?: string;
   onNavigateToChemistMap?: () => void;
 }
 
 export function PatientFollowupCard({
-  patientRef = "PT-RAMESH-01",
+  patientRef = "PT-CITIZEN",
+  patientName = "Citizen Patient",
   onNavigateToChemistMap,
 }: PatientFollowupCardProps) {
   const { effectiveLang } = useLanguage();
@@ -69,7 +71,7 @@ export function PatientFollowupCard({
       id: `FUP-${Date.now().toString(36).toUpperCase()}`,
       prescriptionId: selectedRxId,
       patientRef,
-      patientName: "Ramesh Soren",
+      patientName: patientName || "Citizen Patient",
       doctorName: assignedDoc,
       doctorNmc: assignedNmc,
       doctorEmail: assignedEmail,
