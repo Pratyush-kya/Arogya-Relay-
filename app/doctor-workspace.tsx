@@ -28,12 +28,22 @@ export function DoctorWorkspace({
     currentUser?.email?.includes("samarpit") || currentUser?.email?.includes("samarpitbiswal966");
 
   const docName =
-    currentProfile?.full_name ||
     currentProfile?.display_name ||
+    currentProfile?.full_name ||
+    (currentUser as any)?.user_metadata?.display_name ||
     (isSamarpit ? "Dr. Samarpit Biswal, MD" : "Dr. Bishnu Prasad Satapathy, MBBS");
 
-  const regNo = currentProfile?.nmc_registration_number || (isSamarpit ? "OMC-2020-54190" : "OMC-2018-88412");
-  const hospital = currentProfile?.hospital_affiliation || (isSamarpit ? "AIIMS Bhubaneswar (Apex Trauma Centre)" : "Capital Hospital Bhubaneswar / DHH Khurda");
+  const regNo =
+    (currentProfile as any)?.medical_reg_no ||
+    currentProfile?.nmc_registration_number ||
+    (currentUser as any)?.user_metadata?.medical_reg_no ||
+    (isSamarpit ? "OMC-2020-54190" : "OMC-2018-88412");
+
+  const hospital =
+    (currentProfile as any)?.facility_name ||
+    currentProfile?.hospital_affiliation ||
+    (currentUser as any)?.user_metadata?.facility_name ||
+    (isSamarpit ? "AIIMS Bhubaneswar (Apex Trauma Centre)" : "Capital Hospital Bhubaneswar / DHH Khurda");
   const docEmail =
     currentProfile?.email ||
     currentUser?.email ||

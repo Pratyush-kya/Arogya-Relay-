@@ -66,44 +66,10 @@ const SEED_FOLLOWUPS: PrescriptionFollowUpRequest[] = [
     doctorEmail: "bishnuprasadsatapathy7846@gmail.com",
     handledByAi: false,
     issueType: "side_effect",
-    patientMessage: "Dr. Bishnu Prasad sir, since starting Amlodipine 5mg I am feeling slight dizziness in the morning and ankle swelling. Can you please check and adjust my dose?",
+    patientMessage: "Doctor sir, since starting Amlodipine 5mg I am feeling slight dizziness in the morning and ankle swelling. Can you please check and adjust my dose?",
     reportedAt: new Date(Date.now() - 3600000 * 4).toISOString(),
-    status: "doctor_revised",
-    doctorReply: "Direct clinical review by Dr. Bishnu Prasad Satapathy (Capital Hospital / DHH Khurda): Reviewed your blood pressure readings. I have adjusted Amlodipine to 2.5mg and advised low-sodium diet. Collect your revised medicine from Jan Aushadhi Kendra #7402.",
-    revisedMedicines: [
-      {
-        id: "m-amlo-rev",
-        name: "Amlodipine (Low Dose)",
-        strength: "2.5mg",
-        form: "tablet",
-        dose: "1 tablet once daily morning",
-        foodRelation: "after_food",
-        slots: { morning: true },
-        customTimes: ["08:00"],
-        durationDays: 14,
-        startDate: new Date().toISOString().slice(0, 10),
-        instructions: "Take 2.5mg half-tablet after food. Elevate legs when resting.",
-      },
-    ],
-    suggestedChemist: {
-      id: "ph-01",
-      name: "Pradhan Mantri Jan Aushadhi Kendra #7402",
-      address: "Main Market Road, near Block Office",
-      phone: "+91 94370 12345",
-      email: "janaushadhi.kendra7402@gov.in",
-      distanceKm: 1.2,
-    },
-    totalPriceInr: 18.0,
-    mrpPriceInr: 85.0,
-    savingsPercent: 78.8,
-    fulfillmentMode: "store_pickup",
-    fulfillmentStatus: "order_confirmed",
-    deliveryAddress: "North Ridge Hamlet #12",
-    deliveryFeeInr: 0.0,
-    finalTotalInr: 18.0,
-    batchVerified: true,
-    expirySafeDate: "Dec 2027 (Batch JAK-9982)",
-    doctorAuditStatus: "pending_dispense",
+    status: "pending_doctor_review",
+    doctorReply: undefined,
   },
   {
     id: "FUP-102",
@@ -135,6 +101,26 @@ export function getLocalPrescriptions(): PatientPrescription[] {
       localStorage.setItem(PRESCRIPTION_STORAGE_KEY, JSON.stringify(SEED_PRESCRIPTIONS));
       return SEED_PRESCRIPTIONS;
     }
+
+    // Sanitize any stale demo doctor names
+    let modified = false;
+    const sanitized = parsed.map((rx) => {
+      let r = { ...rx };
+      if (r.doctorName?.toLowerCase().includes("rajesh") || r.doctorName?.toLowerCase().includes("patel")) {
+        r.doctorName = "Dr. Bishnu Prasad Satapathy, MBBS";
+        modified = true;
+      } else if (r.doctorName?.toLowerCase().includes("ananya")) {
+        r.doctorName = "Dr. Samarpit Biswal, MD";
+        modified = true;
+      }
+      return r;
+    });
+
+    if (modified) {
+      localStorage.setItem(PRESCRIPTION_STORAGE_KEY, JSON.stringify(sanitized));
+      return sanitized;
+    }
+
     return parsed;
   } catch {
     return SEED_PRESCRIPTIONS;
@@ -168,6 +154,89 @@ export function getLocalFollowUps(): PrescriptionFollowUpRequest[] {
       localStorage.setItem(FOLLOWUP_STORAGE_KEY, JSON.stringify(SEED_FOLLOWUPS));
       return SEED_FOLLOWUPS;
     }
+
+    // Retrieve active logged-in doctor profile if any
+    let activeDoctorProfile: any = null;
+    try {
+      const rawProfile = localStorage.getItem("arogya.local_profile");
+      if (rawProfile) {
+        const prof = JSON.parse(rawProfile);
+        if (prof && prof.role === "doctor") {
+          activeDoctorProfile = prof;
+        }
+      }
+    } catch {}
+
+    // Sanitize any cached items:
+    // 1. Purge legacy dummy doctor replies from prior seeds
+    // 2. Fix old mock names ("Rajesh", "Patel", "Ananya")
+    // 3. Keep names synchronized with active doctor profile
+    let modified = false;
+    const sanitized = parsed.map((item: PrescriptionFollowUpRequest) => {
+      const next = { ...item };
+
+      // Eradicate old pre-baked dummy reply from FUP-101
+      if (
+        next.id === "FUP-101" &&
+        next.doctorReply &&
+        (next.doctorReply.includes("Direct clinical review by Dr.") ||
+          next.doctorReply.includes("Amlodipine to 2.5mg and advised low-sodium"))
+      ) {
+        next.doctorReply = undefined;
+        next.status = "pending_doctor_review";
+        next.revisedMedicines = undefined;
+        next.suggestedChemist = undefined;
+        next.totalPriceInr = undefined;
+        next.mrpPriceInr = undefined;
+        modified = true;
+      }
+
+      // Eradicate legacy fake doctor names
+      if (
+        next.doctorName?.toLowerCase().includes("rajesh") ||
+        next.doctorName?.toLowerCase().includes("patel") ||
+        next.doctorEmail?.toLowerCase().includes("patel")
+      ) {
+        next.doctorName = "Dr. Bishnu Prasad Satapathy, MBBS";
+        next.doctorNmc = "OMC-2018-88412";
+        next.doctorEmail = "bishnuprasadsatapathy7846@gmail.com";
+        modified = true;
+      } else if (
+        next.doctorName?.toLowerCase().includes("ananya") ||
+        next.doctorEmail?.toLowerCase().includes("ananya")
+      ) {
+        next.doctorName = "Dr. Samarpit Biswal, MD";
+        next.doctorNmc = "OMC-2020-54190";
+        next.doctorEmail = "samarpitbiswal966@gmail.com";
+        modified = true;
+      }
+
+      // Synchronize with active doctor profile if email matches
+      if (
+        activeDoctorProfile &&
+        activeDoctorProfile.email &&
+        next.doctorEmail?.toLowerCase() === activeDoctorProfile.email.toLowerCase()
+      ) {
+        const dynamicName = activeDoctorProfile.display_name || activeDoctorProfile.full_name;
+        if (dynamicName && next.doctorName !== dynamicName) {
+          next.doctorName = dynamicName;
+          modified = true;
+        }
+        const dynamicReg = activeDoctorProfile.medical_reg_no || activeDoctorProfile.nmc_registration_number;
+        if (dynamicReg && next.doctorNmc !== dynamicReg) {
+          next.doctorNmc = dynamicReg;
+          modified = true;
+        }
+      }
+
+      return next;
+    });
+
+    if (modified) {
+      localStorage.setItem(FOLLOWUP_STORAGE_KEY, JSON.stringify(sanitized));
+      return sanitized;
+    }
+
     return parsed;
   } catch {
     return SEED_FOLLOWUPS;

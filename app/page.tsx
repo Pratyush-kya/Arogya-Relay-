@@ -215,12 +215,27 @@ export default function Home({
                     id: data.user.id,
                     email: cleanEmail,
                     role: "doctor",
-                    display_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Dr. Samarpit Biswal, MD" : "Dr. Bishnu Prasad Satapathy, MBBS",
-                    medical_reg_no: cleanEmail === "samarpitbiswal966@gmail.com" ? "OMC-2020-54190" : "OMC-2018-88412",
-                    council_name: "Odisha Medical Council",
-                    specialization: cleanEmail === "samarpitbiswal966@gmail.com" ? "Internal Medicine & Paediatrics" : "General Medicine & Cardiology",
-                    facility_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "AIIMS Bhubaneswar (Apex Trauma Centre)" : "Capital Hospital Bhubaneswar / DHH Khurda",
-                    verification_status: "verified",
+                    display_name:
+                      p?.display_name ||
+                      (data.user?.user_metadata?.display_name as string) ||
+                      (cleanEmail === "samarpitbiswal966@gmail.com" ? "Dr. Samarpit Biswal, MD" : "Dr. Bishnu Prasad Satapathy, MBBS"),
+                    medical_reg_no:
+                      p?.medical_reg_no ||
+                      (data.user?.user_metadata?.medical_reg_no as string) ||
+                      (cleanEmail === "samarpitbiswal966@gmail.com" ? "OMC-2020-54190" : "OMC-2018-88412"),
+                    council_name:
+                      p?.council_name ||
+                      (data.user?.user_metadata?.council_name as string) ||
+                      "Odisha Medical Council",
+                    specialization:
+                      p?.specialization ||
+                      (data.user?.user_metadata?.specialization as string) ||
+                      (cleanEmail === "samarpitbiswal966@gmail.com" ? "Internal Medicine & Paediatrics" : "General Medicine & Cardiology"),
+                    facility_name:
+                      p?.facility_name ||
+                      (data.user?.user_metadata?.facility_name as string) ||
+                      (cleanEmail === "samarpitbiswal966@gmail.com" ? "AIIMS Bhubaneswar (Apex Trauma Centre)" : "Capital Hospital Bhubaneswar / DHH Khurda"),
+                    verification_status: p?.verification_status || "verified",
                   }
                 : isChemistEmail
                 ? {
@@ -290,12 +305,27 @@ export default function Home({
                   ? {
                       ...p,
                       role: "doctor",
-                      display_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Dr. Samarpit Biswal, MD" : "Dr. Bishnu Prasad Satapathy, MBBS",
-                      medical_reg_no: cleanEmail === "samarpitbiswal966@gmail.com" ? "OMC-2020-54190" : "OMC-2018-88412",
-                      council_name: "Odisha Medical Council",
-                      specialization: cleanEmail === "samarpitbiswal966@gmail.com" ? "Internal Medicine & Paediatrics" : "General Medicine & Cardiology",
-                      facility_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "AIIMS Bhubaneswar (Apex Trauma Centre)" : "Capital Hospital Bhubaneswar / DHH Khurda",
-                      verification_status: "verified",
+                      display_name:
+                        p?.display_name ||
+                        (u?.user_metadata?.display_name as string) ||
+                        (cleanEmail === "samarpitbiswal966@gmail.com" ? "Dr. Samarpit Biswal, MD" : "Dr. Bishnu Prasad Satapathy, MBBS"),
+                      medical_reg_no:
+                        p?.medical_reg_no ||
+                        (u?.user_metadata?.medical_reg_no as string) ||
+                        (cleanEmail === "samarpitbiswal966@gmail.com" ? "OMC-2020-54190" : "OMC-2018-88412"),
+                      council_name:
+                        p?.council_name ||
+                        (u?.user_metadata?.council_name as string) ||
+                        "Odisha Medical Council",
+                      specialization:
+                        p?.specialization ||
+                        (u?.user_metadata?.specialization as string) ||
+                        (cleanEmail === "samarpitbiswal966@gmail.com" ? "Internal Medicine & Paediatrics" : "General Medicine & Cardiology"),
+                      facility_name:
+                        p?.facility_name ||
+                        (u?.user_metadata?.facility_name as string) ||
+                        (cleanEmail === "samarpitbiswal966@gmail.com" ? "AIIMS Bhubaneswar (Apex Trauma Centre)" : "Capital Hospital Bhubaneswar / DHH Khurda"),
+                      verification_status: p?.verification_status || "verified",
                     }
                   : isChemistEmail
                   ? {
@@ -394,12 +424,27 @@ export default function Home({
                     id: session.user.id,
                     email: cleanEmail,
                     role: "doctor",
-                    display_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Dr. Samarpit Biswal, MD" : "Dr. Bishnu Prasad Satapathy, MBBS",
-                    medical_reg_no: cleanEmail === "samarpitbiswal966@gmail.com" ? "OMC-2020-54190" : "OMC-2018-88412",
-                    council_name: "Odisha Medical Council",
-                    specialization: cleanEmail === "samarpitbiswal966@gmail.com" ? "Internal Medicine & Paediatrics" : "General Medicine & Cardiology",
-                    facility_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "AIIMS Bhubaneswar (Apex Trauma Centre)" : "Capital Hospital Bhubaneswar / DHH Khurda",
-                    verification_status: "verified",
+                    display_name:
+                      p?.display_name ||
+                      (session.user?.user_metadata?.display_name as string) ||
+                      (cleanEmail === "samarpitbiswal966@gmail.com" ? "Dr. Samarpit Biswal, MD" : "Dr. Bishnu Prasad Satapathy, MBBS"),
+                    medical_reg_no:
+                      p?.medical_reg_no ||
+                      (session.user?.user_metadata?.medical_reg_no as string) ||
+                      (cleanEmail === "samarpitbiswal966@gmail.com" ? "OMC-2020-54190" : "OMC-2018-88412"),
+                    council_name:
+                      p?.council_name ||
+                      (session.user?.user_metadata?.council_name as string) ||
+                      "Odisha Medical Council",
+                    specialization:
+                      p?.specialization ||
+                      (session.user?.user_metadata?.specialization as string) ||
+                      (cleanEmail === "samarpitbiswal966@gmail.com" ? "Internal Medicine & Paediatrics" : "General Medicine & Cardiology"),
+                    facility_name:
+                      p?.facility_name ||
+                      (session.user?.user_metadata?.facility_name as string) ||
+                      (cleanEmail === "samarpitbiswal966@gmail.com" ? "AIIMS Bhubaneswar (Apex Trauma Centre)" : "Capital Hospital Bhubaneswar / DHH Khurda"),
+                    verification_status: p?.verification_status || "verified",
                   }
                 : isChemistEmail
                 ? {

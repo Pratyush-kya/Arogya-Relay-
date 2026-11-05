@@ -107,6 +107,13 @@ export function DoctorFollowupManager({
     doctorName.toLowerCase().includes("satapathy");
 
   function isAssignedToCurrentDoctor(req: PrescriptionFollowUpRequest): boolean {
+    if (resolvedEmail && req.doctorEmail) {
+      if (req.doctorEmail.toLowerCase() === resolvedEmail.toLowerCase()) return true;
+    }
+    if (doctorName && req.doctorName) {
+      const cleanName = doctorName.toLowerCase().replace(/^(dr\.?\s*)/i, "").trim();
+      if (cleanName && req.doctorName.toLowerCase().includes(cleanName)) return true;
+    }
     if (isSamarpit) {
       return (
         Boolean(req.doctorEmail?.includes("samarpitbiswal966")) ||
@@ -240,6 +247,11 @@ export function DoctorFollowupManager({
     e.preventDefault();
     if (!selectedReq) return;
 
+    if (!doctorReply.trim()) {
+      setStatusNotice("⚠️ Please enter clinical instructions and advice for the patient before signing.");
+      return;
+    }
+
     const chosenChemist = NEARBY_CHEMISTS.find((c) => c.id === selectedChemistId) || NEARBY_CHEMISTS[0];
 
     const updatedMedicines: ScheduledMedicine[] = [
@@ -270,7 +282,7 @@ export function DoctorFollowupManager({
       suggestedChemist: chosenChemist,
       fulfillmentMode: selectedReq.fulfillmentMode || "store_pickup",
       fulfillmentStatus: selectedReq.fulfillmentStatus || "awaiting_patient_choice",
-      deliveryAddress: selectedReq.deliveryAddress || "North Ridge Hamlet #12",
+      deliveryAddress: selectedReq.deliveryAddress || "Patient Residence",
       deliveryFeeInr: selectedReq.deliveryFeeInr ?? 0.0,
       finalTotalInr: calculatedPrice + (selectedReq.fulfillmentMode === "home_delivery" ? (selectedReq.deliveryFeeInr ?? 30.0) : 0.0),
       totalPriceInr: calculatedPrice,

@@ -11,6 +11,7 @@ import {
   type PrescriptionFollowUpRequest,
   type FollowUpIssueType,
   getDoctorGmailComposeUrl,
+  getAvailableDoctors,
 } from "@/lib/prescriptions/types";
 import { useLanguage } from "@/lib/i18n/provider";
 
@@ -57,16 +58,20 @@ export function PatientFollowupCard({
     }
     setSubmitting(true);
 
+    const allDocs = getAvailableDoctors();
     const targetRx = prescriptions.find((p) => p.id === selectedRxId);
-    const assignedDoc = targetRx?.doctorName || "Dr. Bishnu Prasad Satapathy, MBBS";
-    const assignedEmail = assignedDoc.toLowerCase().includes("samarpit") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com";
+    const assignedDoc = targetRx?.doctorName || allDocs[0]?.name || "Dr. Bishnu Prasad Satapathy, MBBS";
+    const matchingDocObj = allDocs.find((d) => d.name.toLowerCase() === assignedDoc.toLowerCase()) || allDocs[0];
+    const assignedEmail = matchingDocObj?.email || (assignedDoc.toLowerCase().includes("samarpit") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com");
+    const assignedNmc = matchingDocObj?.nmcNumber || (assignedDoc.toLowerCase().includes("samarpit") ? "OMC-2020-54190" : "OMC-2018-88412");
+
     const newReq: PrescriptionFollowUpRequest = {
       id: `FUP-${Date.now().toString(36).toUpperCase()}`,
       prescriptionId: selectedRxId,
       patientRef,
       patientName: "Ramesh Soren",
       doctorName: assignedDoc,
-      doctorNmc: assignedDoc.toLowerCase().includes("samarpit") ? "OMC-2020-54190" : "OMC-2018-88412",
+      doctorNmc: assignedNmc,
       doctorEmail: assignedEmail,
       handledByAi: false,
       issueType,

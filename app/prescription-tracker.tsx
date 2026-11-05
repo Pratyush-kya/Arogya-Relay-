@@ -24,6 +24,7 @@ import {
   type FulfillmentMode,
   type FulfillmentStatus,
   TWO_AVAILABLE_DOCTORS,
+  getAvailableDoctors,
   NEARBY_CHEMISTS,
   getDoctorGmailComposeUrl,
   getChemistGmailComposeUrl,
@@ -123,7 +124,8 @@ export default function PrescriptionTracker({
     const fupList = getLocalFollowUps();
     setFollowups(fupList);
     if (fupList.length > 0) {
-      setSelectedFollowupId(fupList[0].id);
+      const target = fupList.find((f) => f.status === "doctor_revised") || fupList[0];
+      setSelectedFollowupId(target.id);
     }
 
     if (rxList.length > 0) {
@@ -249,7 +251,8 @@ export default function PrescriptionTracker({
     }
     setIsSubmittingReport(true);
 
-    const chosenDoctor = TWO_AVAILABLE_DOCTORS.find((d) => d.id === selectedDoctorId) || TWO_AVAILABLE_DOCTORS[0];
+    const allDocs = getAvailableDoctors();
+    const chosenDoctor = allDocs.find((d) => d.id === selectedDoctorId) || allDocs[0];
     const newFollowupId = `FUP-${Date.now().toString(36).toUpperCase()}`;
 
     // Direct routing to licensed doctor's queue (NO AI answering)
@@ -673,7 +676,7 @@ export default function PrescriptionTracker({
                 Select Your Verified Doctor (Met in Person):
               </label>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "12px" }}>
-                {TWO_AVAILABLE_DOCTORS.map((doc) => {
+                {getAvailableDoctors().map((doc) => {
                   const isSelected = selectedDoctorId === doc.id;
                   return (
                     <div
@@ -972,11 +975,11 @@ export default function PrescriptionTracker({
               >
                 {isSubmittingReport
                   ? "Delivering to Doctor..."
-                  : `🚀 Submit to ${TWO_AVAILABLE_DOCTORS.find((d) => d.id === selectedDoctorId)?.name || "Doctor"}`}
+                  : `🚀 Submit to ${getAvailableDoctors().find((d) => d.id === selectedDoctorId)?.name || "Doctor"}`}
               </button>
 
               {(() => {
-                const targetDoc = TWO_AVAILABLE_DOCTORS.find((d) => d.id === selectedDoctorId) || TWO_AVAILABLE_DOCTORS[0];
+                const targetDoc = getAvailableDoctors().find((d) => d.id === selectedDoctorId) || getAvailableDoctors()[0];
                 return (
                   <a
                     href={getDoctorGmailComposeUrl(
@@ -1065,7 +1068,7 @@ export default function PrescriptionTracker({
                 >
                   {followups.map((f) => (
                     <option key={f.id} value={f.id}>
-                      {f.doctorName} ({new Date(f.reportedAt).toLocaleDateString()})
+                      {f.doctorName} ({new Date(f.reportedAt).toLocaleDateString()}) — {f.status === "doctor_revised" ? "✓ Revised Response Ready" : "⏳ Awaiting Doctor Review"}
                     </option>
                   ))}
                 </select>

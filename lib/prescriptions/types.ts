@@ -32,6 +32,44 @@ export const TWO_AVAILABLE_DOCTORS: AvailableDoctor[] = [
   },
 ];
 
+export function getAvailableDoctors(): AvailableDoctor[] {
+  if (typeof window === "undefined") return TWO_AVAILABLE_DOCTORS;
+  try {
+    const list = [...TWO_AVAILABLE_DOCTORS];
+    const rawProfile = localStorage.getItem("arogya.local_profile");
+    if (rawProfile) {
+      const p = JSON.parse(rawProfile);
+      if (p && p.role === "doctor" && (p.display_name || p.full_name)) {
+        const docName = p.display_name || p.full_name;
+        const cleanEmail = (p.email || "").toLowerCase().trim();
+        const existingIdx = list.findIndex(
+          (d) =>
+            (cleanEmail && d.email.toLowerCase() === cleanEmail) ||
+            d.name.toLowerCase() === docName.toLowerCase()
+        );
+        const dynamicDoc: AvailableDoctor = {
+          id: p.id || (existingIdx >= 0 ? list[existingIdx].id : `doc-${Date.now()}`),
+          name: docName,
+          nmcNumber: p.medical_reg_no || p.nmc_registration_number || (cleanEmail.includes("samarpit") ? "OMC-2020-54190" : "OMC-2018-88412"),
+          specialization: p.specialization || (cleanEmail.includes("samarpit") ? "Internal Medicine & Paediatrics" : "General Medicine & Cardiology"),
+          hospital: p.facility_name || p.hospital_affiliation || (cleanEmail.includes("samarpit") ? "AIIMS Bhubaneswar (Apex Trauma Centre)" : "Capital Hospital Bhubaneswar / DHH Khurda"),
+          experience: "Verified Medical Officer",
+          avatar: "👨‍⚕️",
+          email: p.email || (cleanEmail.includes("samarpit") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com"),
+        };
+        if (existingIdx >= 0) {
+          list[existingIdx] = dynamicDoc;
+        } else {
+          list.unshift(dynamicDoc);
+        }
+      }
+    }
+    return list;
+  } catch {
+    return TWO_AVAILABLE_DOCTORS;
+  }
+}
+
 export function getDoctorGmailComposeUrl(
   doctorEmail: string,
   subject: string,
