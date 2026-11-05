@@ -58,15 +58,15 @@ export function PatientFollowupCard({
     setSubmitting(true);
 
     const targetRx = prescriptions.find((p) => p.id === selectedRxId);
-    const assignedDoc = targetRx?.doctorName || "Dr. Rajesh Patel, MBBS";
-    const assignedEmail = assignedDoc.toLowerCase().includes("ananya") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com";
+    const assignedDoc = targetRx?.doctorName || "Dr. Bishnu Prasad Satapathy, MBBS";
+    const assignedEmail = assignedDoc.toLowerCase().includes("samarpit") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com";
     const newReq: PrescriptionFollowUpRequest = {
       id: `FUP-${Date.now().toString(36).toUpperCase()}`,
       prescriptionId: selectedRxId,
       patientRef,
       patientName: "Ramesh Soren",
       doctorName: assignedDoc,
-      doctorNmc: assignedDoc.toLowerCase().includes("ananya") ? "NMC-2020-54190" : "NMC-2018-88412",
+      doctorNmc: assignedDoc.toLowerCase().includes("samarpit") ? "OMC-2020-54190" : "OMC-2018-88412",
       doctorEmail: assignedEmail,
       handledByAi: false,
       issueType,
@@ -248,11 +248,11 @@ export function PatientFollowupCard({
               }}
             >
               <span style={{ color: "#0369a1" }}>
-                📧 Attached Gmail: <strong>{activeFollowup.doctorEmail || (activeFollowup.doctorName.includes("Ananya") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com")}</strong>
+                📧 Attached Gmail: <strong>{activeFollowup.doctorEmail || (activeFollowup.doctorName.toLowerCase().includes("samarpit") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com")}</strong>
               </span>
               <a
                 href={getDoctorGmailComposeUrl(
-                  activeFollowup.doctorEmail || (activeFollowup.doctorName.includes("Ananya") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com"),
+                  activeFollowup.doctorEmail || (activeFollowup.doctorName.toLowerCase().includes("samarpit") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com"),
                   `[Arogya-Relay] Consultation for ${activeFollowup.doctorName} - Ref: ${activeFollowup.prescriptionId}`,
                   `Respected ${activeFollowup.doctorName},\n\nPrescription Ref: ${activeFollowup.prescriptionId}\nPatient: ${activeFollowup.patientName}\n\nSymptoms / Inquiry:\n${activeFollowup.patientMessage}\n\nThank you.`
                 )}
@@ -569,7 +569,7 @@ export function PatientFollowupCard({
                       {p.id} · {p.doctorName} ({p.diagnosis || "Consultation"})
                     </option>
                   ))}
-                  {prescriptions.length === 0 && <option value="RX-9021">RX-9021 · Dr. Rajesh Patel (Hypertension)</option>}
+                  {prescriptions.length === 0 && <option value="RX-9021">RX-9021 · Dr. Bishnu Prasad Satapathy (Hypertension)</option>}
                 </select>
               </div>
 

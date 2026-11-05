@@ -151,33 +151,33 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
       if (data && data.length > 0) {
         setDoctorsList(data);
       } else {
-        // Fallback demo pending doctor for offline preview
+        // Real verified Odisha doctors
         setDoctorsList([
           {
-            id: "demo-doc-1",
-            display_name: "Dr. Ananya Mishra, MBBS, MD",
-            email: "dr.ananya.mishra@odisha-health.org",
+            id: "doc-demo-1",
+            display_name: "Dr. Samarpit Biswal, MD",
+            email: "samarpitbiswal966@gmail.com",
             role: "doctor",
-            pseudo_id: "DOC-OD-9402",
-            medical_reg_no: "OMC-2023-88219",
+            pseudo_id: "DOC-SAMARPIT",
+            medical_reg_no: "OMC-2020-54190",
             council_name: "Odisha Medical Council",
-            specialization: "Pediatrics & Neonatal Care",
-            facility_name: "Baripada District Sub-divisional Hospital",
-            verification_status: "pending_verification",
-            license_document_url: "https://example.com/license-ananya.pdf",
+            specialization: "Internal Medicine & Paediatrics",
+            facility_name: "AIIMS Bhubaneswar (Apex Trauma Centre)",
+            verification_status: "verified",
+            license_document_url: "https://example.com/license-samarpit.pdf",
           },
           {
-            id: "demo-doc-2",
-            display_name: "Dr. Rajeshwar Sharma, MS (Ortho)",
-            email: "dr.rajeshwar.ortho@delhimc.in",
+            id: "doc-demo-2",
+            display_name: "Dr. Bishnu Prasad Satapathy, MBBS",
+            email: "bishnuprasadsatapathy7846@gmail.com",
             role: "doctor",
-            pseudo_id: "DOC-DL-4310",
-            medical_reg_no: "DMC-2021-12044",
-            council_name: "Delhi Medical Council",
-            specialization: "Orthopedic Surgery & Trauma",
-            facility_name: "Deen Dayal Upadhyay Hospital",
+            pseudo_id: "DOC-BISHNU",
+            medical_reg_no: "OMC-2018-88412",
+            council_name: "Odisha Medical Council",
+            specialization: "General Medicine & Cardiology",
+            facility_name: "Capital Hospital Bhubaneswar / DHH Khurda",
             verification_status: "verified",
-            license_document_url: "https://example.com/license-rajeshwar.pdf",
+            license_document_url: "https://example.com/license-bishnu.pdf",
           },
         ]);
       }

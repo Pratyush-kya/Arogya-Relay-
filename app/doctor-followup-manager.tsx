@@ -71,13 +71,13 @@ const CLINICAL_PRESETS: ClinicalPreset[] = [
 ];
 
 export function DoctorFollowupManager({
-  doctorName = "Dr. Rajesh Patel, MBBS",
-  doctorNmc = "NMC-2018-88412",
+  doctorName = "Dr. Bishnu Prasad Satapathy, MBBS",
+  doctorNmc = "OMC-2018-88412",
   doctorEmail,
 }: DoctorFollowupManagerProps) {
   const resolvedEmail =
     doctorEmail ||
-    (doctorName.toLowerCase().includes("ananya") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com");
+    (doctorName.toLowerCase().includes("samarpit") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com");
   const { effectiveLang } = useLanguage();
   const [followups, setFollowups] = useState<PrescriptionFollowUpRequest[]>([]);
   const [selectedFollowupId, setSelectedFollowupId] = useState<string | null>(null);
@@ -97,25 +97,28 @@ export function DoctorFollowupManager({
   const [calculatedPrice, setCalculatedPrice] = useState<number>(18.0);
   const [statusNotice, setStatusNotice] = useState<string | null>(null);
 
-  const isAnanya =
-    resolvedEmail.includes("samarpitbiswal966") || doctorName.toLowerCase().includes("ananya");
-  const isRajesh =
+  const isSamarpit =
+    resolvedEmail.includes("samarpitbiswal966") ||
+    doctorName.toLowerCase().includes("samarpit") ||
+    doctorName.toLowerCase().includes("biswal");
+  const isBishnu =
     resolvedEmail.includes("bishnuprasadsatapathy7846") ||
-    doctorName.toLowerCase().includes("rajesh") ||
-    doctorName.toLowerCase().includes("patel");
+    doctorName.toLowerCase().includes("bishnu") ||
+    doctorName.toLowerCase().includes("satapathy");
 
   function isAssignedToCurrentDoctor(req: PrescriptionFollowUpRequest): boolean {
-    if (isAnanya) {
+    if (isSamarpit) {
       return (
         Boolean(req.doctorEmail?.includes("samarpitbiswal966")) ||
-        req.doctorName.toLowerCase().includes("ananya")
+        req.doctorName.toLowerCase().includes("samarpit") ||
+        req.doctorName.toLowerCase().includes("biswal")
       );
     }
-    if (isRajesh) {
+    if (isBishnu) {
       return (
         Boolean(req.doctorEmail?.includes("bishnuprasadsatapathy7846")) ||
-        req.doctorName.toLowerCase().includes("rajesh") ||
-        req.doctorName.toLowerCase().includes("patel")
+        req.doctorName.toLowerCase().includes("bishnu") ||
+        req.doctorName.toLowerCase().includes("satapathy")
       );
     }
     return true;
@@ -613,7 +616,7 @@ export function DoctorFollowupManager({
                         🏪 {item.suggestedChemist?.name || "PMBJP Jan Aushadhi Kendra #7402"}
                       </strong>
                       <span style={{ fontSize: "12px", color: "#15803d", display: "block" }}>
-                        📍 {item.suggestedChemist?.address || "Mawlynnong Main Road"} ({item.suggestedChemist?.distanceKm || 1.2} km)
+                        📍 {item.suggestedChemist?.address || "Main Market Road, near Block Office"} ({item.suggestedChemist?.distanceKm || 1.2} km)
                       </span>
                       <span style={{ fontSize: "11.5px", color: "#166534", display: "block", marginTop: "2px" }}>
                         📞 {item.suggestedChemist?.phone || "+91 94370 12345"} · 📧 {item.suggestedChemist?.email || "janaushadhi.kendra7402@gov.in"}

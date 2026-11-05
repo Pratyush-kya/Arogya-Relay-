@@ -24,20 +24,20 @@ export function DoctorWorkspace({
 }: DoctorWorkspaceProps) {
   const { effectiveLang, setLang } = useLanguage();
 
-  const isAnanya =
-    currentUser?.email?.includes("ananya") || currentUser?.email?.includes("samarpitbiswal966");
+  const isSamarpit =
+    currentUser?.email?.includes("samarpit") || currentUser?.email?.includes("samarpitbiswal966");
 
   const docName =
     currentProfile?.full_name ||
     currentProfile?.display_name ||
-    (isAnanya ? "Dr. Ananya Sharma, MD" : "Dr. Rajesh Patel, MBBS");
+    (isSamarpit ? "Dr. Samarpit Biswal, MD" : "Dr. Bishnu Prasad Satapathy, MBBS");
 
-  const regNo = currentProfile?.nmc_registration_number || (isAnanya ? "NMC-2020-54190" : "NMC-2018-88412");
-  const hospital = currentProfile?.hospital_affiliation || (isAnanya ? "Community Health Centre & Rural Hospital" : "Mawlynnong Sub-Divisional Hospital & PHC");
+  const regNo = currentProfile?.nmc_registration_number || (isSamarpit ? "OMC-2020-54190" : "OMC-2018-88412");
+  const hospital = currentProfile?.hospital_affiliation || (isSamarpit ? "AIIMS Bhubaneswar (Apex Trauma Centre)" : "Capital Hospital Bhubaneswar / DHH Khurda");
   const docEmail =
     currentProfile?.email ||
     currentUser?.email ||
-    (isAnanya ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com");
+    (isSamarpit ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com");
 
   return (
     <div

@@ -9,7 +9,7 @@ const SEED_PRESCRIPTIONS: PatientPrescription[] = [
   {
     id: "RX-9021",
     patientRef: "PT-RAMESH-01",
-    doctorName: "Dr. Rajesh Patel, MBBS",
+    doctorName: "Dr. Bishnu Prasad Satapathy, MBBS",
     diagnosis: "Essential Hypertension Stage 1 & Mild Fatigue",
     createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
     synced: true,
@@ -61,15 +61,15 @@ const SEED_FOLLOWUPS: PrescriptionFollowUpRequest[] = [
     prescriptionId: "RX-9021",
     patientRef: "PT-RAMESH-01",
     patientName: "Ramesh Soren",
-    doctorName: "Dr. Rajesh Patel, MBBS",
-    doctorNmc: "NMC-2018-88412",
+    doctorName: "Dr. Bishnu Prasad Satapathy, MBBS",
+    doctorNmc: "OMC-2018-88412",
     doctorEmail: "bishnuprasadsatapathy7846@gmail.com",
     handledByAi: false,
     issueType: "side_effect",
-    patientMessage: "Doctor sir, since starting Amlodipine 5mg I am feeling slight dizziness in the morning and ankle swelling. Can you please check and adjust my dose?",
+    patientMessage: "Dr. Bishnu Prasad sir, since starting Amlodipine 5mg I am feeling slight dizziness in the morning and ankle swelling. Can you please check and adjust my dose?",
     reportedAt: new Date(Date.now() - 3600000 * 4).toISOString(),
     status: "doctor_revised",
-    doctorReply: "Direct clinical review by Dr. Rajesh Patel (via registered Gmail/portal): Reviewed your blood pressure history. I have reduced Amlodipine to 2.5mg and added low-salt dietary advice. Please collect the new tablets from Jan Aushadhi Kendra #7402.",
+    doctorReply: "Direct clinical review by Dr. Bishnu Prasad Satapathy (Capital Hospital / DHH Khurda): Reviewed your blood pressure readings. I have adjusted Amlodipine to 2.5mg and advised low-sodium diet. Collect your revised medicine from Jan Aushadhi Kendra #7402.",
     revisedMedicines: [
       {
         id: "m-amlo-rev",
@@ -110,12 +110,12 @@ const SEED_FOLLOWUPS: PrescriptionFollowUpRequest[] = [
     prescriptionId: "RX-9022",
     patientRef: "PT-RAMESH-01",
     patientName: "Ramesh Soren",
-    doctorName: "Dr. Ananya Sharma, MD",
-    doctorNmc: "NMC-2020-54190",
+    doctorName: "Dr. Samarpit Biswal, MD",
+    doctorNmc: "OMC-2020-54190",
     doctorEmail: "samarpitbiswal966@gmail.com",
     handledByAi: false,
     issueType: "dose_change",
-    patientMessage: "Dr. Ananya, my throat irritation has settled, but I still have mild body fatigue. How should I adjust my dosage?",
+    patientMessage: "Dr. Samarpit, my throat irritation has settled, but I still have mild body fatigue. How should I adjust my dosage?",
     reportedAt: new Date(Date.now() - 3600000 * 2).toISOString(),
     status: "pending_doctor_review",
     doctorReply: undefined,
@@ -247,7 +247,16 @@ export function getFollowUpsForDoctor(doctorQuery?: string): PrescriptionFollowU
   const all = getLocalFollowUps();
   if (!doctorQuery) return all;
   const q = doctorQuery.toLowerCase();
-  return all.filter((f) => !f.doctorName || f.doctorName.toLowerCase().includes(q) || q.includes("rajesh") || q.includes("patel"));
+  return all.filter(
+    (f) =>
+      !f.doctorName ||
+      f.doctorName.toLowerCase().includes(q) ||
+      (f.doctorEmail && f.doctorEmail.toLowerCase().includes(q)) ||
+      q.includes("bishnu") ||
+      q.includes("satapathy") ||
+      q.includes("samarpit") ||
+      q.includes("biswal")
+  );
 }
 
 export function getLocalAdherence(): AdherenceLog[] {

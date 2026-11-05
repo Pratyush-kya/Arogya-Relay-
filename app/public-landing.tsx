@@ -177,30 +177,28 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
     const effectiveRole = isDocEmail ? "doctor" : role;
     const effectiveName = isDocEmail
       ? cleanEmail === "samarpitbiswal966@gmail.com"
-        ? "Dr. Ananya Sharma, MD"
-        : "Dr. Rajesh Patel, MBBS"
+        ? "Dr. Samarpit Biswal, MD"
+        : "Dr. Bishnu Prasad Satapathy, MBBS"
       : displayName || cleanEmail.split("@")[0];
     const effectiveRegNo = isDocEmail
       ? cleanEmail === "samarpitbiswal966@gmail.com"
-        ? "NMC-2020-54190"
-        : "NMC-2018-88412"
+        ? "OMC-2020-54190"
+        : "OMC-2018-88412"
       : docNmcNumber;
     const effectiveCouncil = isDocEmail
-      ? cleanEmail === "samarpitbiswal966@gmail.com"
-        ? "Delhi Medical Council"
-        : "National Medical Commission"
+      ? "Odisha Medical Council"
       : docCouncil;
     const effectiveFacility = isDocEmail
       ? cleanEmail === "samarpitbiswal966@gmail.com"
-        ? "Community Health Centre & Rural Hospital"
-        : "Mawlynnong Sub-Divisional Hospital & PHC"
+        ? "AIIMS Bhubaneswar (Apex Trauma Centre)"
+        : "Capital Hospital Bhubaneswar / DHH Khurda"
       : role === "chemist"
       ? chemistStoreName
       : null;
 
     const pseudoId =
       effectiveRole === "doctor"
-        ? isDocEmail && cleanEmail === "samarpitbiswal966@gmail.com" ? "DOC-ANANYA" : "DOC-RAJESH"
+        ? isDocEmail && cleanEmail === "samarpitbiswal966@gmail.com" ? "DOC-SAMARPIT" : "DOC-BISHNU"
         : effectiveRole === "health_worker"
         ? `HW-${Math.floor(1000 + Math.random() * 9000)}`
         : effectiveRole === "chemist"
@@ -921,7 +919,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                     onClick={() => {
                       setEmail("bishnuprasadsatapathy7846@gmail.com");
                       setPassword("demo123");
-                      setStatus({ tone: "good", msg: "Selected Dr. Rajesh Patel, MBBS (Verified Doctor · bishnuprasadsatapathy7846@gmail.com) · Click Sign In" });
+                      setStatus({ tone: "good", msg: "Selected Dr. Bishnu Prasad Satapathy, MBBS (Verified Doctor · bishnuprasadsatapathy7846@gmail.com) · Click Sign In" });
                     }}
                     style={{
                       background: "#f0f9ff",
@@ -933,16 +931,16 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                       fontWeight: 600,
                       cursor: "pointer",
                     }}
-                    title="Paediatrics & Neonatal Care - Verified Doctor (bishnuprasadsatapathy7846@gmail.com)"
+                    title="General Medicine & Cardiology - Verified Doctor (bishnuprasadsatapathy7846@gmail.com)"
                   >
-                    👨‍⚕️ Dr. Patel (Gmail)
+                    👨‍⚕️ Dr. Bishnu Prasad (Gmail)
                   </button>
                   <button
                     type="button"
                     onClick={() => {
                       setEmail("samarpitbiswal966@gmail.com");
                       setPassword("demo123");
-                      setStatus({ tone: "good", msg: "Selected Dr. Ananya Sharma, MD (Verified Doctor · NMC-2020-54190 · samarpitbiswal966@gmail.com) · Click Sign In" });
+                      setStatus({ tone: "good", msg: "Selected Dr. Samarpit Biswal, MD (Verified Doctor · OMC-2020-54190 · samarpitbiswal966@gmail.com) · Click Sign In" });
                     }}
                     style={{
                       background: "#f0fdf4",
@@ -956,7 +954,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                     }}
                     title="Internal Medicine & Paediatrics - Verified Doctor (samarpitbiswal966@gmail.com)"
                   >
-                    👩‍⚕️ Dr. Ananya (Gmail)
+                    👨‍⚕️ Dr. Samarpit (Gmail)
                   </button>
                   <button
                     type="button"
@@ -1032,7 +1030,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                   required
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="e.g. Ramesh Soren / Dr. Ananya Sharma"
+                  placeholder="e.g. Ramesh Soren / Dr. Samarpit Biswal"
                   style={{
                     width: "100%",
                     padding: "9px 12px",

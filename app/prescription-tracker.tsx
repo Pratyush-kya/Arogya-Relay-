@@ -81,7 +81,7 @@ export default function PrescriptionTracker({
 
   // Doctor Authoring State
   const [patientRef, setPatientRef] = useState("PT-RAMESH-01");
-  const [doctorName, setDoctorName] = useState("Dr. Rajesh Patel, MBBS");
+  const [doctorName, setDoctorName] = useState("Dr. Bishnu Prasad Satapathy, MBBS");
   const [diagnosis, setDiagnosis] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -843,7 +843,7 @@ export default function PrescriptionTracker({
                           "Doctor sir, since starting Tab. Amlodipine 5mg from my visit, I am experiencing morning dizziness, lightheadedness when standing up, and slight swelling in my ankles. My BP measured today at the local sub-centre was 132/84 mmHg. Please review and adjust my medicine dose."
                         );
                       }
-                      setStatusMessage("Attached official sample prescription slip (Dr. Rajesh Patel · RX-9021)!");
+                      setStatusMessage("Attached official sample prescription slip (Dr. Bishnu Prasad Satapathy · RX-9021)!");
                     }}
                     style={{
                       background: "#047857",
@@ -867,7 +867,7 @@ export default function PrescriptionTracker({
                     href="/sample-prescription.pdf"
                     target="_blank"
                     rel="noopener noreferrer"
-                    download="Dr_Rajesh_Patel_Prescription_RX-9021.pdf"
+                    download="Dr_Bishnu_Prasad_Satapathy_Prescription_RX-9021.pdf"
                     style={{
                       background: "#e0f2fe",
                       color: "#0369a1",
@@ -922,7 +922,7 @@ export default function PrescriptionTracker({
                       ✓ Official Medical Prescription Attached
                     </strong>
                     <span style={{ display: "block", color: "var(--muted, #64748b)", marginTop: "2px" }}>
-                      Mawlynnong Sub-Divisional Hospital &amp; PHC · Dr. Rajesh Patel (NMC-2018-88412) · Ref: RX-9021
+                      Capital Hospital Bhubaneswar / DHH Khurda · Dr. Bishnu Prasad Satapathy (OMC-2018-88412) · Ref: RX-9021
                     </span>
                     <p style={{ margin: "6px 0 0", fontSize: "11.5px", color: "#475569" }}>
                       Contains Tab. Amlodipine 5mg, Paracetamol 500mg, Vitals (BP 148/92), and medical officer stamp ready for dosage review.
@@ -951,7 +951,7 @@ export default function PrescriptionTracker({
                 <span>No AI Medical Handling · Direct Human Doctor Review Guaranteed</span>
               </div>
               <p style={{ margin: 0, fontSize: "12px", color: "#0c4a6e" }}>
-                Your clinical query is answered exclusively by licensed human physicians (Dr. Rajesh Patel, MBBS or Dr. Ananya Sharma, MD). If you prefer sending an email directly from your own Gmail account, click &quot;Compose via Gmail&quot; below.
+                Your clinical query is answered exclusively by licensed human physicians (Dr. Bishnu Prasad Satapathy, MBBS or Dr. Samarpit Biswal, MD). If you prefer sending an email directly from your own Gmail account, click &quot;Compose via Gmail&quot; below.
               </p>
             </div>
 
@@ -1086,7 +1086,7 @@ export default function PrescriptionTracker({
               <span style={{ fontSize: "36px", display: "block", marginBottom: "8px" }}>📋</span>
               <h3 style={{ margin: "0 0 6px", fontSize: "16px" }}>No Doctor Follow-Up Responses Yet</h3>
               <p style={{ margin: "0 0 16px", fontSize: "13px", color: "var(--muted, #64748b)" }}>
-                Submit a report in Section 1 to consult Dr. Rajesh Patel or Dr. Ananya Sharma.
+                Submit a report in Section 1 to consult Dr. Bishnu Prasad Satapathy or Dr. Samarpit Biswal.
               </p>
               <button
                 type="button"
@@ -1185,7 +1185,7 @@ export default function PrescriptionTracker({
                     Your Submitted Symptom / Issue Note:
                   </strong>
                   <span style={{ fontSize: "11.5px", color: "#0369a1", fontWeight: 600 }}>
-                    Assigned to: {activeFollowup.doctorName} (Gmail: {activeFollowup.doctorEmail || (activeFollowup.doctorName.includes("Ananya") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com")})
+                    Assigned to: {activeFollowup.doctorName} (Gmail: {activeFollowup.doctorEmail || (activeFollowup.doctorName.toLowerCase().includes("samarpit") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com")})
                   </span>
                 </div>
                 <p style={{ margin: "6px 0 0", color: "var(--foreground, #1e293b)", fontStyle: "italic" }}>
@@ -1235,7 +1235,7 @@ export default function PrescriptionTracker({
                       <span style={{ fontWeight: 600, color: "#1e293b" }}>
                         Doctor&apos;s Attached Gmail:{" "}
                         <strong style={{ color: "#0369a1" }}>
-                          {activeFollowup.doctorEmail || (activeFollowup.doctorName.includes("Ananya") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com")}
+                          {activeFollowup.doctorEmail || (activeFollowup.doctorName.toLowerCase().includes("samarpit") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com")}
                         </strong>
                       </span>
                     </div>
@@ -1247,7 +1247,7 @@ export default function PrescriptionTracker({
                   <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
                     <a
                       href={getDoctorGmailComposeUrl(
-                        activeFollowup.doctorEmail || (activeFollowup.doctorName.includes("Ananya") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com"),
+                        activeFollowup.doctorEmail || (activeFollowup.doctorName.toLowerCase().includes("samarpit") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com"),
                         `[Arogya-Relay Case ${activeFollowup.id}] Consultation Inquiry for ${activeFollowup.doctorName}`,
                         `Respected ${activeFollowup.doctorName},\n\nI have submitted a clinical consultation request on Arogya-Relay.\n\nCase ID: ${activeFollowup.id}\nPrescription Reference: ${activeFollowup.prescriptionId}\nPatient Name: ${activeFollowup.patientName}\n\nSymptoms / Issue Note:\n${activeFollowup.patientMessage}\n\nPlease reply with your medical advice at your earliest convenience.\n\nThank you,\n${activeFollowup.patientName}`
                       )}
@@ -1272,7 +1272,7 @@ export default function PrescriptionTracker({
                     </a>
 
                     <a
-                      href={`mailto:${activeFollowup.doctorEmail || (activeFollowup.doctorName.includes("Ananya") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com")}?subject=${encodeURIComponent(`[Arogya-Relay Case ${activeFollowup.id}] Consultation Inquiry`)}&body=${encodeURIComponent(`Respected ${activeFollowup.doctorName},\n\nCase ID: ${activeFollowup.id}\nPrescription: ${activeFollowup.prescriptionId}\nPatient: ${activeFollowup.patientName}\n\nNote:\n${activeFollowup.patientMessage}`)}`}
+                      href={`mailto:${activeFollowup.doctorEmail || (activeFollowup.doctorName.toLowerCase().includes("samarpit") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com")}?subject=${encodeURIComponent(`[Arogya-Relay Case ${activeFollowup.id}] Consultation Inquiry`)}&body=${encodeURIComponent(`Respected ${activeFollowup.doctorName},\n\nCase ID: ${activeFollowup.id}\nPrescription: ${activeFollowup.prescriptionId}\nPatient: ${activeFollowup.patientName}\n\nNote:\n${activeFollowup.patientMessage}`)}`}
                       className="secondary-button"
                       style={{
                         padding: "9px 16px",
@@ -1352,7 +1352,7 @@ export default function PrescriptionTracker({
                           `💊 *Prescribed Medicine:* ${activeFollowup.revisedMedicines?.[0]?.name || "Generic Medicine"} (${activeFollowup.revisedMedicines?.[0]?.strength || ""}) - ${activeFollowup.revisedMedicines?.[0]?.dose || ""}\n` +
                           `💰 *Jan Aushadhi Fair Price:* ₹${activeFollowup.totalPriceInr || 18.0} (MRP ₹${activeFollowup.mrpPriceInr || 85.0})\n\n` +
                           `📍 *Nearest Chemist:* ${activeFollowup.suggestedChemist?.name || "PMBJP Jan Aushadhi Kendra #7402"}\n` +
-                          `Address: ${activeFollowup.suggestedChemist?.address || "Mawlynnong Main Road"}\n` +
+                          `Address: ${activeFollowup.suggestedChemist?.address || "Main Market Road, near Block Office"}\n` +
                           `Distance: ${activeFollowup.suggestedChemist?.distanceKm || 1.2} km\n` +
                           `Phone: ${activeFollowup.suggestedChemist?.phone || "+91 94370 12345"}\n` +
                           `Email: ${activeFollowup.suggestedChemist?.email || "janaushadhi.kendra7402@gov.in"}`
@@ -1440,11 +1440,11 @@ export default function PrescriptionTracker({
                   >
                     <span style={{ color: "#334155" }}>
                       📧 Have questions about this revision? Contact <strong>{activeFollowup.doctorName}</strong> directly at{" "}
-                      <strong>{activeFollowup.doctorEmail || (activeFollowup.doctorName.includes("Ananya") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com")}</strong>
+                      <strong>{activeFollowup.doctorEmail || (activeFollowup.doctorName.toLowerCase().includes("samarpit") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com")}</strong>
                     </span>
                     <a
                       href={getDoctorGmailComposeUrl(
-                        activeFollowup.doctorEmail || (activeFollowup.doctorName.includes("Ananya") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com"),
+                        activeFollowup.doctorEmail || (activeFollowup.doctorName.toLowerCase().includes("samarpit") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com"),
                         `[Follow-Up] Question on Prescription ${activeFollowup.prescriptionId}`,
                         `Respected ${activeFollowup.doctorName},\n\nI have a follow-up question regarding my revised prescription.\n\nThank you,\n${activeFollowup.patientName}`
                       )}
@@ -2260,7 +2260,7 @@ export default function PrescriptionTracker({
                 value={doctorName}
                 onChange={(e) => setDoctorName(e.target.value)}
                 style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid var(--line)" }}
-                placeholder="e.g. Dr. Rajesh Patel, MBBS"
+                placeholder="e.g. Dr. Bishnu Prasad Satapathy, MBBS"
               />
             </label>
 

@@ -125,7 +125,7 @@ export function ChemistDispensary({
       const sampleRx = {
         id: parsedId.startsWith("rx-") ? parsedId : `rx-${Date.now().toString(36).toUpperCase()}`,
         patientRef: parsedId.startsWith("PT-") ? parsedId : "PT-7821",
-        doctorName: "Dr. Rajesh Patel, MBBS",
+        doctorName: "Dr. Bishnu Prasad Satapathy, MBBS",
         diagnosis: "Acute Bronchial Infection / Febrile Cough",
         medicines: [
           {

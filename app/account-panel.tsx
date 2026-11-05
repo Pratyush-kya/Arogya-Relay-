@@ -305,26 +305,27 @@ export function TopRightUserNav({
             {
               id: "doc-demo-1",
               email: "samarpitbiswal966@gmail.com",
-              display_name: "Dr. Ananya Sharma, MD",
+              display_name: "Dr. Samarpit Biswal, MD",
               role: "doctor",
-              pseudo_id: "DOC-ANANYA",
-              medical_reg_no: "NMC-2022-84920",
-              council_name: "Delhi Medical Council",
-              specialization: "General Physician",
-              facility_name: "Pynursla CHC",
-              verification_status: "pending_verification",
-              verification_notes: "Awaiting NMC verification approval",
+              pseudo_id: "DOC-SAMARPIT",
+              medical_reg_no: "OMC-2020-54190",
+              council_name: "Odisha Medical Council",
+              specialization: "Internal Medicine & Paediatrics",
+              facility_name: "AIIMS Bhubaneswar (Apex Trauma Centre)",
+              verification_status: "verified",
+              verified_by: ADMIN_EMAIL,
+              verified_at: new Date().toISOString(),
             },
             {
               id: "doc-demo-2",
               email: "bishnuprasadsatapathy7846@gmail.com",
-              display_name: "Dr. Rajesh Patel, MBBS",
+              display_name: "Dr. Bishnu Prasad Satapathy, MBBS",
               role: "doctor",
-              pseudo_id: "DOC-RAJESH",
-              medical_reg_no: "GMC-1998-11024",
-              council_name: "Gujarat Medical Council",
-              specialization: "Paediatrics & Neonatal Care",
-              facility_name: "Mawlynnong District Hospital",
+              pseudo_id: "DOC-BISHNU",
+              medical_reg_no: "OMC-2018-88412",
+              council_name: "Odisha Medical Council",
+              specialization: "General Medicine & Cardiology",
+              facility_name: "Capital Hospital Bhubaneswar / DHH Khurda",
               verification_status: "verified",
               verified_by: ADMIN_EMAIL,
               verified_at: new Date().toISOString(),
@@ -1030,7 +1031,7 @@ export function TopRightUserNav({
               <form className="auth-body-form" onSubmit={handleSignUp} style={{ padding: "14px 20px", maxHeight: "420px", overflowY: "auto" }}>
                 <div className="auth-field">
                   <label htmlFor="auth-reg-name">Full Name</label>
-                  <input id="auth-reg-name" type="text" name="displayName" placeholder="e.g. Priya Sharma or Dr. Ananya Roy" required />
+                  <input id="auth-reg-name" type="text" name="displayName" placeholder="e.g. Priya Sharma or Dr. Samarpit Biswal" required />
                 </div>
 
                 <div className="auth-field">

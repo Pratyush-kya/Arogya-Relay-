@@ -215,11 +215,11 @@ export default function Home({
                     id: data.user.id,
                     email: cleanEmail,
                     role: "doctor",
-                    display_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Dr. Ananya Sharma, MD" : "Dr. Rajesh Patel, MBBS",
-                    medical_reg_no: cleanEmail === "samarpitbiswal966@gmail.com" ? "NMC-2020-54190" : "NMC-2018-88412",
-                    council_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Delhi Medical Council" : "National Medical Commission",
+                    display_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Dr. Samarpit Biswal, MD" : "Dr. Bishnu Prasad Satapathy, MBBS",
+                    medical_reg_no: cleanEmail === "samarpitbiswal966@gmail.com" ? "OMC-2020-54190" : "OMC-2018-88412",
+                    council_name: "Odisha Medical Council",
                     specialization: cleanEmail === "samarpitbiswal966@gmail.com" ? "Internal Medicine & Paediatrics" : "General Medicine & Cardiology",
-                    facility_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Community Health Centre & Rural Hospital" : "Mawlynnong Sub-Divisional Hospital & PHC",
+                    facility_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "AIIMS Bhubaneswar (Apex Trauma Centre)" : "Capital Hospital Bhubaneswar / DHH Khurda",
                     verification_status: "verified",
                   }
                 : isChemistEmail
@@ -290,11 +290,11 @@ export default function Home({
                   ? {
                       ...p,
                       role: "doctor",
-                      display_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Dr. Ananya Sharma, MD" : "Dr. Rajesh Patel, MBBS",
-                      medical_reg_no: cleanEmail === "samarpitbiswal966@gmail.com" ? "NMC-2020-54190" : "NMC-2018-88412",
-                      council_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Delhi Medical Council" : "National Medical Commission",
+                      display_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Dr. Samarpit Biswal, MD" : "Dr. Bishnu Prasad Satapathy, MBBS",
+                      medical_reg_no: cleanEmail === "samarpitbiswal966@gmail.com" ? "OMC-2020-54190" : "OMC-2018-88412",
+                      council_name: "Odisha Medical Council",
                       specialization: cleanEmail === "samarpitbiswal966@gmail.com" ? "Internal Medicine & Paediatrics" : "General Medicine & Cardiology",
-                      facility_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Community Health Centre & Rural Hospital" : "Mawlynnong Sub-Divisional Hospital & PHC",
+                      facility_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "AIIMS Bhubaneswar (Apex Trauma Centre)" : "Capital Hospital Bhubaneswar / DHH Khurda",
                       verification_status: "verified",
                     }
                   : isChemistEmail
@@ -394,11 +394,11 @@ export default function Home({
                     id: session.user.id,
                     email: cleanEmail,
                     role: "doctor",
-                    display_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Dr. Ananya Sharma, MD" : "Dr. Rajesh Patel, MBBS",
-                    medical_reg_no: cleanEmail === "samarpitbiswal966@gmail.com" ? "NMC-2020-54190" : "NMC-2018-88412",
-                    council_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Delhi Medical Council" : "National Medical Commission",
+                    display_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Dr. Samarpit Biswal, MD" : "Dr. Bishnu Prasad Satapathy, MBBS",
+                    medical_reg_no: cleanEmail === "samarpitbiswal966@gmail.com" ? "OMC-2020-54190" : "OMC-2018-88412",
+                    council_name: "Odisha Medical Council",
                     specialization: cleanEmail === "samarpitbiswal966@gmail.com" ? "Internal Medicine & Paediatrics" : "General Medicine & Cardiology",
-                    facility_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "Community Health Centre & Rural Hospital" : "Mawlynnong Sub-Divisional Hospital & PHC",
+                    facility_name: cleanEmail === "samarpitbiswal966@gmail.com" ? "AIIMS Bhubaneswar (Apex Trauma Centre)" : "Capital Hospital Bhubaneswar / DHH Khurda",
                     verification_status: "verified",
                   }
                 : isChemistEmail
