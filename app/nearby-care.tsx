@@ -31,10 +31,12 @@ import {
 } from "@/lib/nearby/district-camps";
 
 export const LOCATION_PRESETS = [
+  { id: "khurda_dhh", label: "Khurda Town & DHH", sub: "District Hospital & NH-16 Bypass", district: "Khordha", lat: 20.1875, lng: 85.6265 },
+  { id: "aiims_patrapada", label: "AIIMS / Patrapada Bypass", sub: "NH-16 Apex Trauma Centre", district: "Khordha", lat: 20.2290, lng: 85.7760 },
+  { id: "bhubaneswar", label: "Bhubaneswar Central", sub: "Capital Hospital & Unit 6", district: "Khordha", lat: 20.2648, lng: 85.8281 },
+  { id: "cuttack", label: "Cuttack", sub: "SCB Medical College & Sishu Bhawan", district: "Cuttack", lat: 20.4780, lng: 85.8850 },
   { id: "ganjam_berhampur", label: "Berhampur, Ganjam", sub: "MKCG Medical College & Hospitals", district: "Ganjam", lat: 19.3149, lng: 84.7941 },
   { id: "ganjam_chhatrapur", label: "Chhatrapur, Ganjam", sub: "Sub-Divisional Hospital & Coastal Area", district: "Ganjam", lat: 19.3524, lng: 84.9873 },
-  { id: "bhubaneswar", label: "Bhubaneswar, Khordha", sub: "Capital Hospital & AIIMS", district: "Khordha", lat: 20.2648, lng: 85.8281 },
-  { id: "cuttack", label: "Cuttack", sub: "SCB Medical College & Sishu Bhawan", district: "Cuttack", lat: 20.4780, lng: 85.8850 },
   { id: "mayurbhanj_baripada", label: "Baripada, Mayurbhanj", sub: "PRM Medical College & Rural Blocks", district: "Mayurbhanj", lat: 21.9320, lng: 86.7280 },
   { id: "pynursla", label: "Pynursla Block", sub: "Mawlynnong Community CHC Zone", district: "East Khasi Hills", lat: 25.3082, lng: 91.9022 },
   { id: "shillong", label: "Shillong", sub: "Civil Hospital & NEIGRIHMS", district: "East Khasi Hills", lat: 25.5788, lng: 91.8933 },
@@ -60,6 +62,11 @@ export default function NearbyCare() {
   const [emergency, setEmergency] = useState(false);
   const [results, setResults] = useState<ReferralResult[]>([]);
   const [emergencyFacility, setEmergencyFacility] = useState<Facility | null>(null);
+  const [triageData, setTriageData] = useState<{
+    primaryStabilization: Facility | null;
+    apexReferral: Facility | null;
+    fastest: Facility | null;
+  } | null>(null);
   const [liveCounts, setLiveCounts] = useState<LiveFacilityCounts | null>(null);
   const [isLiveOnline, setIsLiveOnline] = useState(false);
   const [districtCamps, setDistrictCamps] = useState<DistrictHealthCamp[]>([]);
@@ -151,6 +158,7 @@ export default function NearbyCare() {
         if (cancelled) return;
         setResults(r.results);
         setEmergencyFacility(r.emergencyFacility);
+        setTriageData(r.triage || null);
         setLiveCounts(r.counts);
         setIsLiveOnline(r.isLive);
       })
@@ -267,6 +275,103 @@ export default function NearbyCare() {
     }
   }, [pos]);
 
+  // Update map markers & emergency route line
+  useEffect(() => {
+    if (tab !== "map" || !mapRef.current || !pos) return;
+    const map = mapRef.current;
+    if (!map.isStyleLoaded()) return;
+
+    try {
+      // 1. Render all healthcare facilities on the map
+      const facilityFeatures = results.slice(0, 30).map((r) => ({
+        type: "Feature" as const,
+        geometry: {
+          type: "Point" as const,
+          coordinates: [r.facility.coordinates.lng, r.facility.coordinates.lat],
+        },
+        properties: {
+          name: r.facility.name,
+          type: r.facility.type,
+          isEmergency: Boolean(r.facility.capabilities.emergency),
+        },
+      }));
+
+      if (!map.getSource("facilities")) {
+        map.addSource("facilities", {
+          type: "geojson",
+          data: {
+            type: "FeatureCollection",
+            features: facilityFeatures,
+          },
+        });
+
+        map.addLayer({
+          id: "facilities-circle",
+          type: "circle",
+          source: "facilities",
+          paint: {
+            "circle-radius": 7,
+            "circle-color": [
+              "case",
+              ["get", "isEmergency"],
+              "#dc2626",
+              "#16a34a",
+            ],
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "#ffffff",
+          },
+        });
+      } else {
+        (map.getSource("facilities") as maplibregl.GeoJSONSource).setData({
+          type: "FeatureCollection",
+          features: facilityFeatures,
+        });
+      }
+
+      // 2. Render direct emergency route polyline to closest trauma facility
+      const targetEmergency = emergencyFacility || nearestHospital?.facility;
+      if (targetEmergency && pos) {
+        const routeGeojson = {
+          type: "Feature" as const,
+          geometry: {
+            type: "LineString" as const,
+            coordinates: [
+              [pos.lng, pos.lat],
+              [targetEmergency.coordinates.lng, targetEmergency.coordinates.lat],
+            ],
+          },
+          properties: {},
+        };
+
+        if (!map.getSource("emergency-route")) {
+          map.addSource("emergency-route", {
+            type: "geojson",
+            data: routeGeojson,
+          });
+
+          map.addLayer({
+            id: "emergency-route-line",
+            type: "line",
+            source: "emergency-route",
+            layout: {
+              "line-join": "round",
+              "line-cap": "round",
+            },
+            paint: {
+              "line-color": "#dc2626",
+              "line-width": 3.5,
+              "line-dasharray": [2, 2],
+            },
+          });
+        } else {
+          (map.getSource("emergency-route") as maplibregl.GeoJSONSource).setData(routeGeojson);
+        }
+      }
+    } catch (e) {
+      console.warn("Map route warning:", e);
+    }
+  }, [tab, pos, results, emergencyFacility, nearestHospital]);
+
   return (
     <div className="page-content section-page" style={{ maxWidth: "1100px", margin: "0 auto", padding: "16px 20px 48px" }}>
       {/* ── Page Header ──────────────────────────────────────────────────────── */}
@@ -284,7 +389,7 @@ export default function NearbyCare() {
         </div>
       </div>
 
-      {/* ── Emergency 112 Banner ─────────────────────────────────────────────── */}
+      {/* ── Emergency 112 / Golden Hour Dispatch Banner ─────────────────────────────── */}
       <div
         className="cg-emergency"
         role="alert"
@@ -292,69 +397,115 @@ export default function NearbyCare() {
           background: "linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)",
           color: "#ffffff",
           borderRadius: "14px",
-          padding: "16px 20px",
+          padding: "18px 22px",
           marginBottom: "20px",
           display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
+          flexDirection: "column",
           gap: "14px",
-          boxShadow: "0 4px 14px rgba(153, 27, 27, 0.2)",
+          boxShadow: "0 4px 18px rgba(153, 27, 27, 0.25)",
         }}
       >
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "20px" }}>🚨</span>
-            <strong style={{ fontSize: "16px" }}>Life-Threatening Medical Emergency?</strong>
-          </div>
-          <p style={{ margin: "4px 0 0", fontSize: "13px", opacity: 0.95 }}>
-            National Ambulance Hotline: Dial 112 directly for immediate government dispatch.
-            {nearestHospital && (
-              <span style={{ display: "block", marginTop: "2px", fontWeight: 600 }}>
-                Nearest Emergency Center: {nearestHospital.facility.name} ({formatDistance(nearestHospital.straightLineKm ?? nearestHospital.distanceKm)} away)
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "22px" }}>🚨</span>
+              <strong style={{ fontSize: "16px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                Golden-Hour Life-Saving Emergency Dispatch
+              </strong>
+              <span style={{ background: "rgba(255,255,255,0.2)", padding: "2px 8px", borderRadius: "12px", fontSize: "11px", fontWeight: 700 }}>
+                Bypasses City Congestion
               </span>
-            )}
-          </p>
-        </div>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <a
-            href="tel:112"
-            style={{
-              background: "#ffffff",
-              color: "#991b1b",
-              padding: "10px 20px",
-              borderRadius: "8px",
-              fontWeight: 800,
-              fontSize: "14px",
-              textDecoration: "none",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
-          >
-            <span>📞</span> Call 112 Now
-          </a>
-          {nearestHospital?.facility.phone && (
+            </div>
+            <p style={{ margin: "6px 0 0", fontSize: "13.5px", opacity: 0.95, lineHeight: 1.4, maxWidth: "750px" }}>
+              {(triageData?.primaryStabilization || emergencyFacility || nearestHospital?.facility) ? (
+                <>
+                  Recommended Closest Trauma Facility:{" "}
+                  <strong>{(triageData?.primaryStabilization || emergencyFacility || nearestHospital?.facility)?.name}</strong>
+                  {" — "}
+                  <span>
+                    {(triageData?.primaryStabilization || emergencyFacility || nearestHospital?.facility)?.corridorNotes ||
+                      "Immediate 24x7 Trauma & Life-Saving Resuscitation. Fastest highway/arterial road access."}
+                  </span>
+                </>
+              ) : (
+                "National Ambulance Hotline: Dial 108 / 112 directly for immediate government dispatch."
+              )}
+            </p>
+          </div>
+
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
             <a
-              href={`tel:${nearestHospital.facility.phone}`}
+              href="tel:108"
               style={{
-                background: "rgba(255,255,255,0.2)",
-                color: "#ffffff",
-                padding: "10px 16px",
+                background: "#ffffff",
+                color: "#991b1b",
+                padding: "9px 18px",
                 borderRadius: "8px",
-                fontWeight: 700,
-                fontSize: "13px",
+                fontWeight: 800,
+                fontSize: "13.5px",
                 textDecoration: "none",
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "6px",
-                border: "1px solid rgba(255,255,255,0.4)",
               }}
             >
-              <span>🏥</span> Call Nearest Hospital
+              <span>📞</span> Call 108
             </a>
-          )}
+            {pos && (triageData?.primaryStabilization || emergencyFacility || nearestHospital?.facility) && (
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&origin=${pos.lat},${pos.lng}&destination=${(triageData?.primaryStabilization || emergencyFacility || nearestHospital?.facility)?.coordinates.lat},${(triageData?.primaryStabilization || emergencyFacility || nearestHospital?.facility)?.coordinates.lng}&travelmode=driving&dir_action=navigate`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  background: "#16a34a",
+                  color: "#ffffff",
+                  padding: "9px 18px",
+                  borderRadius: "8px",
+                  fontWeight: 800,
+                  fontSize: "13.5px",
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  boxShadow: "0 2px 8px rgba(22, 163, 74, 0.3)",
+                }}
+              >
+                <span>🚗</span> Start Navigation
+              </a>
+            )}
+          </div>
         </div>
+
+        {/* Secondary Triage Link if Advanced Neurosurgery / Cardiac Cath-Lab Required */}
+        {triageData?.apexReferral && triageData.apexReferral.id !== triageData.primaryStabilization?.id && (
+          <div
+            style={{
+              background: "rgba(0,0,0,0.2)",
+              borderRadius: "8px",
+              padding: "8px 14px",
+              fontSize: "12px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "8px",
+            }}
+          >
+            <span>
+              🧠 <strong>Need Advanced Neurosurgery / Cardiac Cath-Lab?</strong> Apex Referral: <strong>{triageData.apexReferral.name}</strong> ({triageData.apexReferral.address})
+            </span>
+            {pos && (
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&origin=${pos.lat},${pos.lng}&destination=${triageData.apexReferral.coordinates.lat},${triageData.apexReferral.coordinates.lng}&travelmode=driving&dir_action=navigate`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#bae6fd", fontWeight: 700, textDecoration: "underline" }}
+              >
+                Route to Apex Referral →
+              </a>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ── STEP 1: Location Control (GPS + District Dropdown) ────────────────── */}
@@ -880,15 +1031,31 @@ export default function NearbyCare() {
                       </span>
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "var(--foreground)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "var(--foreground)", flexWrap: "wrap" }}>
                       <span>📏 <strong>{formatDistance(r.straightLineKm ?? r.distanceKm)}</strong></span>
                       {r.roadEtaMin != null && <span>· 🚗 <strong>~{r.roadEtaMin} mins</strong> by road</span>}
+                      {r.trafficCondition === "highway_flow" && (
+                        <span style={{ fontSize: "10.5px", background: "#ecfdf5", color: "#047857", padding: "1px 6px", borderRadius: "4px", fontWeight: 700 }}>
+                          🟢 Highway Flow
+                        </span>
+                      )}
+                      {r.trafficCondition === "urban_congestion" && (
+                        <span style={{ fontSize: "10.5px", background: "#fff7ed", color: "#c2410c", padding: "1px 6px", borderRadius: "4px", fontWeight: 700 }}>
+                          ⚠️ City Congestion
+                        </span>
+                      )}
                       {r.facility.capabilities.emergency && (
                         <span style={{ color: "#dc2626", fontWeight: 700, marginLeft: "auto" }}>
                           🚨 24x7 Emergency
                         </span>
                       )}
                     </div>
+
+                    {r.facility.corridorNotes && (
+                      <div style={{ fontSize: "11.5px", color: "#0369a1", background: "#f0f9ff", padding: "6px 10px", borderRadius: "6px", border: "1px solid #bae6fd", lineHeight: 1.35 }}>
+                        <strong>Corridor Access:</strong> {r.facility.corridorNotes}
+                      </div>
+                    )}
 
                     {r.facility.schemes.length > 0 && (
                       <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
@@ -945,7 +1112,11 @@ export default function NearbyCare() {
                       )}
 
                       <a
-                        href={`https://www.google.com/maps/dir/?api=1&destination=${r.facility.coordinates.lat},${r.facility.coordinates.lng}`}
+                        href={
+                          pos
+                            ? `https://www.google.com/maps/dir/?api=1&origin=${pos.lat},${pos.lng}&destination=${r.facility.coordinates.lat},${r.facility.coordinates.lng}&travelmode=driving&dir_action=navigate`
+                            : `https://www.google.com/maps/dir/?api=1&destination=${r.facility.coordinates.lat},${r.facility.coordinates.lng}&travelmode=driving`
+                        }
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{
@@ -1101,7 +1272,11 @@ export default function NearbyCare() {
                       )}
 
                       <a
-                        href={`https://www.google.com/maps/dir/?api=1&destination=${r.facility.coordinates.lat},${r.facility.coordinates.lng}`}
+                        href={
+                          pos
+                            ? `https://www.google.com/maps/dir/?api=1&origin=${pos.lat},${pos.lng}&destination=${r.facility.coordinates.lat},${r.facility.coordinates.lng}&travelmode=driving&dir_action=navigate`
+                            : `https://www.google.com/maps/dir/?api=1&destination=${r.facility.coordinates.lat},${r.facility.coordinates.lng}&travelmode=driving`
+                        }
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{
@@ -1264,7 +1439,11 @@ export default function NearbyCare() {
 
                     {camp.coordinates && (
                       <a
-                        href={`https://www.google.com/maps/dir/?api=1&destination=${camp.coordinates.lat},${camp.coordinates.lng}`}
+                        href={
+                          pos
+                            ? `https://www.google.com/maps/dir/?api=1&origin=${pos.lat},${pos.lng}&destination=${camp.coordinates.lat},${camp.coordinates.lng}&travelmode=driving&dir_action=navigate`
+                            : `https://www.google.com/maps/dir/?api=1&destination=${camp.coordinates.lat},${camp.coordinates.lng}&travelmode=driving`
+                        }
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{

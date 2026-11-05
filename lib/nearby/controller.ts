@@ -1,4 +1,4 @@
-import { rankFacilities, pickEmergencyFacility } from "./ranking.ts";
+import { rankFacilities, pickEmergencyFacility, pickEmergencyTriage } from "./ranking.ts";
 import { syntheticFacilityAdapter, getCamps, clampBox, inBoundingBox } from "./adapters.ts";
 import { SYNTHETIC_FACILITIES } from "./synthetic-data.ts";
 import type {
@@ -86,6 +86,11 @@ export function applyFilters(facilities: Facility[], f: NearbyFilters): Facility
 export interface RankedNearby {
   results: ReturnType<typeof rankFacilities>;
   emergencyFacility: Facility | null;
+  triage?: {
+    primaryStabilization: Facility | null;
+    apexReferral: Facility | null;
+    fastest: Facility | null;
+  };
   counts: LiveFacilityCounts;
   isLive: boolean;
 }
@@ -97,8 +102,20 @@ export async function computeNearby(
   emergency: boolean,
   now: Date = new Date(),
 ): Promise<RankedNearby> {
+  const localFacilities = await loadFacilities(origin);
   const liveData = await loadLiveFacilities(origin);
-  const all = liveData.facilities.length > 0 ? liveData.facilities : await loadFacilities(origin);
+
+  // Merge live OSM facilities with our verified local registry (no duplicates)
+  const existingIds = new Set(localFacilities.map((f) => f.id));
+  const mergedFacilities = [...localFacilities];
+  for (const lf of liveData.facilities) {
+    if (!existingIds.has(lf.id)) {
+      mergedFacilities.push(lf);
+      existingIds.add(lf.id);
+    }
+  }
+
+  const all = mergedFacilities.length > 0 ? mergedFacilities : localFacilities;
   const filtered = applyFilters(all, filters);
   const query: ReferralQuery = {
     origin,
@@ -109,7 +126,8 @@ export async function computeNearby(
   };
   const results = rankFacilities(filtered, query, now);
   const emergencyFacility = emergency ? pickEmergencyFacility(all, origin, now) : null;
-  return { results, emergencyFacility, counts: liveData.counts, isLive: liveData.isLive };
+  const triage = emergency ? pickEmergencyTriage(all, origin, now) : undefined;
+  return { results, emergencyFacility, triage, counts: liveData.counts, isLive: liveData.isLive };
 }
 
 export async function loadCamps(now: Date = new Date()): Promise<CampEvent[]> {

@@ -56,6 +56,9 @@ export interface Facility {
   externalId?: string;
   sourceUrl?: string;
   lastFetchedAt?: string;
+  corridorType?: "highway_corridor" | "urban_core" | "rural_arterial";
+  emergencyTier?: "trauma_stabilization" | "apex_tertiary" | "primary_care";
+  corridorNotes?: string;
 }
 
 export interface CampEvent {
@@ -103,9 +106,12 @@ export interface RankedFacilityResult {
   facility: Facility;
   distanceKm: number;
   straightLineKm?: number;
+  roadDistanceKm?: number;
   roadEtaMin?: number | null;
   score: number;
   capabilityMet: boolean;
+  emergencyTier?: "trauma_stabilization" | "apex_tertiary" | "primary_care";
+  trafficCondition?: "highway_flow" | "urban_congestion" | "normal";
 }
 
 export interface ReferralQuery {
