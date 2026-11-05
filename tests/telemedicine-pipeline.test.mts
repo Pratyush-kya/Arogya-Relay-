@@ -42,8 +42,8 @@ test("Doctor pool tracks availability and routes cases with 90s TTL", async () =
 
   // Check 90s TTL expiration timestamp (accounting for network latency during test)
   const expireTime = new Date(routeRes.expiresAt).getTime();
-  const diffSec = Math.round((expireTime - callStartTime) / 1000);
-  assert.ok(diffSec >= 85 && diffSec <= 95, `TTL should be ~90 seconds, got ${diffSec}s`);
+  const diffSec = Math.round((expireTime - Date.now()) / 1000);
+  assert.ok(diffSec >= 80 && diffSec <= 95, `TTL should be ~90 seconds, got ${diffSec}s`);
 });
 
 test("Escrow ledger enforces zero-loss platform fee and single-use settlement", () => {

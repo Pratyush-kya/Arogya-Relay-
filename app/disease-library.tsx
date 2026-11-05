@@ -3,7 +3,6 @@
 import { useState, useMemo } from "react";
 import { DISEASE_CATALOG, type DiseaseRemedy } from "@/lib/library/disease-catalog";
 import { useLanguage } from "@/lib/i18n/provider";
-import { ReadAloud } from "./read-aloud";
 
 interface DiseaseLibraryProps {
   onTransferToScreening?: (symptoms: string[], notes: string) => void;
@@ -302,14 +301,6 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
               ? "#eab308"
               : "#10b981";
 
-          // Full narration text that completely reads the entire disease advice without stopping
-          const fullAudioGuide =
-            effectiveLang === "hi"
-              ? `${item.hindiName}। सारांश: ${item.narrationText}। सुरक्षित घरेलू उपाय: ${item.remedies.join("। ")}। खतरे के संकेत: ${item.redFlags.join("। ")}। दवा और खुराक: ${item.otcGuidance.join("। ")}।`
-              : effectiveLang === "or" && item.odiaName
-              ? `${item.odiaName}। ସାରାଂଶ: ${item.narrationText}। ସୁରକ୍ଷିତ ଘରୋଇ ଉପଚାର: ${item.remedies.join("। ")}। ବିପଦ ସଙ୍କେତ: ${item.redFlags.join("। ")}। ଔଷଧ: ${item.otcGuidance.join("। ")}।`
-              : `${item.name}. Overview: ${item.narrationText}. Safe home remedies: ${item.remedies.join(". ")}. Warning signs: ${item.redFlags.join(". ")}. Standard medicine protocol: ${item.otcGuidance.join(". ")}.`;
-
           if (viewMode === "quick") {
             // 💡 QUICK IDEA MODE
             return (
@@ -380,7 +371,7 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                   </div>
                 </div>
 
-                {/* 1 Simple Sentence Summary with Read Aloud */}
+                {/* 1 Simple Sentence Summary */}
                 <div
                   style={{
                     background: "var(--surface-muted)",
@@ -389,11 +380,10 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                     borderLeft: "4px solid #10b981",
                   }}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                  <div style={{ marginBottom: "6px" }}>
                     <span style={{ fontSize: "12px", fontWeight: "700", color: "#065f46" }}>
                       {t("library.inSimpleWords")}
                     </span>
-                    <ReadAloud text={item.narrationText} />
                   </div>
                   <p style={{ margin: 0, fontSize: "13.5px", lineHeight: "1.5", color: "var(--foreground)" }}>
                     {item.narrationText}
@@ -455,25 +445,22 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                       <strong style={{ fontSize: "13px", color: "#166534", display: "flex", alignItems: "center", gap: "6px" }}>
                         <span>{t("library.fullDetails")}</span>
                       </strong>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <ReadAloud text={fullAudioGuide} />
-                        <button
-                          type="button"
-                          onClick={() => setExpandedId(null)}
-                          style={{
-                            background: "#fee2e2",
-                            color: "#dc2626",
-                            border: "1px solid #f87171",
-                            borderRadius: "6px",
-                            padding: "4px 10px",
-                            fontSize: "11px",
-                            fontWeight: 700,
-                            cursor: "pointer",
-                          }}
-                        >
-                          {t("library.closeDetails")}
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setExpandedId(null)}
+                        style={{
+                          background: "#fee2e2",
+                          color: "#dc2626",
+                          border: "1px solid #f87171",
+                          borderRadius: "6px",
+                          padding: "4px 10px",
+                          fontSize: "11px",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {t("library.closeDetails")}
+                      </button>
                     </div>
 
                     {/* All Recognized Symptoms */}
@@ -683,14 +670,6 @@ export default function DiseaseLibrary({ onTransferToScreening, onClose }: Disea
                     </button>
                   )}
                 </div>
-              </div>
-
-              {/* Clinical Case Audio & Brief */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--surface-muted)", padding: "8px 12px", borderRadius: "8px" }}>
-                <span style={{ fontSize: "12px", fontWeight: "600", color: "var(--muted)" }}>
-                  {t("library.inSimpleWords")}
-                </span>
-                <ReadAloud text={fullAudioGuide} />
               </div>
 
               {/* Symptoms Checklist */}
