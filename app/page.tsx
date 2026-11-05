@@ -197,7 +197,7 @@ export default function Home({
             cleanEmail.includes("doctor");
           const isChemistEmail =
             cleanEmail === "jan.aushadhi.kendra@pharma.org" ||
-            cleanEmail === "pratyushrath50@gmail.com" ||
+            cleanEmail === "janaushadhi.kendra7402@gov.in" ||
             cleanEmail.includes("chemist");
           const isRootAdmin = cleanEmail === "pratyushkiranrath4@gmail.com";
 
@@ -228,9 +228,9 @@ export default function Home({
                     id: data.user.id,
                     email: cleanEmail,
                     role: "chemist",
-                    display_name: cleanEmail === "pratyushrath50@gmail.com" ? "PMBJP Jan Aushadhi Kendra #7402" : "Jan Aushadhi Kendra #1084",
-                    facility_name: cleanEmail === "pratyushrath50@gmail.com" ? "PMBJP Kendra #7402 - Block Market" : "Kendra Dispensary - North Ridge",
-                    address: cleanEmail === "pratyushrath50@gmail.com" ? "Main Market Road, near Block Office" : "Market Complex, Sector 4",
+                    display_name: cleanEmail === "janaushadhi.kendra7402@gov.in" ? "PMBJP Jan Aushadhi Kendra #7402" : "Jan Aushadhi Kendra #1084",
+                    facility_name: cleanEmail === "janaushadhi.kendra7402@gov.in" ? "PMBJP Kendra #7402 - Block Market" : "Kendra Dispensary - North Ridge",
+                    address: cleanEmail === "janaushadhi.kendra7402@gov.in" ? "Main Market Road, near Block Office" : "Market Complex, Sector 4",
                     verification_status: "verified",
                   }
                 : p || ({ id: data.user.id, email: cleanEmail, role: r, display_name: cleanEmail.split("@")[0] } as Profile);
@@ -276,7 +276,7 @@ export default function Home({
                   cleanEmail.includes("doctor");
                 const isChemistEmail =
                   cleanEmail === "jan.aushadhi.kendra@pharma.org" ||
-                  cleanEmail === "pratyushrath50@gmail.com" ||
+                  cleanEmail === "janaushadhi.kendra7402@gov.in" ||
                   cleanEmail.includes("chemist");
                 const isRootAdmin = cleanEmail === "pratyushkiranrath4@gmail.com";
 
@@ -301,9 +301,9 @@ export default function Home({
                   ? {
                       ...p,
                       role: "chemist",
-                      display_name: cleanEmail === "pratyushrath50@gmail.com" ? "PMBJP Jan Aushadhi Kendra #7402" : "Jan Aushadhi Kendra #1084",
-                      facility_name: cleanEmail === "pratyushrath50@gmail.com" ? "PMBJP Kendra #7402 - Block Market" : "Kendra Dispensary - North Ridge",
-                      address: cleanEmail === "pratyushrath50@gmail.com" ? "Main Market Road, near Block Office" : "Market Complex, Sector 4",
+                      display_name: cleanEmail === "janaushadhi.kendra7402@gov.in" ? "PMBJP Jan Aushadhi Kendra #7402" : "Jan Aushadhi Kendra #1084",
+                      facility_name: cleanEmail === "janaushadhi.kendra7402@gov.in" ? "PMBJP Kendra #7402 - Block Market" : "Kendra Dispensary - North Ridge",
+                      address: cleanEmail === "janaushadhi.kendra7402@gov.in" ? "Main Market Road, near Block Office" : "Market Complex, Sector 4",
                       verification_status: "verified",
                     }
                   : p;
@@ -376,7 +376,7 @@ export default function Home({
             cleanEmail.includes("doctor");
           const isChemistEmail =
             cleanEmail === "jan.aushadhi.kendra@pharma.org" ||
-            cleanEmail === "pratyushrath50@gmail.com" ||
+            cleanEmail === "janaushadhi.kendra7402@gov.in" ||
             cleanEmail.includes("chemist");
           const isRootAdmin = cleanEmail === "pratyushkiranrath4@gmail.com";
 
@@ -407,9 +407,9 @@ export default function Home({
                     id: session.user.id,
                     email: cleanEmail,
                     role: "chemist",
-                    display_name: cleanEmail === "pratyushrath50@gmail.com" ? "PMBJP Jan Aushadhi Kendra #7402" : "Jan Aushadhi Kendra #1084",
-                    facility_name: cleanEmail === "pratyushrath50@gmail.com" ? "PMBJP Kendra #7402 - Block Market" : "Kendra Dispensary - North Ridge",
-                    address: cleanEmail === "pratyushrath50@gmail.com" ? "Main Market Road, near Block Office" : "Market Complex, Sector 4",
+                    display_name: cleanEmail === "janaushadhi.kendra7402@gov.in" ? "PMBJP Jan Aushadhi Kendra #7402" : "Jan Aushadhi Kendra #1084",
+                    facility_name: cleanEmail === "janaushadhi.kendra7402@gov.in" ? "PMBJP Kendra #7402 - Block Market" : "Kendra Dispensary - North Ridge",
+                    address: cleanEmail === "janaushadhi.kendra7402@gov.in" ? "Main Market Road, near Block Office" : "Market Complex, Sector 4",
                     verification_status: "verified",
                   }
                 : p || ({ id: session.user.id, email: cleanEmail, role: r, display_name: cleanEmail.split("@")[0] } as Profile);

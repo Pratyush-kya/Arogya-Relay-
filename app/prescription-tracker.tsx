@@ -449,7 +449,7 @@ export default function PrescriptionTracker({
     setIsFulfillmentConfirmed(true);
     setConfirmingFulfillment(false);
 
-    const chemistEmail = fup.suggestedChemist?.email || "pratyushrath50@gmail.com";
+    const chemistEmail = fup.suggestedChemist?.email || "janaushadhi.kendra7402@gov.in";
     setStatusMessage(
       `✓ Order confirmed! ${fup.suggestedChemist?.name || "PMBJP Jan Aushadhi Kendra"} (${chemistEmail}) has been notified for ${
         fulfillmentMode === "home_delivery" ? "Home Delivery" : "Store Pickup"
@@ -1356,7 +1356,7 @@ export default function PrescriptionTracker({
                           `Address: ${activeFollowup.suggestedChemist?.address || "Mawlynnong Main Road"}\n` +
                           `Distance: ${activeFollowup.suggestedChemist?.distanceKm || 1.2} km\n` +
                           `Phone: ${activeFollowup.suggestedChemist?.phone || "+91 94370 12345"}\n` +
-                          `Email: ${activeFollowup.suggestedChemist?.email || "pratyushrath50@gmail.com"}`
+                          `Email: ${activeFollowup.suggestedChemist?.email || "janaushadhi.kendra7402@gov.in"}`
                         )}`}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -1664,7 +1664,7 @@ export default function PrescriptionTracker({
                               Chemist Official Email:
                             </span>
                             <strong style={{ fontSize: "13px", color: "#0369a1" }}>
-                              {activeFollowup.suggestedChemist.email || "pratyushrath50@gmail.com"}
+                              {activeFollowup.suggestedChemist.email || "janaushadhi.kendra7402@gov.in"}
                             </strong>
                           </div>
                         </div>
@@ -1672,7 +1672,7 @@ export default function PrescriptionTracker({
                         <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                           <a
                             href={getChemistGmailComposeUrl(
-                              activeFollowup.suggestedChemist.email || "pratyushrath50@gmail.com",
+                              activeFollowup.suggestedChemist.email || "janaushadhi.kendra7402@gov.in",
                               `[Arogya-Relay Prescription ${activeFollowup.prescriptionId}] Order Inquiry for ${activeFollowup.patientName}`,
                               `Respected Jan Aushadhi Chemist,\n\nI have a verified prescription from ${activeFollowup.doctorName}.\n\nPatient Name: ${activeFollowup.patientName}\nPrescription Reference: ${activeFollowup.prescriptionId}\nFulfillment Mode: ${fulfillmentMode === "home_delivery" ? "Home Delivery to " + deliveryAddress : "Store Pickup"}\n\nPlease prepare the prescribed medicines for fulfillment.\n\nThank you,\n${activeFollowup.patientName}`
                             )}
@@ -1696,7 +1696,7 @@ export default function PrescriptionTracker({
                           </a>
 
                           <a
-                            href={`mailto:${activeFollowup.suggestedChemist.email || "pratyushrath50@gmail.com"}?subject=${encodeURIComponent(
+                            href={`mailto:${activeFollowup.suggestedChemist.email || "janaushadhi.kendra7402@gov.in"}?subject=${encodeURIComponent(
                               `[Arogya-Relay Prescription ${activeFollowup.prescriptionId}] Order Inquiry`
                             )}&body=${encodeURIComponent(
                               `Patient: ${activeFollowup.patientName}\nPrescription: ${activeFollowup.prescriptionId}\nDoctor: ${activeFollowup.doctorName}\nMode: ${fulfillmentMode === "home_delivery" ? "Home Delivery" : "Store Pickup"}`

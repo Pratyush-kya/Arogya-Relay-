@@ -94,7 +94,7 @@ export const NEARBY_CHEMISTS: AvailableChemist[] = [
     name: "Pradhan Mantri Jan Aushadhi Kendra #7402",
     address: "Main Market Road, near Block Office",
     phone: "+91 94370 12345",
-    email: "pratyushrath50@gmail.com",
+    email: "janaushadhi.kendra7402@gov.in",
     distanceKm: 1.2,
   },
   {

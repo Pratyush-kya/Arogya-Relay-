@@ -103,7 +103,7 @@ export const DEFAULT_DEMO_USERS: Profile[] = [
   },
   {
     id: "chem-demo-7402",
-    email: "pratyushrath50@gmail.com",
+    email: "janaushadhi.kendra7402@gov.in",
     display_name: "PMBJP Jan Aushadhi Kendra #7402",
     role: "chemist",
     pseudo_id: "PHARM-7402",

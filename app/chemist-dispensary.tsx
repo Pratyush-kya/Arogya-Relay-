@@ -30,7 +30,7 @@ export function ChemistDispensary({
   onBackToDashboard,
   onSignOut,
   chemistName = "PMBJP Jan Aushadhi Kendra #7402",
-  chemistEmail = "pratyushrath50@gmail.com",
+  chemistEmail = "janaushadhi.kendra7402@gov.in",
 }: ChemistDispensaryProps) {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<"queue" | "scanner">("queue");

@@ -617,7 +617,7 @@ export function DoctorFollowupManager({
                         📍 {item.suggestedChemist?.address || "Mawlynnong Main Road"} ({item.suggestedChemist?.distanceKm || 1.2} km)
                       </span>
                       <span style={{ fontSize: "11.5px", color: "#166534", display: "block", marginTop: "2px" }}>
-                        📞 {item.suggestedChemist?.phone || "+91 94370 12345"} · 📧 {item.suggestedChemist?.email || "pratyushrath50@gmail.com"}
+                        📞 {item.suggestedChemist?.phone || "+91 94370 12345"} · 📧 {item.suggestedChemist?.email || "janaushadhi.kendra7402@gov.in"}
                       </span>
                       <div style={{ marginTop: "6px", display: "flex", alignItems: "baseline", gap: "6px" }}>
                         <strong style={{ fontSize: "15px", color: "#166534" }}>₹{item.totalPriceInr || 18.0}</strong>
