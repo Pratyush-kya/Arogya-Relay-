@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useLanguage } from "@/lib/i18n/provider";
 import { HealthCampFinder } from "./health-camp-finder";
-import { ReadAloud } from "./read-aloud";
 import PrescriptionTracker from "./prescription-tracker";
 import { TWO_AVAILABLE_DOCTORS, getDoctorGmailComposeUrl } from "@/lib/prescriptions/types";
 import DiseaseLibrary from "./disease-library";

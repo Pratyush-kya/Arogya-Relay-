@@ -13,7 +13,6 @@ import {
   getDoctorGmailComposeUrl,
 } from "@/lib/prescriptions/types";
 import { useLanguage } from "@/lib/i18n/provider";
-import { ReadAloud } from "./read-aloud";
 
 interface PatientFollowupCardProps {
   patientRef?: string;
@@ -293,7 +292,6 @@ export function PatientFollowupCard({
                 <div style={{ borderTop: "1px dashed #cbd5e1", paddingTop: "8px", color: "#065f46" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
                     <strong>👨‍⚕️ {activeFollowup.doctorName} Advice:</strong>
-                    <ReadAloud text={activeFollowup.doctorReply} />
                   </div>
                   <p style={{ margin: 0, fontStyle: "italic", lineHeight: 1.4 }}>
                     &ldquo;{activeFollowup.doctorReply}&rdquo;

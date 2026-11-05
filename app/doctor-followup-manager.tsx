@@ -14,7 +14,6 @@ import {
   NEARBY_CHEMISTS,
 } from "@/lib/prescriptions/types";
 import { useLanguage } from "@/lib/i18n/provider";
-import { ReadAloud } from "./read-aloud";
 
 interface DoctorFollowupManagerProps {
   doctorName?: string;
@@ -821,7 +820,6 @@ export function DoctorFollowupManager({
                     Prescription Reference: <strong>{selectedReq.prescriptionId}</strong> · Reported: {new Date(selectedReq.reportedAt).toLocaleString()}
                   </span>
                 </div>
-                <ReadAloud text={`Patient ${selectedReq.patientName} reports: ${selectedReq.patientMessage}`} />
               </div>
 
               {/* Patient Message Callout */}

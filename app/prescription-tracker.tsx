@@ -29,7 +29,6 @@ import {
   getChemistGmailComposeUrl,
 } from "@/lib/prescriptions/types";
 import { useLanguage } from "@/lib/i18n/provider";
-import { ReadAloud } from "./read-aloud";
 import { createClient, uploadToStorage, type Profile } from "@/lib/supabase/client";
 
 interface PrescriptionTrackerProps {
@@ -1418,7 +1417,6 @@ export default function PrescriptionTracker({
                         <span>🩺</span>
                         <span>Doctor&apos;s Advice &amp; Clinical Modification (Human Doctor Signed)</span>
                       </strong>
-                      {activeFollowup.doctorReply && <ReadAloud text={activeFollowup.doctorReply} />}
                     </div>
                     <p style={{ margin: 0, fontSize: "13.5px", color: "#0c4a6e", lineHeight: 1.5 }}>
                       {activeFollowup.doctorReply || "Clinical review complete. Take the prescribed medicines below as scheduled."}
@@ -2059,7 +2057,6 @@ export default function PrescriptionTracker({
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h3 style={{ fontSize: "15.5px", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
                 <span>⏰ Daily Medication Schedule</span>
-                <ReadAloud text={`You have ${todayReminders.length} doses scheduled today. ${takenCount} completed.`} />
               </h3>
 
               {isPatientView && (
