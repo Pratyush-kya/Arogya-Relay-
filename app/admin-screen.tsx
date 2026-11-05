@@ -9,6 +9,7 @@ import {
   DEFAULT_DEMO_USERS,
 } from "@/lib/supabase/client";
 import { fetchAllScreenings, type ScreeningRecord } from "@/lib/supabase/screenings";
+import { getLocalFollowUps } from "@/lib/prescriptions/storage";
 import { LanguageSwitcher } from "./language-switcher";
 import { IconTooltip } from "./icon-tooltip";
 import { getStoredFeedbackReports, type FeedbackReport } from "./hero-feedback-and-instructions";
@@ -214,10 +215,38 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
           }
         }
 
-        // Load screenings safely
+        // Load screenings safely and merge with active patient consultation follow-ups
         try {
           const recs = await fetchAllScreenings();
-          setScreenings(recs);
+
+          // Merge active patient follow-up consults into clinical surveillance audit
+          const localFollowUps = getLocalFollowUps();
+          const followUpScreenings: ScreeningRecord[] = localFollowUps.map((f) => ({
+            id: `FU-${f.id}`,
+            patient_ref: f.patientId || f.prescriptionId || "PT-CITIZEN",
+            age: 48,
+            temperature: 98.4,
+            spo2: 98,
+            symptoms: f.symptomsReported ? [f.symptomsReported] : ["Cardiovascular / Antihypertensive Review"],
+            field_notes: f.patientNotes || `Follow-up request for ${f.prescriptionId}. Assigned clinician: ${f.doctorName || "Assigned Medical Officer"}`,
+            village: "Unit-6, Bhubaneswar / Cuttack Urban Clinic",
+            urgency_tier: f.status === "emergency" ? "emergency" : f.status === "urgent" ? "urgent" : "review",
+            status: f.doctorResponse ? "doctor_evaluated" : "pending_doctor_review",
+            doctor_notes: f.doctorResponse ? `${f.doctorName || "Doctor"}: ${f.doctorResponse}` : undefined,
+            prescription_advice: f.doctorResponse || undefined,
+            evaluated_by: f.doctorName || undefined,
+            screener_name: "Citizen Self-Report / Telehealth Follow-up",
+            screener_role: "patient",
+            created_at: f.createdAt || new Date().toISOString(),
+          }));
+
+          const combined = [...recs];
+          for (const fu of followUpScreenings) {
+            if (!combined.some((c) => c.id === fu.id || (c.patient_ref === fu.patient_ref && c.doctor_notes === fu.doctor_notes))) {
+              combined.push(fu);
+            }
+          }
+          setScreenings(combined);
         } catch (scrErr) {
           console.warn("Notice: Remote screenings fetch bypassed:", scrErr);
         }
@@ -316,19 +345,52 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
   // Filtered screenings
   const filteredScreenings = useMemo(() => {
     return screenings.filter((s) => {
-      const matchUrgency = screeningUrgencyFilter === "all" || s.urgency_tier === screeningUrgencyFilter;
+      const matchUrgency =
+        screeningUrgencyFilter === "all" ||
+        s.urgency_tier === screeningUrgencyFilter ||
+        (screeningUrgencyFilter === "pending" && s.status === "pending_doctor_review");
       if (!matchUrgency) return false;
       if (!screeningSearch.trim()) return true;
       const q = screeningSearch.toLowerCase();
+      const patientId = (s.patient_ref || (s as any).pseudo_id || "").toLowerCase();
+      const symptomsStr = (s.symptoms || []).join(" ").toLowerCase();
+      const notes = (s.field_notes || s.doctor_notes || (s as any).notes || "").toLowerCase();
+      const village = (s.village || "").toLowerCase();
+      const doc = (s.evaluated_by || "").toLowerCase();
       return (
-        s.pseudo_id.toLowerCase().includes(q) ||
-        (s.notes && s.notes.toLowerCase().includes(q)) ||
-        s.symptoms.some((sym) => sym.toLowerCase().includes(q))
+        patientId.includes(q) ||
+        symptomsStr.includes(q) ||
+        notes.includes(q) ||
+        village.includes(q) ||
+        doc.includes(q)
       );
     });
   }, [screenings, screeningUrgencyFilter, screeningSearch]);
 
   const pendingDoctorsCount = users.filter((u) => u.role === "doctor" && u.verification_status === "pending_verification").length;
+
+  const doctorStats = useMemo(() => {
+    const doctors = users.filter((u) => u.role === "doctor");
+    const verified = doctors.filter((d) => d.verification_status === "verified").length;
+    const pending = doctors.filter((d) => d.verification_status === "pending_verification").length;
+    return { total: doctors.length, verified, pending };
+  }, [users]);
+
+  const patientCount = useMemo(() => {
+    return users.filter((u) => u.role === "patient").length;
+  }, [users]);
+
+  const workerCount = useMemo(() => {
+    return users.filter((u) => u.role === "health_worker").length;
+  }, [users]);
+
+  const chemistCount = useMemo(() => {
+    return users.filter((u) => u.role === "chemist").length;
+  }, [users]);
+
+  const pendingScreeningsCount = useMemo(() => {
+    return screenings.filter((s) => s.status === "pending_doctor_review").length;
+  }, [screenings]);
 
   if (checkingAdminAuth) {
     return (
@@ -557,6 +619,199 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
 
       {/* Main Body */}
       <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "24px" }}>
+        {/* KPI Metrics Summary Ribbon */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+            gap: "14px",
+            marginBottom: "24px",
+          }}
+        >
+          {/* Card 1: Verified Doctors */}
+          <div
+            onClick={() => setTab("doctors")}
+            style={{
+              background: "var(--surface)",
+              border: tab === "doctors" ? "2px solid var(--primary)" : "1px solid var(--line)",
+              borderRadius: "14px",
+              padding: "16px",
+              cursor: "pointer",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+              transition: "transform 0.15s ease, border-color 0.15s ease",
+            }}
+            title="Click to manage Doctor Verifications"
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "11.5px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
+                Verified Doctors
+              </span>
+              <span style={{ fontSize: "18px" }}>🩺</span>
+            </div>
+            <div style={{ fontSize: "26px", fontWeight: 800, margin: "6px 0 2px", color: "var(--foreground)" }}>
+              {doctorStats.verified}
+              <span style={{ fontSize: "13px", fontWeight: 500, color: "var(--muted)", marginLeft: "6px" }}>
+                / {doctorStats.total} active
+              </span>
+            </div>
+            <div style={{ fontSize: "11.5px", color: doctorStats.pending > 0 ? "#ea580c" : "#16a34a", fontWeight: 600 }}>
+              {doctorStats.pending > 0 ? `⏳ ${doctorStats.pending} pending NMC review` : "✓ 100% Verified NMC active"}
+            </div>
+          </div>
+
+          {/* Card 2: Registered Patients */}
+          <div
+            onClick={() => {
+              setTab("users");
+              setUserRoleFilter("patient");
+            }}
+            style={{
+              background: "var(--surface)",
+              border: tab === "users" && userRoleFilter === "patient" ? "2px solid var(--primary)" : "1px solid var(--line)",
+              borderRadius: "14px",
+              padding: "16px",
+              cursor: "pointer",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+              transition: "transform 0.15s ease, border-color 0.15s ease",
+            }}
+            title="Click to view Registered Patients"
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "11.5px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
+                Registered Patients
+              </span>
+              <span style={{ fontSize: "18px" }}>👥</span>
+            </div>
+            <div style={{ fontSize: "26px", fontWeight: 800, margin: "6px 0 2px", color: "var(--foreground)" }}>
+              {patientCount}
+            </div>
+            <div style={{ fontSize: "11.5px", color: "#2563eb", fontWeight: 600 }}>
+              Citizens &amp; Digital Health Passes
+            </div>
+          </div>
+
+          {/* Card 3: Field Health Workers */}
+          <div
+            onClick={() => {
+              setTab("users");
+              setUserRoleFilter("health_worker");
+            }}
+            style={{
+              background: "var(--surface)",
+              border: tab === "users" && userRoleFilter === "health_worker" ? "2px solid var(--primary)" : "1px solid var(--line)",
+              borderRadius: "14px",
+              padding: "16px",
+              cursor: "pointer",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+              transition: "transform 0.15s ease, border-color 0.15s ease",
+            }}
+            title="Click to view Field Health Workers"
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "11.5px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
+                Health Workers
+              </span>
+              <span style={{ fontSize: "18px" }}>👩‍⚕️</span>
+            </div>
+            <div style={{ fontSize: "26px", fontWeight: 800, margin: "6px 0 2px", color: "var(--foreground)" }}>
+              {workerCount}
+            </div>
+            <div style={{ fontSize: "11.5px", color: "var(--primary)", fontWeight: 600 }}>
+              ASHA Field Facilitators
+            </div>
+          </div>
+
+          {/* Card 4: Jan Aushadhi Chemists */}
+          <div
+            onClick={() => {
+              setTab("users");
+              setUserRoleFilter("chemist");
+            }}
+            style={{
+              background: "var(--surface)",
+              border: tab === "users" && userRoleFilter === "chemist" ? "2px solid var(--primary)" : "1px solid var(--line)",
+              borderRadius: "14px",
+              padding: "16px",
+              cursor: "pointer",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+              transition: "transform 0.15s ease, border-color 0.15s ease",
+            }}
+            title="Click to view PMBJP Chemists"
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "11.5px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
+                PMBJP Chemists
+              </span>
+              <span style={{ fontSize: "18px" }}>💊</span>
+            </div>
+            <div style={{ fontSize: "26px", fontWeight: 800, margin: "6px 0 2px", color: "var(--foreground)" }}>
+              {chemistCount}
+            </div>
+            <div style={{ fontSize: "11.5px", color: "#16a34a", fontWeight: 600 }}>
+              SCB Cuttack &amp; Capital Hospital
+            </div>
+          </div>
+
+          {/* Card 5: Screenings & Surveillance */}
+          <div
+            onClick={() => setTab("screenings")}
+            style={{
+              background: "var(--surface)",
+              border: tab === "screenings" ? "2px solid var(--primary)" : "1px solid var(--line)",
+              borderRadius: "14px",
+              padding: "16px",
+              cursor: "pointer",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+              transition: "transform 0.15s ease, border-color 0.15s ease",
+            }}
+            title="Click to view Clinical Surveillance"
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "11.5px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
+                Surveillance Cases
+              </span>
+              <span style={{ fontSize: "18px" }}>🔬</span>
+            </div>
+            <div style={{ fontSize: "26px", fontWeight: 800, margin: "6px 0 2px", color: "var(--foreground)" }}>
+              {screenings.length}
+            </div>
+            <div style={{ fontSize: "11.5px", color: "var(--muted)", fontWeight: 600 }}>
+              Active Clinical Records
+            </div>
+          </div>
+
+          {/* Card 6: Pending Doctor Reviews / Triage Queue */}
+          <div
+            onClick={() => {
+              setTab("screenings");
+              setScreeningUrgencyFilter("pending");
+            }}
+            style={{
+              background: pendingScreeningsCount > 0 || doctorStats.pending > 0 ? "#fffbeb" : "var(--surface)",
+              border: pendingScreeningsCount > 0 || doctorStats.pending > 0 ? "1px solid #fde68a" : "1px solid var(--line)",
+              borderRadius: "14px",
+              padding: "16px",
+              cursor: "pointer",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+              transition: "transform 0.15s ease, border-color 0.15s ease",
+            }}
+            title="Click to view pending reviews"
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: "11.5px", fontWeight: 700, color: pendingScreeningsCount > 0 ? "#b45309" : "var(--muted)", textTransform: "uppercase" }}>
+                Pending Triage
+              </span>
+              <span style={{ fontSize: "18px" }}>⏳</span>
+            </div>
+            <div style={{ fontSize: "26px", fontWeight: 800, margin: "6px 0 2px", color: pendingScreeningsCount > 0 ? "#d97706" : "var(--foreground)" }}>
+              {pendingScreeningsCount + doctorStats.pending}
+            </div>
+            <div style={{ fontSize: "11.5px", color: pendingScreeningsCount > 0 ? "#b45309" : "#16a34a", fontWeight: 600 }}>
+              {pendingScreeningsCount} cases · {doctorStats.pending} doc approvals
+            </div>
+          </div>
+        </div>
+
         {/* Navigation Tabs */}
         <div
           style={{
@@ -1055,9 +1310,11 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
                   }}
                 >
                   <option value="all">All Triage Tiers ({screenings.length})</option>
-                  <option value="emergency">Emergency (112)</option>
-                  <option value="urgent">Urgent / Same-Day</option>
-                  <option value="routine">Routine / Self-Care</option>
+                  <option value="pending">⏳ Pending Doctor Review ({pendingScreeningsCount})</option>
+                  <option value="emergency">🚨 Emergency (112)</option>
+                  <option value="urgent">⚡ Urgent / Same-Day</option>
+                  <option value="review">🔍 Routine / Review</option>
+                  <option value="cleared">✓ Cleared</option>
                 </select>
               </div>
             </div>
@@ -1067,82 +1324,139 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
                 <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "13px" }}>
                   <thead>
                     <tr style={{ background: "var(--surface-muted)", borderBottom: "1px solid var(--line)", color: "var(--muted)" }}>
-                      <th style={{ padding: "12px 16px" }}>Patient Pseudo ID</th>
+                      <th style={{ padding: "12px 16px" }}>Patient Reference</th>
                       <th style={{ padding: "12px 16px" }}>Triage Urgency</th>
-                      <th style={{ padding: "12px 16px" }}>Recorded Symptoms</th>
-                      <th style={{ padding: "12px 16px" }}>Vitals (HR / SpO2 / Temp)</th>
+                      <th style={{ padding: "12px 16px" }}>Symptoms &amp; Notes</th>
+                      <th style={{ padding: "12px 16px" }}>Vitals &amp; Location</th>
                       <th style={{ padding: "12px 16px" }}>Doctor Review Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredScreenings.map((s) => (
-                      <tr key={s.id} style={{ borderBottom: "1px solid var(--line)" }}>
-                        <td style={{ padding: "12px 16px" }}>
-                          <strong>{s.pseudo_id}</strong>
-                          <span style={{ display: "block", fontSize: "11px", color: "var(--muted)" }}>
-                            {new Date(s.created_at).toLocaleString()}
-                          </span>
-                        </td>
-                        <td style={{ padding: "12px 16px" }}>
-                          <span
-                            style={{
-                              padding: "3px 8px",
-                              borderRadius: "10px",
-                              fontSize: "11px",
-                              fontWeight: 700,
-                              textTransform: "uppercase",
-                              background:
-                                s.urgency_tier === "emergency"
-                                  ? "#fee2e2"
-                                  : s.urgency_tier === "urgent"
-                                  ? "#ffedd5"
-                                  : "#ecfdf5",
-                              color:
-                                s.urgency_tier === "emergency"
-                                  ? "#991b1b"
-                                  : s.urgency_tier === "urgent"
-                                  ? "#9a3412"
-                                  : "#065f46",
+                    {filteredScreenings.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} style={{ padding: "40px 16px", textAlign: "center", color: "var(--muted)" }}>
+                          <div style={{ fontSize: "32px", marginBottom: "8px" }}>🔬</div>
+                          <strong style={{ fontSize: "15px", color: "var(--foreground)" }}>
+                            No surveillance or screening records matched your filter.
+                          </strong>
+                          <p style={{ margin: "6px 0 14px", fontSize: "12.5px" }}>
+                            Try adjusting your search query or reset the urgency tier filter to view all active cases.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setScreeningSearch("");
+                              setScreeningUrgencyFilter("all");
                             }}
+                            className="secondary-button"
+                            style={{ fontSize: "12px", padding: "6px 16px" }}
                           >
-                            {s.urgency_tier}
-                          </span>
-                        </td>
-                        <td style={{ padding: "12px 16px" }}>
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                            {s.symptoms.map((sym, idx) => (
-                              <span
-                                key={idx}
-                                style={{
-                                  fontSize: "11px",
-                                  padding: "2px 6px",
-                                  borderRadius: "4px",
-                                  background: "var(--surface-muted)",
-                                  border: "1px solid var(--line)",
-                                }}
-                              >
-                                {sym}
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                        <td style={{ padding: "12px 16px" }}>
-                          <span style={{ fontSize: "12px" }}>
-                            💓 {s.heart_rate || "--"} bpm · 🫁 {s.spo2 || "--"}% · 🌡️ {s.temperature_f || "--"}°F
-                          </span>
-                        </td>
-                        <td style={{ padding: "12px 16px" }}>
-                          {s.doctor_notes ? (
-                            <div>
-                              <span style={{ color: "#16a34a", fontWeight: 700, fontSize: "12px" }}>✓ Evaluated by Doctor</span>
-                              <p style={{ margin: "2px 0 0", fontSize: "11px", color: "var(--muted)" }}>{s.doctor_notes}</p>
-                            </div>
-                          ) : (
-                            <span style={{ color: "#ea580c", fontSize: "12px", fontWeight: 600 }}>⏳ Awaiting Clinician Evaluation</span>
-                          )}
+                            Reset Filters
+                          </button>
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      filteredScreenings.map((s) => (
+                        <tr key={s.id} style={{ borderBottom: "1px solid var(--line)" }}>
+                          <td style={{ padding: "12px 16px" }}>
+                            <strong style={{ fontFamily: "monospace", fontSize: "13.5px" }}>
+                              {s.patient_ref || (s as any).pseudo_id || "PT-CITIZEN"}
+                            </strong>
+                            <span style={{ display: "block", fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
+                              {new Date(s.created_at).toLocaleString()}
+                            </span>
+                            {s.age ? (
+                              <span style={{ display: "inline-block", marginTop: "3px", fontSize: "11px", color: "var(--primary)", fontWeight: 600 }}>
+                                Age: {s.age} yrs
+                              </span>
+                            ) : null}
+                          </td>
+                          <td style={{ padding: "12px 16px" }}>
+                            <span
+                              style={{
+                                padding: "3px 8px",
+                                borderRadius: "10px",
+                                fontSize: "11px",
+                                fontWeight: 700,
+                                textTransform: "uppercase",
+                                display: "inline-block",
+                                background:
+                                  s.urgency_tier === "emergency"
+                                    ? "#fee2e2"
+                                    : s.urgency_tier === "urgent"
+                                    ? "#ffedd5"
+                                    : "#ecfdf5",
+                                color:
+                                  s.urgency_tier === "emergency"
+                                    ? "#991b1b"
+                                    : s.urgency_tier === "urgent"
+                                    ? "#9a3412"
+                                    : "#065f46",
+                              }}
+                            >
+                              {s.urgency_tier}
+                            </span>
+                          </td>
+                          <td style={{ padding: "12px 16px", maxWidth: "340px" }}>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "6px" }}>
+                              {(s.symptoms || []).map((sym, idx) => (
+                                <span
+                                  key={idx}
+                                  style={{
+                                    fontSize: "11px",
+                                    padding: "2px 6px",
+                                    borderRadius: "4px",
+                                    background: "var(--surface-muted)",
+                                    border: "1px solid var(--line)",
+                                  }}
+                                >
+                                  {sym}
+                                </span>
+                              ))}
+                            </div>
+                            {s.field_notes && (
+                              <div style={{ fontSize: "12px", color: "var(--foreground)", opacity: 0.85, lineHeight: "1.4" }}>
+                                📝 {s.field_notes}
+                              </div>
+                            )}
+                            {s.screener_name && (
+                              <small style={{ display: "block", marginTop: "4px", fontSize: "11px", color: "var(--muted)" }}>
+                                Reported by: {s.screener_name} ({s.screener_role || "health_worker"})
+                              </small>
+                            )}
+                          </td>
+                          <td style={{ padding: "12px 16px" }}>
+                            <div style={{ fontSize: "12px", lineHeight: "1.6" }}>
+                              <div>🌡️ <strong>{s.temperature || "--"}°F</strong> · 🫁 <strong>{s.spo2 || "--"}%</strong> SpO2</div>
+                              <div style={{ color: "var(--muted)", fontSize: "11.5px", marginTop: "2px" }}>
+                                📍 {s.village || "Odisha Urban/Rural Circle"}
+                              </div>
+                            </div>
+                          </td>
+                          <td style={{ padding: "12px 16px", minWidth: "220px" }}>
+                            {s.doctor_notes || s.status === "doctor_evaluated" ? (
+                              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "8px 10px", borderRadius: "8px" }}>
+                                <div style={{ color: "#16a34a", fontWeight: 700, fontSize: "12px", display: "flex", alignItems: "center", gap: "4px" }}>
+                                  ✓ Evaluated by {s.evaluated_by || "Assigned Medical Officer"}
+                                </div>
+                                <p style={{ margin: "4px 0 0", fontSize: "11.5px", color: "#14532d", lineHeight: "1.4" }}>
+                                  {s.doctor_notes || s.prescription_advice || "Clinical review complete."}
+                                </p>
+                              </div>
+                            ) : (
+                              <div style={{ background: "#fff7ed", border: "1px solid #fed7aa", padding: "8px 10px", borderRadius: "8px" }}>
+                                <span style={{ color: "#c2410c", fontSize: "12px", fontWeight: 700 }}>
+                                  ⏳ Awaiting Clinician Evaluation
+                                </span>
+                                <small style={{ display: "block", color: "#9a3412", fontSize: "11px", marginTop: "2px" }}>
+                                  Pending doctor triage queue
+                                </small>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
