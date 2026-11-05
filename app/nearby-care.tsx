@@ -9,6 +9,7 @@ import {
   formatEta,
   isValidCoordinate,
   buildConsentSnapshot,
+  haversineKm,
 } from "@/lib/nearby/geo";
 import {
   DEFAULT_FILTERS,
@@ -83,47 +84,133 @@ export default function NearbyCare() {
     setDistrictCamps(matched);
   }, [activeDistrict]);
 
-  // Request browser GPS position
-  const acquire = useCallback(() => {
+  // Helper to apply detected coordinates (GPS or Network/IP) and snap to closest district/preset
+  const applyDetectedLocation = useCallback((lat: number, lng: number, accuracy: number, sourceName: string, cityName?: string) => {
+    setPos({ lat, lng, accuracy });
+    setLocState(accuracy <= 100 ? "accurate" : "approximate");
+
+    // Find the closest preset among LOCATION_PRESETS
+    let closest = LOCATION_PRESETS[0];
+    let minD = Infinity;
+    for (const p of LOCATION_PRESETS) {
+      const d = haversineKm({ lat, lng }, { lat: p.lat, lng: p.lng });
+      if (d < minD) {
+        minD = d;
+        closest = p;
+      }
+    }
+
+    if (minD <= 50) {
+      setSelectedPreset(closest.id);
+      setActiveDistrict(closest.district);
+      setLocNote(`Auto-detected: ${closest.label} (±${Math.round(accuracy)} m via ${sourceName}).`);
+    } else {
+      setSelectedPreset("custom");
+      const matchDistrict = registeredDistricts.find(
+        (d) =>
+          d.district.toLowerCase() === (cityName || "").toLowerCase() ||
+          (cityName || "").toLowerCase().includes(d.district.toLowerCase())
+      );
+      if (matchDistrict) {
+        setActiveDistrict(matchDistrict.district);
+        setLocNote(`Auto-detected: ${cityName || matchDistrict.district} (${matchDistrict.district} District) (via ${sourceName}).`);
+      } else {
+        setLocNote(`Auto-detected location [${lat.toFixed(4)}, ${lng.toFixed(4)}] (via ${sourceName}).`);
+      }
+    }
+  }, [registeredDistricts]);
+
+  // Request browser GPS position with seamless Network/IP fallback
+  const acquire = useCallback(async () => {
     setConsent(true);
+    setLocState("acquiring");
+    setLocNote("Detecting your location via GPS & Network...");
+
+    // Fallback function: Query IP-based location if device GPS is absent or unavailable
+    const tryIpFallback = async (reason: string) => {
+      try {
+        let data: { lat?: number; lng?: number; city?: string; region?: string } | null = null;
+        try {
+          const res = await fetch("/api/detect-location", { signal: AbortSignal.timeout(3500) });
+          if (res.ok) data = await res.json();
+        } catch {}
+
+        if (!data || !data.lat || !data.lng) {
+          const res = await fetch("https://ipwho.is/", { signal: AbortSignal.timeout(3500) });
+          if (res.ok) {
+            const raw = await res.json();
+            if (raw.success && raw.latitude && raw.longitude) {
+              data = {
+                lat: raw.latitude,
+                lng: raw.longitude,
+                city: raw.city,
+                region: raw.region,
+              };
+            }
+          }
+        }
+
+        if (data && typeof data.lat === "number" && typeof data.lng === "number") {
+          applyDetectedLocation(
+            data.lat,
+            data.lng,
+            500,
+            "Network / IP",
+            data.city || data.region,
+          );
+          return true;
+        }
+      } catch (err) {
+        console.warn("IP Geolocation fallback warning:", err);
+      }
+
+      setLocState("approximate");
+      setLocNote(`${reason}. Using regional emergency healthcare hub.`);
+      return false;
+    };
+
     if (typeof navigator === "undefined" || !navigator.geolocation) {
-      setLocState("unavailable");
-      setPos({ ...REGION_CENTER });
-      setLocNote("Device GPS is not supported in this browser.");
+      await tryIpFallback("Device GPS not supported");
       return;
     }
-    setLocState("acquiring");
-    setLocNote("Acquiring high-accuracy GPS fix from device...");
+
+    let resolved = false;
+    const fallbackTimer = setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        tryIpFallback("Browser GPS timed out");
+      }
+    }, 4000);
+
     navigator.geolocation.getCurrentPosition(
       (p) => {
-        const coords = {
-          lat: p.coords.latitude,
-          lng: p.coords.longitude,
-          accuracy: p.coords.accuracy,
-          capturedAt: new Date().toISOString(),
-          source: "gps" as const,
-        };
-        setPos({ lat: coords.lat, lng: coords.lng, accuracy: coords.accuracy });
-        setLocState(classifyLocation(coords));
-        setSelectedPreset("custom");
-        setLocNote(
-          coords.accuracy && coords.accuracy > 500
-            ? `Device GPS fix acquired (approx ±${Math.round(coords.accuracy)} m).`
-            : `Accurate device GPS fix acquired (±${Math.round(coords.accuracy ?? 0)} m).`,
+        if (resolved) return;
+        resolved = true;
+        clearTimeout(fallbackTimer);
+        applyDetectedLocation(
+          p.coords.latitude,
+          p.coords.longitude,
+          p.coords.accuracy || 80,
+          "Device GPS",
         );
       },
-      (err) => {
-        if (err.code === err.PERMISSION_DENIED) {
-          setLocState("denied");
-          setLocNote("Location access was denied. You can select your district from the dropdown below.");
-        } else {
-          setLocState("unavailable");
-          setLocNote("GPS location timed out. Selected district is active.");
-        }
+      async (err) => {
+        if (resolved) return;
+        resolved = true;
+        clearTimeout(fallbackTimer);
+        const reason =
+          err.code === err.PERMISSION_DENIED
+            ? "Location permission not granted"
+            : "Device GPS unavailable on this device";
+        await tryIpFallback(reason);
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+      {
+        enableHighAccuracy: false,
+        timeout: 3800,
+        maximumAge: 60000,
+      },
     );
-  }, []);
+  }, [applyDetectedLocation]);
 
   const setPreset = useCallback((presetId: string) => {
     const p = LOCATION_PRESETS.find((x) => x.id === presetId);
@@ -536,22 +623,26 @@ export default function NearbyCare() {
           <button
             type="button"
             onClick={acquire}
+            disabled={locState === "acquiring"}
             style={{
-              background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
+              background: locState === "acquiring" ? "#047857" : "linear-gradient(135deg, #059669 0%, #047857 100%)",
               color: "#ffffff",
               border: "none",
               borderRadius: "10px",
               padding: "10px 18px",
               fontWeight: 700,
               fontSize: "13px",
-              cursor: "pointer",
+              cursor: locState === "acquiring" ? "wait" : "pointer",
               display: "inline-flex",
               alignItems: "center",
               gap: "8px",
               boxShadow: "0 2px 8px rgba(5, 150, 105, 0.25)",
+              opacity: locState === "acquiring" ? 0.8 : 1,
+              transition: "all 0.2s ease",
             }}
           >
-            <span>🎯</span> Auto-Detect My GPS
+            <span>{locState === "acquiring" ? "⏳" : "🎯"}</span>
+            {locState === "acquiring" ? "Detecting Location..." : "Auto-Detect My GPS"}
           </button>
         </div>
 
