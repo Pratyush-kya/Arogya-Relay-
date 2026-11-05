@@ -5,55 +5,7 @@ const PRESCRIPTION_STORAGE_KEY = "arogya.prescriptions.local";
 const ADHERENCE_STORAGE_KEY = "arogya.adherence.local";
 const FOLLOWUP_STORAGE_KEY = "arogya.followups.local";
 
-const SEED_PRESCRIPTIONS: PatientPrescription[] = [
-  {
-    id: "RX-9021",
-    patientRef: "PT-RAMESH-01",
-    doctorName: "Dr. Bishnu Prasad Satapathy, MBBS",
-    diagnosis: "Essential Hypertension Stage 1 & Mild Fatigue",
-    createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
-    synced: true,
-    totalPriceInr: 32.5,
-    mrpPriceInr: 168.0,
-    suggestedChemist: {
-      id: "ph-01",
-      name: "Pradhan Mantri Jan Aushadhi Kendra #7402",
-      address: "Main Market Road, near Block Office",
-      phone: "+91 94370 12345",
-      email: "janaushadhi.kendra7402@gov.in",
-      distanceKm: 1.2,
-    },
-    adherenceLogs: [],
-    medicines: [
-      {
-        id: "m-amlo",
-        name: "Amlodipine",
-        strength: "5mg",
-        form: "tablet",
-        dose: "1 tablet once daily morning",
-        foodRelation: "after_food",
-        slots: { morning: true },
-        customTimes: ["08:00"],
-        durationDays: 14,
-        startDate: new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10),
-        instructions: "Take with water after breakfast.",
-      },
-      {
-        id: "m-para",
-        name: "Paracetamol",
-        strength: "500mg",
-        form: "tablet",
-        dose: "1 tablet as needed for headache",
-        foodRelation: "after_food",
-        slots: { night: true },
-        customTimes: ["21:00"],
-        durationDays: 5,
-        startDate: new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10),
-        instructions: "Max 2 tablets a day if headache persists.",
-      },
-    ],
-  },
-];
+const SEED_PRESCRIPTIONS: PatientPrescription[] = [];
 
 const SEED_FOLLOWUPS: PrescriptionFollowUpRequest[] = [];
 
@@ -62,19 +14,27 @@ export function getLocalPrescriptions(): PatientPrescription[] {
   try {
     const raw = localStorage.getItem(PRESCRIPTION_STORAGE_KEY);
     if (!raw) {
-      localStorage.setItem(PRESCRIPTION_STORAGE_KEY, JSON.stringify(SEED_PRESCRIPTIONS));
-      return SEED_PRESCRIPTIONS;
+      localStorage.setItem(PRESCRIPTION_STORAGE_KEY, JSON.stringify([]));
+      return [];
     }
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed) || parsed.length === 0) {
-      localStorage.setItem(PRESCRIPTION_STORAGE_KEY, JSON.stringify(SEED_PRESCRIPTIONS));
-      return SEED_PRESCRIPTIONS;
+      return [];
     }
 
-    // Sanitize any stale demo doctor names
-    let modified = false;
-    const sanitized = parsed.map((rx) => {
-      let r = { ...rx };
+    // Purge fake mock prescriptions (RX-9021, PT-RAMESH-01, Kendra #7402)
+    // Prescriptions should only exist once generated/approved by the real doctor
+    const cleaned = parsed.filter((rx) => {
+      if (!rx || typeof rx !== "object") return false;
+      if (rx.id === "RX-9021") return false;
+      if (rx.patientRef === "PT-RAMESH-01") return false;
+      if (rx.suggestedChemist?.name?.includes("#7402")) return false;
+      return true;
+    });
+
+    let modified = cleaned.length !== parsed.length;
+    const sanitized = cleaned.map((rx) => {
+      const r = { ...rx };
       if (r.doctorName?.toLowerCase().includes("rajesh") || r.doctorName?.toLowerCase().includes("patel")) {
         r.doctorName = "Dr. Bishnu Prasad Satapathy, MBBS";
         modified = true;
@@ -90,9 +50,9 @@ export function getLocalPrescriptions(): PatientPrescription[] {
       return sanitized;
     }
 
-    return parsed;
+    return sanitized;
   } catch {
-    return SEED_PRESCRIPTIONS;
+    return [];
   }
 }
 
@@ -414,41 +374,100 @@ export async function requestNotificationPermission(): Promise<boolean> {
   return false;
 }
 
+/** Play a gentle, high-clarity harmonic medical chime (E-G#-B-E melody with soft bell resonance) */
+export function playHarmonicMedicalChime(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    if (ctx.state === "suspended") {
+      void ctx.resume();
+    }
+
+    // Melodic sequence: E5 (659.25Hz), G#5 (830.61Hz), B5 (987.77Hz), resolving E6 (1318.51Hz)
+    const melody = [
+      { freq: 659.25, start: 0.00, dur: 0.35, gain: 0.18 },
+      { freq: 830.61, start: 0.14, dur: 0.38, gain: 0.20 },
+      { freq: 987.77, start: 0.28, dur: 0.42, gain: 0.22 },
+      { freq: 1318.51, start: 0.42, dur: 0.70, gain: 0.18 },
+    ];
+
+    melody.forEach((note) => {
+      // Primary pure bell tone (sine)
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(note.freq, ctx.currentTime + note.start);
+
+      // Subtle celestial harmonic overtone (triangle)
+      const overtone = ctx.createOscillator();
+      const overGain = ctx.createGain();
+      overtone.type = "triangle";
+      overtone.frequency.setValueAtTime(note.freq * 2, ctx.currentTime + note.start);
+
+      // Smooth envelope attack and exponential decay
+      const t = ctx.currentTime + note.start;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(note.gain, t + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + note.dur);
+
+      overGain.gain.setValueAtTime(0.0001, t);
+      overGain.gain.exponentialRampToValueAtTime(note.gain * 0.25, t + 0.02);
+      overGain.gain.exponentialRampToValueAtTime(0.0001, t + note.dur * 0.65);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      overtone.connect(overGain);
+      overGain.connect(ctx.destination);
+
+      osc.start(t);
+      osc.stop(t + note.dur + 0.05);
+      overtone.start(t);
+      overtone.stop(t + note.dur * 0.65 + 0.05);
+    });
+  } catch {
+    // Audio context not allowed or failed
+  }
+}
+
 export function triggerMedicineNotification(medicineName: string, dose: string, instructions?: string) {
   if (typeof window === "undefined") return;
 
-  // Visual in-app toast / native alert
   const title = `⏰ Medicine Reminder: ${medicineName}`;
   const body = `Take ${dose} now. ${instructions ? `(${instructions})` : ""}`;
 
+  // Native Web Push / Screen Notification with proper Medical Bell Icon (NEVER QR code)
   if ("Notification" in window && Notification.permission === "granted") {
     try {
       new Notification(title, {
         body,
-        icon: "/hotspot-qr.png",
-        badge: "/hotspot-qr.png",
-        tag: `med-${medicineName}`,
+        icon: "/medicine-alarm-icon.png",
+        badge: "/medicine-alarm-icon.png",
+        tag: `med-${medicineName.toLowerCase().replace(/[^a-z0-9]/g, "-")}`,
       });
     } catch {
       // Fallback
     }
   }
 
-  // Play subtle reminder chime if Audio API is supported
+  // Play rich, comforting harmonic chime
+  playHarmonicMedicalChime();
+
+  // Dispatch interactive in-app visual alarm event
   try {
-    const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-    gain.gain.setValueAtTime(0.1, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.6);
+    window.dispatchEvent(
+      new CustomEvent("arogya.medicine_alarm", {
+        detail: {
+          medicineName,
+          dose,
+          instructions: instructions || "Take with clean drinking water as prescribed.",
+          timestamp: new Date().toISOString(),
+        },
+      })
+    );
   } catch {
-    // Ignore audio error
+    // Ignore event dispatch failure
   }
 }
 

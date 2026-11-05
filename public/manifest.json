@@ -8,12 +8,12 @@
   "description": "Offline-First Telehealth, Doctor-Patient Prescriptions & Visual Disease Screening",
   "icons": [
     {
-      "src": "/hotspot-qr.png",
+      "src": "/medicine-alarm-icon.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/hotspot-qr.png",
+      "src": "/medicine-alarm-icon.png",
       "sizes": "512x512",
       "type": "image/png"
     }

@@ -295,7 +295,8 @@ export function DoctorFollowupManager({
 
     saveLocalFollowUp(updatedReq);
 
-    // Also update prescription in local store if matches
+    // Ensure the real confirmed prescription is saved in the patient's local store
+    // This activates the patient's real medication alarms with the doctor's prescribed doses
     const allRx = getLocalPrescriptions();
     const targetRx = allRx.find((p) => p.id === selectedReq.prescriptionId);
     if (targetRx) {
@@ -303,6 +304,21 @@ export function DoctorFollowupManager({
       targetRx.totalPriceInr = calculatedPrice;
       targetRx.suggestedChemist = chosenChemist;
       saveLocalPrescription(targetRx);
+    } else {
+      const newPrescription: PatientPrescription = {
+        id: selectedReq.prescriptionId && selectedReq.prescriptionId !== "RX-NEW" ? selectedReq.prescriptionId : `RX-${Date.now().toString(36).toUpperCase()}`,
+        patientRef: selectedReq.patientRef || "PT-CITIZEN",
+        doctorName: doctorName,
+        diagnosis: `Doctor Approved: ${selectedReq.issueType.replace(/_/g, " ")}`,
+        medicines: updatedMedicines,
+        totalPriceInr: calculatedPrice,
+        mrpPriceInr: Math.round(calculatedPrice * 4.2),
+        suggestedChemist: chosenChemist,
+        adherenceLogs: [],
+        createdAt: new Date().toISOString(),
+        synced: false,
+      };
+      saveLocalPrescription(newPrescription);
     }
 
     reload(selectedReq.id);

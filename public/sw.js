@@ -1,7 +1,7 @@
 // Arogya Relay — Service Worker for Offline Caching and Medicine Push Notifications
 
 const CACHE_NAME = "arogya-relay-v1";
-const STATIC_ASSETS = ["/", "/manifest.json", "/hotspot-qr.png"];
+const STATIC_ASSETS = ["/", "/manifest.json", "/medicine-alarm-icon.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -38,8 +38,8 @@ self.addEventListener("push", (event) => {
 
   const options = {
     body: data.body,
-    icon: "/hotspot-qr.png",
-    badge: "/hotspot-qr.png",
+    icon: "/medicine-alarm-icon.png",
+    badge: "/medicine-alarm-icon.png",
     vibrate: [200, 100, 200, 100, 200],
     actions: [
       { action: "take", title: "✓ Mark Taken" },

@@ -80,8 +80,15 @@ export default function PrescriptionTracker({
   const [isFulfillmentConfirmed, setIsFulfillmentConfirmed] = useState(false);
   const [confirmingFulfillment, setConfirmingFulfillment] = useState(false);
 
+  // Active Interactive Alarm Alert Modal
+  const [activeAlarmAlert, setActiveAlarmAlert] = useState<{
+    medicineName: string;
+    dose: string;
+    instructions?: string;
+  } | null>(null);
+
   // Doctor Authoring State
-  const [patientRef, setPatientRef] = useState("PT-RAMESH-01");
+  const [patientRef, setPatientRef] = useState("PT-CITIZEN");
   const [doctorName, setDoctorName] = useState("Dr. Bishnu Prasad Satapathy, MBBS");
   const [diagnosis, setDiagnosis] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -181,12 +188,26 @@ export default function PrescriptionTracker({
         }
       }
     }
+
+    function onMedicineAlarm(e: Event) {
+      const detail = (e as CustomEvent)?.detail;
+      if (detail && detail.medicineName) {
+        setActiveAlarmAlert({
+          medicineName: detail.medicineName,
+          dose: detail.dose || "1 Dose",
+          instructions: detail.instructions || "Take with clean drinking water as prescribed.",
+        });
+      }
+    }
+
     window.addEventListener("arogya:followup:updated", onFollowupUpdate);
     window.addEventListener("storage", onFollowupUpdate);
+    window.addEventListener("arogya.medicine_alarm", onMedicineAlarm);
     return () => {
       cleanupRealtime();
       window.removeEventListener("arogya:followup:updated", onFollowupUpdate);
       window.removeEventListener("storage", onFollowupUpdate);
+      window.removeEventListener("arogya.medicine_alarm", onMedicineAlarm);
     };
   }, []);
 
@@ -207,7 +228,11 @@ export default function PrescriptionTracker({
   }
 
   function handleTestChime() {
-    triggerMedicineNotification("Amlodipine 2.5mg", "1 tablet", "Take after food with water.");
+    const medName = todayReminders[0]?.medicine.name || "Daily Prescribed Medicine";
+    const medDose = todayReminders[0]?.medicine.dose || "1 Dose (Scheduled)";
+    const medInstructions = todayReminders[0]?.medicine.instructions || "Take with clean drinking water as prescribed by doctor.";
+    triggerMedicineNotification(medName, medDose, medInstructions);
+    setStatusMessage(`🔔 Test alarm ringing with harmonic chime for ${medName}!`);
   }
 
   function handleTakeDose(item: TodayReminderSlot) {
@@ -298,7 +323,7 @@ export default function PrescriptionTracker({
 
     const newPrescription: PatientPrescription = {
       id: `RX-REV-${Date.now().toString(36).toUpperCase()}`,
-      patientRef: fup.patientRef || "PT-RAMESH-01",
+      patientRef: fup.patientRef || currentUserProfile?.display_name || "PT-CITIZEN",
       doctorName: fup.doctorName,
       diagnosis: `Revised Regimen via Follow-Up (${fup.issueType.replace("_", " ")})`,
       medicines: fup.revisedMedicines,
@@ -559,6 +584,133 @@ export default function PrescriptionTracker({
           >
             ✕
           </button>
+        </div>
+      )}
+
+      {/* ── INTERACTIVE ACTIVE MEDICINE ALARM ALERT BANNER ──────────────────────── */}
+      {activeAlarmAlert && (
+        <div
+          role="alert"
+          style={{
+            background: "linear-gradient(135deg, #064e3b 0%, #047857 55%, #0284c7 100%)",
+            color: "#ffffff",
+            borderRadius: "16px",
+            padding: "20px 24px",
+            boxShadow: "0 12px 28px -6px rgba(4, 120, 87, 0.4), 0 0 0 2.5px #34d399",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "16px",
+            border: "1px solid rgba(255, 255, 255, 0.2)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <div
+              style={{
+                width: "50px",
+                height: "50px",
+                borderRadius: "50%",
+                background: "#ffffff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "26px",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+                flexShrink: 0,
+              }}
+            >
+              🔔
+            </div>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                <span
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: 800,
+                    letterSpacing: "0.5px",
+                    textTransform: "uppercase",
+                    background: "#fef08a",
+                    color: "#854d0e",
+                    padding: "2px 8px",
+                    borderRadius: "10px",
+                  }}
+                >
+                  ⏰ Medication Alarm Ringing
+                </span>
+                <span style={{ fontSize: "11px", color: "#a7f3d0", fontWeight: 600 }}>
+                  🎵 Harmonic Chime Played
+                </span>
+              </div>
+              <h4 style={{ margin: "5px 0 2px", fontSize: "17.5px", fontWeight: 800, color: "#ffffff" }}>
+                {activeAlarmAlert.medicineName} — {activeAlarmAlert.dose}
+              </h4>
+              <p style={{ margin: 0, fontSize: "12.5px", color: "#e2e8f0" }}>
+                {activeAlarmAlert.instructions}
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+            <button
+              type="button"
+              onClick={() => {
+                if (todayReminders.length > 0) {
+                  handleTakeDose(todayReminders[0]);
+                }
+                setActiveAlarmAlert(null);
+                setStatusMessage(`✓ Dose marked as taken for ${activeAlarmAlert.medicineName}!`);
+              }}
+              style={{
+                background: "#ffffff",
+                color: "#065f46",
+                border: "none",
+                padding: "9px 18px",
+                borderRadius: "8px",
+                fontWeight: 800,
+                fontSize: "13px",
+                cursor: "pointer",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+              }}
+            >
+              ✓ Take Dose Now
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveAlarmAlert(null);
+                setStatusMessage("⏰ Alarm snoozed for 10 minutes.");
+              }}
+              style={{
+                background: "rgba(255, 255, 255, 0.18)",
+                color: "#ffffff",
+                border: "1px solid rgba(255, 255, 255, 0.4)",
+                padding: "9px 14px",
+                borderRadius: "8px",
+                fontWeight: 700,
+                fontSize: "12.5px",
+                cursor: "pointer",
+              }}
+            >
+              Snooze 10m
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveAlarmAlert(null)}
+              aria-label="Dismiss alarm"
+              style={{
+                background: "none",
+                border: "none",
+                color: "#ffffff",
+                fontSize: "18px",
+                cursor: "pointer",
+                padding: "4px 8px",
+                opacity: 0.85,
+              }}
+            >
+              ✕
+            </button>
+          </div>
         </div>
       )}
 
@@ -2143,26 +2295,37 @@ export default function PrescriptionTracker({
               <div
                 style={{
                   textAlign: "center",
-                  padding: "48px 16px",
+                  padding: "44px 20px",
                   background: "var(--surface, #ffffff)",
                   borderRadius: "14px",
                   border: "1.5px dashed var(--line, #cbd5e1)",
                 }}
               >
-                <p style={{ fontSize: "15px", fontWeight: "600", margin: "0 0 6px" }}>
-                  No active medicine reminder alarms for today
+                <div style={{ fontSize: "38px", marginBottom: "10px" }}>🩺</div>
+                <h4 style={{ fontSize: "16px", fontWeight: "700", margin: "0 0 6px", color: "var(--foreground, #0f172a)" }}>
+                  Awaiting Verified Doctor Prescription
+                </h4>
+                <p style={{ fontSize: "13px", color: "var(--muted, #64748b)", margin: "0 auto 18px", maxWidth: "520px", lineHeight: 1.55 }}>
+                  Medication reminder alarms and adherence tracking are generated only after an assigned medical officer (Dr. Bishnu Prasad Satapathy or Dr. Samarpit Biswal) reviews your consultation and prescribes verified medicines. No dummy alarms or unverified medication schedules will run on your account.
                 </p>
-                <p style={{ fontSize: "13px", color: "var(--muted, #64748b)", margin: "0 0 16px" }}>
-                  Submit a report in Section 1 or import doctor-prescribed medicines from Section 2 to activate daily alarms.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setActivePatientSection("response")}
-                  className="primary-button"
-                  style={{ fontSize: "13px", padding: "8px 18px", borderRadius: "8px" }}
-                >
-                  📩 View Doctor Prescriptions &amp; Set Alarms
-                </button>
+                <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    onClick={() => setActivePatientSection("submit")}
+                    className="primary-button"
+                    style={{ fontSize: "13px", padding: "8px 18px", borderRadius: "8px" }}
+                  >
+                    📤 Section 1: Submit Consultation / Symptoms
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActivePatientSection("response")}
+                    className="secondary-button"
+                    style={{ fontSize: "13px", padding: "8px 18px", borderRadius: "8px" }}
+                  >
+                    📩 Section 2: View Doctor Responses ({followups.length})
+                  </button>
+                </div>
               </div>
             ) : (
               todayReminders.map((slot, idx) => {
