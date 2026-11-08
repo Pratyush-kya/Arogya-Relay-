@@ -67,6 +67,20 @@ export const DEFAULT_DEMO_USERS: Profile[] = [
     verified_at: "2026-09-30T10:00:00.000Z",
   },
   {
+    id: "doc-demo-3",
+    email: "dr.ananya.mishra@odisha-health.org",
+    display_name: "Dr. Ananya Mishra, MBBS, MD",
+    role: "doctor",
+    pseudo_id: "DOC-ANANYA",
+    medical_reg_no: "OMC-2019-72415",
+    council_name: "Odisha Medical Council",
+    specialization: "Obstetrics, Gynaecology & Community Health",
+    facility_name: "SCB Medical College & Hospital, Cuttack",
+    verification_status: "verified",
+    verified_by: ADMIN_EMAIL,
+    verified_at: "2026-09-30T10:00:00.000Z",
+  },
+  {
     id: "hw-demo-1",
     email: "asha.priya@field.arogya.org",
     display_name: "Priya Devi (Senior ASHA Facilitator)",
@@ -98,18 +112,11 @@ export const DEFAULT_DEMO_USERS: Profile[] = [
   {
     id: "pat-demo-1",
     email: "citizen.patient@arogya.org",
-    display_name: "Citizen Patient",
+    display_name: "Ramesh Soren (Citizen Patient)",
     role: "patient",
     pseudo_id: "PT-CITIZEN-01",
-    address: "Bhubaneswar-Cuttack Twin City Corridor, Odisha",
-  },
-  {
-    id: "pat-demo-2",
-    email: "debasis.mohanty@gmail.com",
-    display_name: "Debasis Mohanty",
-    role: "patient",
-    pseudo_id: "PT-MW3WL4EP",
-    address: "Saheed Nagar, Khurda District, Odisha",
+    address: "Shivaji Nagar, Tulasipur, Cuttack, Odisha",
+    phone: "98610-12345",
   },
 ];
 

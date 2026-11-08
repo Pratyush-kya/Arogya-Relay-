@@ -491,7 +491,7 @@ export const UI_CATALOG: Catalog = {
   "landing.selectRoleChemist": ui("Access Patient Portal ↑", "रोगी पोर्टल पर जाएं ↑", "ରୋଗୀ ପୋର୍ଟାଲକୁ ଯାଆନ୍ତୁ ↑"),
   "landing.footerNotice": ui("Ayushman Bharat Digital Mission aligned clinical relay. Not a diagnostic medical device. Clinical triage decisions must be confirmed by qualified medical officers.", "आयुष्मान भारत डिजिटल मिशन अनुरूप क्लिनिकल रिले। यह कोई नैदानिक चिकित्सा उपकरण नहीं है। नैदानिक ट्राइएज निर्णय योग्य चिकित्सा अधिकारियों द्वारा पुष्टि किए जाने चाहिए।", "ଆୟୁଷ୍ମାନ ଭାରତ ଡିଜିଟାଲ ମିଶନ ଅନୁରୂପ କ୍ଲିନିକାଲ ରିଲେ। ଏହା କୌଣସି ଡାଇଗ୍ନୋଷ୍ଟିକ ଉପକରଣ ନୁହେଁ। କ୍ଲିନିକାଲ ନିଷ୍ପତ୍ତି ଯୋଗ୍ୟ ଡାକ୍ତରଙ୍କ ଦ୍ୱାରା ନିଶ୍ଚିତ ହେବା ଉଚିତ।"),
 
-  "patient.availableDoctorsCount": ui("2 Verified Doctors Available", "2 सत्यापित डॉक्टर उपलब्ध", "୨ ଯାଞ୍ଚ ହୋଇଥିବା ଡାକ୍ତର ଉପଲବ୍ଧ"),
+  "patient.availableDoctorsCount": ui("3 Verified Doctors Available", "3 सत्यापित डॉक्टर उपलब्ध", "୩ ଯାଞ୍ଚ ହୋଇଥିବା ଡାକ୍ତର ଉପଲବ୍ଧ"),
   "patient.emergencyAssistance": ui("Emergency Medical Assistance (Free 24x7)", "आपातकालीन चिकित्सा सहायता (निःशुल्क 24x7)", "ଜରୁରୀକାଳୀନ ଚିକିତ୍ସା ସହାୟତା (ମାଗଣା ୨୪x୭)"),
   "patient.emergencyDesc": ui("Call 112 immediately for severe chest pain, breathing difficulty, or trauma.", "गंभीर सीने में दर्द, सांस लेने में कठिनाई या आघात के लिए तुरंत 112 पर कॉल करें।", "ଛାତିରେ ଅତ୍ୟଧିକ ଯନ୍ତ୍ରଣା, ଶ୍ୱାସକ୍ରିୟାରେ କଷ୍ଟ କିମ୍ବା ଆଘାତ ପାଇଁ ତୁରନ୍ତ ୧୧୨ ରେ କଲ୍ କରନ୍ତୁ।"),
   "patient.call112Btn": ui("📞 Call 112", "📞 112 पर कॉल करें", "📞 ୧୧୨ କଲ୍ କରନ୍ତୁ"),

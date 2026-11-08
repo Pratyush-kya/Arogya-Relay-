@@ -30,7 +30,20 @@ export const TWO_AVAILABLE_DOCTORS: AvailableDoctor[] = [
     avatar: "👨‍⚕️",
     email: "samarpitbiswal966@gmail.com",
   },
+  {
+    id: "doc-mishra",
+    name: "Dr. Ananya Mishra, MBBS, MD",
+    nmcNumber: "OMC-2019-72415",
+    specialization: "Obstetrics, Gynaecology & Community Health",
+    hospital: "SCB Medical College & Hospital, Cuttack",
+    experience: "10 Years Experience",
+    avatar: "👩‍⚕️",
+    email: "dr.ananya.mishra@odisha-health.org",
+  },
 ];
+
+export const THREE_AVAILABLE_DOCTORS = TWO_AVAILABLE_DOCTORS;
+export const AVAILABLE_DOCTORS = TWO_AVAILABLE_DOCTORS;
 
 export function getAvailableDoctors(): AvailableDoctor[] {
   if (typeof window === "undefined") return TWO_AVAILABLE_DOCTORS;

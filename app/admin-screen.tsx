@@ -191,6 +191,19 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
     async function loadData() {
       setLoading(true);
       try {
+        const canonicalBaseline: Profile[] = [
+          {
+            id: "usr-admin-1",
+            email: ADMIN_EMAIL,
+            display_name: "Pratyush Kiran Rath",
+            role: "admin",
+            pseudo_id: "ADM-PRATYUSH",
+            facility_name: "State Health Telehealth Mission",
+            verification_status: "verified",
+          },
+          ...DEFAULT_DEMO_USERS,
+        ];
+
         // Load users from Supabase profiles safely
         let profilesData: Profile[] | null = null;
         try {
@@ -200,30 +213,55 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
           console.warn("Notice: Remote profiles fetch bypassed, using local database cache:", fetchErr);
         }
 
+        const userMap = new Map<string, Profile>();
+        for (const u of canonicalBaseline) {
+          userMap.set(u.email ? u.email.toLowerCase() : u.id, u);
+        }
+
         if (profilesData && profilesData.length > 0) {
-          setUsers(profilesData);
+          for (const p of profilesData) {
+            if (p.email === "debasis.mohanty@gmail.com" || (p.pseudo_id === "PT-MW3WL4EP" && p.role === "patient")) {
+              continue; // Purge obsolete fake duplicate demo patient
+            }
+            const key = p.email ? p.email.toLowerCase() : p.id;
+            userMap.set(key, { ...userMap.get(key), ...p });
+          }
         } else {
-          // Sample initial users if database is empty or offline
           const cached = localStorage.getItem("arogya.admin.users");
           if (cached) {
-            setUsers(JSON.parse(cached));
-          } else {
-            const initialUsers: Profile[] = [
-              {
-                id: "usr-admin-1",
-                email: ADMIN_EMAIL,
-                display_name: "Pratyush Kiran Rath",
-                role: "admin",
-                pseudo_id: "ADM-PRATYUSH",
-                facility_name: "State Health Telehealth Mission",
-                verification_status: "verified",
-              },
-              ...DEFAULT_DEMO_USERS,
-            ];
-            setUsers(initialUsers);
-            localStorage.setItem("arogya.admin.users", JSON.stringify(initialUsers));
+            try {
+              const parsed = JSON.parse(cached);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                for (const p of parsed) {
+                  if (p.email === "debasis.mohanty@gmail.com" || (p.pseudo_id === "PT-MW3WL4EP" && p.role === "patient")) {
+                    continue;
+                  }
+                  const key = p.email ? p.email.toLowerCase() : p.id;
+                  userMap.set(key, { ...userMap.get(key), ...p });
+                }
+              }
+            } catch {}
           }
         }
+
+        // Canonical verification enforcement: 3 verified doctors and 1 patient
+        let resolvedUsers = Array.from(userMap.values()).map((u) => {
+          if (
+            u.role === "doctor" &&
+            (u.email?.includes("samarpit") ||
+              u.email?.includes("satapathy") ||
+              u.email?.includes("bishnu") ||
+              u.email?.includes("ananya") ||
+              u.email?.includes("mishra"))
+          ) {
+            return { ...u, verification_status: "verified" as const };
+          }
+          return u;
+        });
+        resolvedUsers = resolvedUsers.filter((u) => u.email !== "debasis.mohanty@gmail.com");
+
+        setUsers(resolvedUsers);
+        localStorage.setItem("arogya.admin.users", JSON.stringify(resolvedUsers));
 
         // Load screenings safely and merge with active patient consultation follow-ups
         try {
@@ -233,30 +271,42 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
           const localFollowUps = getLocalFollowUps();
           const followUpScreenings: ScreeningRecord[] = localFollowUps.map((f) => ({
             id: `FU-${f.id}`,
-            patient_ref: f.patientId || f.prescriptionId || "PT-CITIZEN",
+            patient_ref: f.patientRef || "PT-CITIZEN-01",
             age: 48,
             temperature: 98.4,
             spo2: 98,
-            symptoms: f.symptomsReported ? [f.symptomsReported] : ["Cardiovascular / Antihypertensive Review"],
-            field_notes: f.patientNotes || `Follow-up request for ${f.prescriptionId}. Assigned clinician: ${f.doctorName || "Assigned Medical Officer"}`,
-            village: "Unit-6, Bhubaneswar / Cuttack Urban Clinic",
-            urgency_tier: f.status === "emergency" ? "emergency" : f.status === "urgent" ? "urgent" : "review",
-            status: f.doctorResponse ? "doctor_evaluated" : "pending_doctor_review",
-            doctor_notes: f.doctorResponse ? `${f.doctorName || "Doctor"}: ${f.doctorResponse}` : undefined,
-            prescription_advice: f.doctorResponse || undefined,
+            symptoms: [
+              f.issueType === "dose_change"
+                ? "Dose Adjustment Request"
+                : f.issueType === "side_effect"
+                ? "Adverse Drug Side-Effect"
+                : f.issueType === "symptom_worsened"
+                ? "Symptoms Worsened / Escalation"
+                : "Medicine Refill Inquiry",
+              "Citizen Clinical Follow-up",
+            ],
+            field_notes: f.patientMessage || `Follow-up request for ${f.prescriptionId}. Assigned clinician: ${f.doctorName || "Assigned Medical Officer"}`,
+            village: "Shivaji Nagar, Tulasipur, Cuttack (Twin-City Health Corridor)",
+            urgency_tier: f.status === "pending_doctor_review" ? "urgent" : "review",
+            status: f.status === "doctor_revised" || f.status === "dispensed" ? "doctor_evaluated" : "pending_doctor_review",
+            doctor_notes: f.doctorReply ? `${f.doctorName || "Doctor"}: ${f.doctorReply}` : undefined,
+            prescription_advice: f.doctorReply || (f.revisedMedicines && f.revisedMedicines.length > 0 ? f.revisedMedicines.map((m) => `${m.name} (${m.strength}) - ${m.dose}`).join(", ") : undefined),
             evaluated_by: f.doctorName || undefined,
-            screener_name: "Citizen Self-Report / Telehealth Follow-up",
+            screener_name: f.patientName || "Ramesh Soren (Citizen Patient)",
             screener_role: "patient",
-            created_at: f.createdAt || new Date().toISOString(),
+            created_at: f.reportedAt || new Date().toISOString(),
           }));
 
           const combined = [...recs];
           for (const fu of followUpScreenings) {
-            if (!combined.some((c) => c.id === fu.id || (c.patient_ref === fu.patient_ref && c.doctor_notes === fu.doctor_notes))) {
+            if (!combined.some((c) => c.id === fu.id || (c.patient_ref === fu.patient_ref && c.doctor_notes === fu.doctor_notes && c.field_notes === fu.field_notes))) {
               combined.push(fu);
             }
           }
-          setScreenings(combined);
+          const cleanCombined = combined.filter(
+            (s) => !["PT-RESP-881", "PT-MAT-104", "PT-EMG-902"].includes(s.patient_ref)
+          );
+          setScreenings(cleanCombined);
         } catch (scrErr) {
           console.warn("Notice: Remote screenings fetch bypassed:", scrErr);
         }

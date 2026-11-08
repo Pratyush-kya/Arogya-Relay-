@@ -33,74 +33,21 @@ const STORAGE_KEY = "arogya.screenings.local";
 export const ODISHA_SURVEILLANCE_SCREENINGS: ScreeningRecord[] = [
   {
     id: "SCR-OD-2026-01",
-    patient_ref: "PT-MW3WL4EP",
+    patient_ref: "PT-CITIZEN-01",
     age: 48,
     temperature: 98.4,
     spo2: 98,
     symptoms: ["Severe morning dizziness", "Elevated resting BP (146/92)", "Postural lightheadedness"],
-    field_notes: "Hypertension patient reporting morning dizziness after concurrent morning dosing. Digital home BP log reviewed.",
-    village: "Unit-6, Bhubaneswar (Khurda District)",
+    field_notes: "Hypertension patient Ramesh Soren reporting morning dizziness after concurrent morning dosing. Digital home BP log reviewed. Vitals: BP 146/92, Pulse 76 BPM.",
+    village: "Shivaji Nagar, Tulasipur, Cuttack (Twin-City Health Corridor)",
     urgency_tier: "urgent",
     status: "doctor_evaluated",
-    doctor_notes: "Reviewed by Dr. Bishnu Prasad Satapathy, MBBS (OMC-2018-88412): Taper Amlodipine to 2.5mg OD at bedtime. Telmisartan morning.",
-    prescription_advice: "Tab. Amlodipine 2.5mg HS + Tab. Telmisartan 40mg OD",
+    doctor_notes: "Reviewed by Dr. Bishnu Prasad Satapathy, MBBS (OMC-2018-88412): Taper Amlodipine to 2.5mg OD at bedtime. Telmisartan morning. Jan Aushadhi generic medicines verified.",
+    prescription_advice: "Tab. Amlodipine 2.5mg HS + Tab. Telmisartan 40mg OD (Jan Aushadhi PMBJP SCB Kendra)",
     evaluated_by: "Dr. Bishnu Prasad Satapathy, MBBS",
     screener_name: "Priya Devi (Senior ASHA Facilitator)",
     screener_role: "health_worker",
     created_at: new Date(Date.now() - 4 * 3600000).toISOString(),
-    synced: true,
-  },
-  {
-    id: "SCR-OD-2026-02",
-    patient_ref: "PT-RESP-881",
-    age: 16,
-    temperature: 100.4,
-    spo2: 96,
-    symptoms: ["Paroxysmal spasmodic cough", "Bilateral expiratory wheezing", "Low-grade fever"],
-    field_notes: "Acute coughing bouts worse at night. Audible rhonchi on chest examination.",
-    village: "Mangalabag, Cuttack (SCB Medical Outreach)",
-    urgency_tier: "urgent",
-    status: "doctor_evaluated",
-    doctor_notes: "Reviewed by Dr. Samarpit Biswal, MD (OMC-2020-54190): Acute hyper-reactive airway disease. Prescribed Duolin MDI inhaler + Amoxicillin 625mg.",
-    prescription_advice: "Duolin Inhaler 2 puffs TID + Tab. Amoxicillin-Clav 625mg BD",
-    evaluated_by: "Dr. Samarpit Biswal, MD",
-    screener_name: "SCB Outreach Triage Desk",
-    screener_role: "health_worker",
-    created_at: new Date(Date.now() - 12 * 3600000).toISOString(),
-    synced: true,
-  },
-  {
-    id: "SCR-OD-2026-03",
-    patient_ref: "PT-MAT-104",
-    age: 24,
-    temperature: 98.6,
-    spo2: 99,
-    symptoms: ["Second trimester pallor", "General fatigue", "Mild pedal edema"],
-    field_notes: "ANC 2nd trimester routine checkup. Suspected moderate nutritional anemia. Routine obstetric consult required.",
-    village: "Baripada Sub-Division (Mayurbhanj District)",
-    urgency_tier: "review",
-    status: "pending_doctor_review",
-    screener_name: "Priya Devi (Senior ASHA Facilitator)",
-    screener_role: "health_worker",
-    created_at: new Date(Date.now() - 24 * 3600000).toISOString(),
-    synced: true,
-  },
-  {
-    id: "SCR-OD-2026-04",
-    patient_ref: "PT-EMG-902",
-    age: 62,
-    temperature: 99.1,
-    spo2: 93,
-    symptoms: ["Sharp substernal chest discomfort", "Dyspnea on exertion", "Diaphoresis"],
-    field_notes: "Elderly male with sudden chest heaviness and desaturation (SpO2 93%). STAT emergency transfer initiated.",
-    village: "Konark Coastal Block (Puri District)",
-    urgency_tier: "emergency",
-    status: "doctor_evaluated",
-    doctor_notes: "108 Ambulance dispatch confirmed. Patient admitted to Capital Hospital Apex Cardiac ICU.",
-    evaluated_by: "Dr. Bishnu Prasad Satapathy, MBBS",
-    screener_name: "Konark PHC Emergency Triage",
-    screener_role: "health_worker",
-    created_at: new Date(Date.now() - 36 * 3600000).toISOString(),
     synced: true,
   },
 ];
@@ -118,7 +65,15 @@ export function getLocalScreenings(): ScreeningRecord[] {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(ODISHA_SURVEILLANCE_SCREENINGS));
       return ODISHA_SURVEILLANCE_SCREENINGS;
     }
-    return parsed;
+    // Purge obsolete fake demo records and retain canonical real patient records + real user-created screenings
+    const cleaned = parsed.filter(
+      (s) => !["PT-RESP-881", "PT-MAT-104", "PT-EMG-902"].includes(s.patient_ref)
+    );
+    if (!cleaned.some((s) => s.patient_ref === "PT-CITIZEN-01" || s.patient_ref === "PT-MW3WL4EP")) {
+      cleaned.unshift(ODISHA_SURVEILLANCE_SCREENINGS[0]);
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
+    return cleaned;
   } catch {
     return ODISHA_SURVEILLANCE_SCREENINGS;
   }

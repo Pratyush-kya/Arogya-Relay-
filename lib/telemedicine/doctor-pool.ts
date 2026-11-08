@@ -50,6 +50,16 @@ const LOCAL_DOCTOR_SESSIONS: DoctorActiveSession[] = [
     rating: 4.95,
     lastHeartbeat: new Date().toISOString(),
   },
+  {
+    doctorId: "doc-mishra-03",
+    doctorName: "Dr. Ananya Mishra (MD)",
+    doctorEmail: "dr.ananya.mishra@odisha-health.org",
+    isFreeNow: true,
+    consultationFeeInr: 50,
+    specialization: "Obstetrics, Gynaecology & Community Health",
+    rating: 4.92,
+    lastHeartbeat: new Date().toISOString(),
+  },
 ];
 
 /**
