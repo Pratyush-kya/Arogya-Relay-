@@ -32,10 +32,11 @@ import {
 } from "@/lib/nearby/district-camps";
 
 export const LOCATION_PRESETS = [
-  { id: "khurda_dhh", label: "Khurda Town & DHH", sub: "District Hospital & NH-16 Bypass", district: "Khordha", lat: 20.1875, lng: 85.6265 },
-  { id: "aiims_patrapada", label: "AIIMS / Patrapada Bypass", sub: "NH-16 Apex Trauma Centre", district: "Khordha", lat: 20.2290, lng: 85.7760 },
+  { id: "cuttack_tulasipur", label: "Cuttack (Shivaji Nagar / Tulasipur / CDA)", sub: "Sun Hospital, Ashwini & UPHC Tulasipur", district: "Cuttack", lat: 20.4862, lng: 85.8520 },
+  { id: "cuttack", label: "Cuttack (SCB & Sishu Bhawan)", sub: "SCB Medical College & Mangalabag", district: "Cuttack", lat: 20.4780, lng: 85.8850 },
   { id: "bhubaneswar", label: "Bhubaneswar Central", sub: "Capital Hospital & Unit 6", district: "Khordha", lat: 20.2648, lng: 85.8281 },
-  { id: "cuttack", label: "Cuttack", sub: "SCB Medical College & Sishu Bhawan", district: "Cuttack", lat: 20.4780, lng: 85.8850 },
+  { id: "aiims_patrapada", label: "AIIMS / Patrapada Bypass", sub: "NH-16 Apex Trauma Centre", district: "Khordha", lat: 20.2290, lng: 85.7760 },
+  { id: "khurda_dhh", label: "Khurda Town & DHH", sub: "District Hospital & NH-16 Bypass", district: "Khordha", lat: 20.1875, lng: 85.6265 },
   { id: "ganjam_berhampur", label: "Berhampur, Ganjam", sub: "MKCG Medical College & Hospitals", district: "Ganjam", lat: 19.3149, lng: 84.7941 },
   { id: "ganjam_chhatrapur", label: "Chhatrapur, Ganjam", sub: "Sub-Divisional Hospital & Coastal Area", district: "Ganjam", lat: 19.3524, lng: 84.9873 },
   { id: "mayurbhanj_baripada", label: "Baripada, Mayurbhanj", sub: "PRM Medical College & Rural Blocks", district: "Mayurbhanj", lat: 21.9320, lng: 86.7280 },
@@ -86,10 +87,7 @@ export default function NearbyCare() {
 
   // Helper to apply detected coordinates (GPS or Network/IP) and snap to closest district/preset
   const applyDetectedLocation = useCallback((lat: number, lng: number, accuracy: number, sourceName: string, cityName?: string) => {
-    setPos({ lat, lng, accuracy });
-    setLocState(accuracy <= 100 ? "accurate" : "approximate");
-
-    // Check if the user is in the Cuttack-Bhubaneswar Twin-City corridor (~24km apart)
+    // Check if the user is located in Cuttack or the Cuttack-Bhubaneswar Twin-City corridor (~24km apart)
     const isTwinCityCorridor = lat >= 20.15 && lat <= 20.60 && lng >= 85.50 && lng <= 86.10;
     const isCuttackExplicit = (cityName || "").toLowerCase().includes("cuttack");
     let preferredDistrict: string | null = null;
@@ -97,15 +95,30 @@ export default function NearbyCare() {
       preferredDistrict = localStorage.getItem("arogya.preferred_district");
     } catch {}
 
-    if ((isTwinCityCorridor && preferredDistrict === "Cuttack") || isCuttackExplicit) {
-      setSelectedPreset("cuttack");
+    const isActualCuttackCoord = lat >= 20.40 && lat <= 20.55 && lng >= 85.80 && lng <= 85.95;
+
+    if (isActualCuttackCoord || (isTwinCityCorridor && preferredDistrict === "Cuttack") || isCuttackExplicit) {
+      const resolvedPos = isActualCuttackCoord
+        ? { lat, lng, accuracy }
+        : { lat: 20.4862, lng: 85.8520, accuracy: 150 }; // Snapped to Cuttack (Shivaji Nagar / Tulasipur)
+
+      setPos(resolvedPos);
+      setLocState(accuracy <= 100 ? "accurate" : "approximate");
+      setSelectedPreset("cuttack_tulasipur");
       setActiveDistrict("Cuttack");
-      setLocNote(`Auto-detected: Cuttack (SCB Medical College & Sishu Bhawan zone via ${sourceName}).`);
+      setLocNote(
+        isActualCuttackCoord
+          ? `Auto-detected: Cuttack (±${Math.round(accuracy)} m via ${sourceName}).`
+          : `Auto-detected: Cuttack (Shivaji Nagar / Tulasipur / CDA zone via ${sourceName}).`
+      );
       try {
         localStorage.setItem("arogya.preferred_district", "Cuttack");
       } catch {}
       return;
     }
+
+    setPos({ lat, lng, accuracy });
+    setLocState(accuracy <= 100 ? "accurate" : "approximate");
 
     // Find the closest preset among LOCATION_PRESETS
     let closest = LOCATION_PRESETS[0];
@@ -248,23 +261,78 @@ export default function NearbyCare() {
     try {
       const savedDistrict = localStorage.getItem("arogya.preferred_district");
       if (savedDistrict === "Cuttack") {
-        setPreset("cuttack");
+        setPreset("cuttack_tulasipur");
       }
     } catch {}
   }, [setPreset]);
 
-  const handleDistrictChange = useCallback((districtName: string) => {
-    setActiveDistrict(districtName);
-    const preset = LOCATION_PRESETS.find((p) => p.district.toLowerCase() === districtName.toLowerCase());
+  const handleDistrictChange = useCallback((districtInput: string) => {
+    const raw = districtInput.trim();
+    if (!raw) return;
+    const lower = raw.toLowerCase();
+
+    // Specific local neighborhood keywords for Cuttack (Shivaji Nagar, Tulasipur / Tulasiput, CDA, Kanika)
+    const isCuttackLocal =
+      lower.includes("shivaji") ||
+      lower.includes("tulasipur") ||
+      lower.includes("tulasiput") ||
+      lower.includes("cda") ||
+      lower.includes("chahata") ||
+      lower.includes("kanika") ||
+      lower.includes("bimanagar");
+
+    if (isCuttackLocal) {
+      setActiveDistrict("Cuttack");
+      setSelectedPreset("cuttack_tulasipur");
+      setPos({ lat: 20.4862, lng: 85.8520, accuracy: 150 });
+      setLocNote(`Location set to Cuttack (Shivaji Nagar / Tulasipur / CDA zone)`);
+      try {
+        localStorage.setItem("arogya.preferred_district", "Cuttack");
+      } catch {}
+      return;
+    }
+
+    // Direct match against preset id or label or district
+    const preset = LOCATION_PRESETS.find(
+      (p) =>
+        p.id.toLowerCase() === lower ||
+        p.district.toLowerCase() === lower ||
+        p.label.toLowerCase().includes(lower) ||
+        lower.includes(p.district.toLowerCase())
+    );
+
     if (preset) {
+      setActiveDistrict(preset.district);
       setSelectedPreset(preset.id);
       setPos({ lat: preset.lat, lng: preset.lng, accuracy: 250 });
       setLocNote(`Location updated to ${preset.label}`);
-    } else {
-      setSelectedPreset("custom_district");
-      setLocNote(`Showing health camps and care for ${districtName} District.`);
+      try {
+        localStorage.setItem("arogya.preferred_district", preset.district);
+      } catch {}
+      return;
     }
-  }, []);
+
+    // Match against registered districts
+    const match = registeredDistricts.find(
+      (d) =>
+        d.district.toLowerCase() === lower ||
+        lower.includes(d.district.toLowerCase()) ||
+        d.district.toLowerCase().includes(lower)
+    );
+
+    if (match) {
+      setActiveDistrict(match.district);
+      setSelectedPreset("custom_district");
+      setLocNote(`Showing health camps and care for ${match.district} District.`);
+      try {
+        localStorage.setItem("arogya.preferred_district", match.district);
+      } catch {}
+    } else {
+      setActiveDistrict(raw);
+      setSelectedPreset("custom_district");
+      setLocNote(`Showing health facilities for ${raw}.`);
+    }
+  }, [registeredDistricts]);
 
   // Compute nearby facilities via overpass / synthetic adapters
   useEffect(() => {
@@ -569,9 +637,9 @@ export default function NearbyCare() {
             >
               <span>📞</span> Call 108
             </a>
-            {pos && (triageData?.primaryStabilization || emergencyFacility || nearestHospital?.facility) && (
+            {(triageData?.primaryStabilization || emergencyFacility || nearestHospital?.facility) && (
               <a
-                href={`https://www.google.com/maps/dir/?api=1&origin=${pos.lat},${pos.lng}&destination=${(triageData?.primaryStabilization || emergencyFacility || nearestHospital?.facility)?.coordinates.lat},${(triageData?.primaryStabilization || emergencyFacility || nearestHospital?.facility)?.coordinates.lng}&travelmode=driving&dir_action=navigate`}
+                href={`https://www.google.com/maps/dir/?api=1&destination=${(triageData?.primaryStabilization || emergencyFacility || nearestHospital?.facility)?.coordinates.lat},${(triageData?.primaryStabilization || emergencyFacility || nearestHospital?.facility)?.coordinates.lng}&travelmode=driving&dir_action=navigate`}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
@@ -612,16 +680,14 @@ export default function NearbyCare() {
             <span>
               🧠 <strong>Need Advanced Neurosurgery / Cardiac Cath-Lab?</strong> Apex Referral: <strong>{triageData.apexReferral.name}</strong> ({triageData.apexReferral.address})
             </span>
-            {pos && (
-              <a
-                href={`https://www.google.com/maps/dir/?api=1&origin=${pos.lat},${pos.lng}&destination=${triageData.apexReferral.coordinates.lat},${triageData.apexReferral.coordinates.lng}&travelmode=driving&dir_action=navigate`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "#bae6fd", fontWeight: 700, textDecoration: "underline" }}
-              >
-                Route to Apex Referral →
-              </a>
-            )}
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&destination=${triageData.apexReferral.coordinates.lat},${triageData.apexReferral.coordinates.lng}&travelmode=driving&dir_action=navigate`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "#bae6fd", fontWeight: 700, textDecoration: "underline" }}
+            >
+              Route to Apex Referral →
+            </a>
           </div>
         )}
       </div>
@@ -694,28 +760,46 @@ export default function NearbyCare() {
             }}
           >
             <span style={{ fontSize: "12.5px", color: "#065f46" }}>
-              📍 Located in <strong>Cuttack</strong> instead of Bhubaneswar? (ISP IPs often route via Bhubaneswar)
+              📍 Located in <strong>Cuttack</strong> (Shivaji Nagar, Tulasipur, CDA, SCB)? (ISP IPs often route via Bhubaneswar)
             </span>
-            <button
-              type="button"
-              onClick={() => setPreset("cuttack")}
-              style={{
-                background: "#047857",
-                color: "#ffffff",
-                border: "none",
-                padding: "6px 14px",
-                borderRadius: "8px",
-                fontSize: "12px",
-                fontWeight: 700,
-                cursor: "pointer",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                boxShadow: "0 2px 6px rgba(4, 120, 87, 0.2)",
-              }}
-            >
-              <span>👉 Switch to Cuttack (SCB Medical College &amp; Hospital)</span>
-            </button>
+            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={() => setPreset("cuttack_tulasipur")}
+                style={{
+                  background: "#047857",
+                  color: "#ffffff",
+                  border: "none",
+                  padding: "6px 14px",
+                  borderRadius: "8px",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  boxShadow: "0 2px 6px rgba(4, 120, 87, 0.2)",
+                }}
+              >
+                <span>👉 Cuttack (Shivaji Nagar / Tulasipur / CDA)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setPreset("cuttack")}
+                style={{
+                  background: "#ffffff",
+                  color: "#047857",
+                  border: "1px solid #047857",
+                  padding: "6px 12px",
+                  borderRadius: "8px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Cuttack (SCB &amp; Mangalabag)
+              </button>
+            </div>
           </div>
         )}
 
@@ -734,9 +818,45 @@ export default function NearbyCare() {
               gap: "8px",
             }}
           >
-            <span style={{ fontSize: "12.5px", color: "#166534" }}>
-              ✓ <strong>Cuttack Active:</strong> Showing SCB Medical College, Sishu Bhawan, and Cuttack Jan Aushadhi Kendras.
-            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+              <span style={{ fontSize: "12.5px", color: "#166534" }}>
+                ✓ <strong>Cuttack Active:</strong> Showing Sun Hospital, Ashwini, UPHC Tulasipur, SCB Medical College &amp; Jan Aushadhi Kendras.
+              </span>
+              <div style={{ display: "flex", gap: "6px" }}>
+                <button
+                  type="button"
+                  onClick={() => setPreset("cuttack_tulasipur")}
+                  style={{
+                    background: selectedPreset === "cuttack_tulasipur" ? "#166534" : "#ffffff",
+                    color: selectedPreset === "cuttack_tulasipur" ? "#ffffff" : "#166534",
+                    border: "1px solid #86efac",
+                    padding: "4px 10px",
+                    borderRadius: "6px",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  📍 Shivaji Nagar / Tulasipur / CDA
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreset("cuttack")}
+                  style={{
+                    background: selectedPreset === "cuttack" ? "#166534" : "#ffffff",
+                    color: selectedPreset === "cuttack" ? "#ffffff" : "#166534",
+                    border: "1px solid #86efac",
+                    padding: "4px 10px",
+                    borderRadius: "6px",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  📍 SCB &amp; Sishu Bhawan
+                </button>
+              </div>
+            </div>
             <button
               type="button"
               onClick={() => setPreset("bhubaneswar")}
@@ -1313,11 +1433,7 @@ export default function NearbyCare() {
                       )}
 
                       <a
-                        href={
-                          pos
-                            ? `https://www.google.com/maps/dir/?api=1&origin=${pos.lat},${pos.lng}&destination=${r.facility.coordinates.lat},${r.facility.coordinates.lng}&travelmode=driving&dir_action=navigate`
-                            : `https://www.google.com/maps/dir/?api=1&destination=${r.facility.coordinates.lat},${r.facility.coordinates.lng}&travelmode=driving`
-                        }
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${r.facility.coordinates.lat},${r.facility.coordinates.lng}&travelmode=driving`}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{
@@ -1473,11 +1589,7 @@ export default function NearbyCare() {
                       )}
 
                       <a
-                        href={
-                          pos
-                            ? `https://www.google.com/maps/dir/?api=1&origin=${pos.lat},${pos.lng}&destination=${r.facility.coordinates.lat},${r.facility.coordinates.lng}&travelmode=driving&dir_action=navigate`
-                            : `https://www.google.com/maps/dir/?api=1&destination=${r.facility.coordinates.lat},${r.facility.coordinates.lng}&travelmode=driving`
-                        }
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${r.facility.coordinates.lat},${r.facility.coordinates.lng}&travelmode=driving`}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{
@@ -1640,11 +1752,7 @@ export default function NearbyCare() {
 
                     {camp.coordinates && (
                       <a
-                        href={
-                          pos
-                            ? `https://www.google.com/maps/dir/?api=1&origin=${pos.lat},${pos.lng}&destination=${camp.coordinates.lat},${camp.coordinates.lng}&travelmode=driving&dir_action=navigate`
-                            : `https://www.google.com/maps/dir/?api=1&destination=${camp.coordinates.lat},${camp.coordinates.lng}&travelmode=driving`
-                        }
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${camp.coordinates.lat},${camp.coordinates.lng}&travelmode=driving`}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{
