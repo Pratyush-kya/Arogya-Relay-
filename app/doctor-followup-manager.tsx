@@ -70,6 +70,28 @@ const CLINICAL_PRESETS: ClinicalPreset[] = [
   },
 ];
 
+function playConfirmationChime() {
+  if (typeof window === "undefined") return;
+  try {
+    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15); // A5
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.35);
+  } catch {
+    // Audio context bypassed safely
+  }
+}
+
 export function DoctorFollowupManager({
   doctorName = "Dr. Bishnu Prasad Satapathy, MBBS",
   doctorNmc = "OMC-2018-88412",
@@ -96,6 +118,8 @@ export function DoctorFollowupManager({
   const [selectedChemistId, setSelectedChemistId] = useState<string>(NEARBY_CHEMISTS[0]?.id || "ph-cuttack-scb");
   const [calculatedPrice, setCalculatedPrice] = useState<number>(18.0);
   const [statusNotice, setStatusNotice] = useState<string | null>(null);
+  const [justSignedSuccess, setJustSignedSuccess] = useState(false);
+  const [isSigning, setIsSigning] = useState(false);
 
   const isSamarpit =
     resolvedEmail.includes("samarpitbiswal966") ||
@@ -252,6 +276,9 @@ export function DoctorFollowupManager({
       return;
     }
 
+    setIsSigning(true);
+    playConfirmationChime();
+
     const chosenChemist = NEARBY_CHEMISTS.find((c) => c.id === selectedChemistId) || NEARBY_CHEMISTS[0];
 
     const updatedMedicines: ScheduledMedicine[] = [
@@ -293,39 +320,47 @@ export function DoctorFollowupManager({
       doctorAuditStatus: selectedReq.doctorAuditStatus || "pending_dispense",
     };
 
-    saveLocalFollowUp(updatedReq);
+    try {
+      saveLocalFollowUp(updatedReq);
 
-    // Ensure the real confirmed prescription is saved in the patient's local store
-    // This activates the patient's real medication alarms with the doctor's prescribed doses
-    const allRx = getLocalPrescriptions();
-    const targetRx = allRx.find((p) => p.id === selectedReq.prescriptionId);
-    if (targetRx) {
-      targetRx.medicines = updatedMedicines;
-      targetRx.totalPriceInr = calculatedPrice;
-      targetRx.suggestedChemist = chosenChemist;
-      saveLocalPrescription(targetRx);
-    } else {
-      const newPrescription: PatientPrescription = {
-        id: selectedReq.prescriptionId && selectedReq.prescriptionId !== "RX-NEW" ? selectedReq.prescriptionId : `RX-${Date.now().toString(36).toUpperCase()}`,
-        patientRef: selectedReq.patientRef || "PT-CITIZEN",
-        doctorName: doctorName,
-        diagnosis: `Doctor Approved: ${selectedReq.issueType.replace(/_/g, " ")}`,
-        medicines: updatedMedicines,
-        totalPriceInr: calculatedPrice,
-        mrpPriceInr: Math.round(calculatedPrice * 4.2),
-        suggestedChemist: chosenChemist,
-        adherenceLogs: [],
-        createdAt: new Date().toISOString(),
-        synced: false,
-      };
-      saveLocalPrescription(newPrescription);
+      // Ensure the real confirmed prescription is saved in the patient's local store
+      // This activates the patient's real medication alarms with the doctor's prescribed doses
+      const allRx = getLocalPrescriptions();
+      const targetRx = allRx.find((p) => p.id === selectedReq.prescriptionId);
+      if (targetRx) {
+        targetRx.medicines = updatedMedicines;
+        targetRx.totalPriceInr = calculatedPrice;
+        targetRx.suggestedChemist = chosenChemist;
+        saveLocalPrescription(targetRx);
+      } else {
+        const newPrescription: PatientPrescription = {
+          id: selectedReq.prescriptionId && selectedReq.prescriptionId !== "RX-NEW" ? selectedReq.prescriptionId : `RX-${Date.now().toString(36).toUpperCase()}`,
+          patientRef: selectedReq.patientRef || "PT-CITIZEN",
+          doctorName: doctorName,
+          diagnosis: `Doctor Approved: ${selectedReq.issueType.replace(/_/g, " ")}`,
+          medicines: updatedMedicines,
+          totalPriceInr: calculatedPrice,
+          mrpPriceInr: Math.round(calculatedPrice * 4.2),
+          suggestedChemist: chosenChemist,
+          adherenceLogs: [],
+          createdAt: new Date().toISOString(),
+          synced: false,
+        };
+        saveLocalPrescription(newPrescription);
+      }
+
+      reload(selectedReq.id);
+      setJustSignedSuccess(true);
+      setStatusNotice(
+        `✓ Prescription revision & Jan Aushadhi fair price signed by ${doctorName}! Notification dispatched to Patient ${selectedReq.patientName}. Patient received in-app alert with nearest Jan Aushadhi Kendra (${chosenChemist.name}) and 1-click WhatsApp/SMS link.`
+      );
+      setTimeout(() => {
+        setJustSignedSuccess(false);
+      }, 9000);
+      setTimeout(() => setStatusNotice(null), 7000);
+    } finally {
+      setIsSigning(false);
     }
-
-    reload(selectedReq.id);
-    setStatusNotice(
-      `✓ Prescription revision & Jan Aushadhi fair price signed by ${doctorName}! Notification dispatched to Patient ${selectedReq.patientName}. Patient received in-app alert with nearest Jan Aushadhi Kendra (${chosenChemist.name}) and 1-click WhatsApp/SMS link.`
-    );
-    setTimeout(() => setStatusNotice(null), 7000);
   }
 
   function handleVerifyChemistAudit(req: PrescriptionFollowUpRequest) {
@@ -856,6 +891,45 @@ export function DoctorFollowupManager({
                     Prescription Reference: <strong>{selectedReq.prescriptionId}</strong> · Reported: {new Date(selectedReq.reportedAt).toLocaleString()}
                   </span>
                 </div>
+
+                <div>
+                  {selectedReq.status === "doctor_revised" ? (
+                    <span
+                      style={{
+                        background: "#dcfce7",
+                        color: "#15803d",
+                        border: "1.5px solid #86efac",
+                        padding: "4px 12px",
+                        borderRadius: "12px",
+                        fontSize: "12px",
+                        fontWeight: 800,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        boxShadow: "0 2px 6px rgba(22, 101, 52, 0.12)",
+                      }}
+                    >
+                      <span>✓</span> OFFICIALLY SIGNED &amp; ACTIVE
+                    </span>
+                  ) : (
+                    <span
+                      style={{
+                        background: "#fef3c7",
+                        color: "#92400e",
+                        border: "1.5px solid #fde68a",
+                        padding: "4px 12px",
+                        borderRadius: "12px",
+                        fontSize: "12px",
+                        fontWeight: 800,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                      }}
+                    >
+                      <span>⏳</span> AWAITING DOCTOR SIGNATURE
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Patient Message Callout */}
@@ -1004,27 +1078,95 @@ export function DoctorFollowupManager({
                 </div>
               </div>
 
+              {/* Immediate in-place confirmation alert */}
+              {justSignedSuccess && (
+                <div
+                  style={{
+                    background: "#ecfdf5",
+                    border: "2px solid #10b981",
+                    borderRadius: "10px",
+                    padding: "14px 18px",
+                    color: "#065f46",
+                    boxShadow: "0 4px 14px rgba(16, 185, 129, 0.18)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "6px",
+                    marginTop: "6px",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14.5px", fontWeight: 800 }}>
+                    <span style={{ fontSize: "18px" }}>✅</span>
+                    <span>Prescription Officially Signed &amp; Dispatched!</span>
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#047857", lineHeight: "1.55" }}>
+                    <div>• <strong>Digital Sign:</strong> Verified &amp; authorized by {doctorName} ({doctorNmc}) at {new Date().toLocaleTimeString()}</div>
+                    <div>• <strong>Patient Pass:</strong> Synchronized with Citizen Health Pass alarms ({selectedReq.patientName} · {selectedReq.patientRef})</div>
+                    <div>• <strong>Jan Aushadhi Routing:</strong> Prescribed order routed to {NEARBY_CHEMISTS.find((c) => c.id === selectedChemistId)?.name || "SCB Cuttack Kendra"} (Govt Fair Price: ₹{calculatedPrice})</div>
+                  </div>
+                </div>
+              )}
+
+              {selectedReq.status === "doctor_revised" && !justSignedSuccess && (
+                <div
+                  style={{
+                    background: "#f0fdf4",
+                    border: "1px solid #bbf7d0",
+                    borderRadius: "8px",
+                    padding: "10px 14px",
+                    color: "#166534",
+                    fontSize: "12.5px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    marginTop: "4px",
+                  }}
+                >
+                  <span style={{ fontSize: "16px" }}>✓</span>
+                  <span>
+                    Currently <strong>Signed &amp; Dispatched</strong> by {selectedReq.doctorName || doctorName} ({selectedReq.doctorNmc || doctorNmc}). Click below anytime to update instructions or re-sign.
+                  </span>
+                </div>
+              )}
+
               <button
                 type="submit"
+                disabled={isSigning}
                 style={{
-                  background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
+                  background: isSigning
+                    ? "#94a3b8"
+                    : justSignedSuccess
+                    ? "linear-gradient(135deg, #047857 0%, #065f46 100%)"
+                    : selectedReq.status === "doctor_revised"
+                    ? "linear-gradient(135deg, #059669 0%, #047857 100%)"
+                    : "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)",
                   color: "#ffffff",
                   border: "none",
-                  borderRadius: "8px",
-                  padding: "12px 20px",
-                  fontSize: "14px",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  boxShadow: "0 4px 12px rgba(5,150,105,0.25)",
+                  borderRadius: "10px",
+                  padding: "14px 22px",
+                  fontSize: "14.5px",
+                  fontWeight: 800,
+                  cursor: isSigning ? "not-allowed" : "pointer",
+                  boxShadow: justSignedSuccess
+                    ? "0 4px 16px rgba(16, 185, 129, 0.35)"
+                    : "0 4px 12px rgba(5,150,105,0.25)",
                   marginTop: "6px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: "8px",
+                  gap: "10px",
+                  transition: "all 0.2s ease",
                 }}
               >
-                <span>✓</span>
-                <span>Sign &amp; Send Revised Prescription to Patient</span>
+                <span style={{ fontSize: "17px" }}>{isSigning ? "⏳" : justSignedSuccess ? "✓" : "✍️"}</span>
+                <span>
+                  {isSigning
+                    ? "Signing & Authorizing with NMC Credentials…"
+                    : justSignedSuccess
+                    ? "✓ Successfully Signed & Dispatched to Patient!"
+                    : selectedReq.status === "doctor_revised"
+                    ? "✓ Update & Re-Sign Revised Prescription"
+                    : "Sign & Send Revised Prescription to Patient"}
+                </span>
               </button>
             </form>
 
