@@ -764,17 +764,92 @@ Features tailored for rural citizens include:
 \section{System Governance, Audit Trail \& Security Administration}
 The Administrative Governance Console (\texttt{app/admin/page.tsx}, \texttt{app/admin-screen.tsx}) provides state and district health authorities with comprehensive system oversight. Key administrative capabilities include:
 \begin{itemize}[leftmargin=1.5em]
-    \item \textbf{Live User Directory \& Role Assignment:} Real-time listing of all registered users with the ability to dynamically update roles (Citizen, Doctor, Health Worker, Chemist, Admin) with instantaneous Row-Level Security policy re-evaluation.
-    \item \textbf{NMC Physician Credential Verification:} Review and audit of physician medical council registration certificates, degrees, and institutional affiliations prior to granting digital prescription authoring rights.
-    \item \textbf{Escrow Audit Ledger \& Database Health:} Comprehensive audit trails recording every screening event, teleconsultation note, prescription token issuance, and escrow settlement, ensuring complete regulatory compliance and forensic accountability.
-    \item \textbf{Executive Platform KPI Metrics Ribbon:} Real-time counts of verified medical officers, registered citizens, active ASHA facilitators, Jan Aushadhi kendras, and epidemiological surveillance cases across Odisha public health circles.
+    \item \textbf{Live User Directory \& Role Assignment:} Real-time listing of platform operators with instantaneous Row-Level Security policy enforcement. In the production deployment, the directory maintains 3 Verified Medical Officers (Dr.~Samarpit Biswal, MD; Dr.~Bishnu Prasad Satapathy, MBBS; Dr.~Ananya Mishra, MD), 1 Registered Citizen (Ramesh Soren), and Root System Administration.
+    \item \textbf{NMC Physician Credential Verification:} Review and audit of physician medical council registration certificates (e.g., OMC-2020-54190, OMC-2018-88412, OMC-2019-72415) and tertiary institutional affiliations prior to granting digital prescription authoring rights.
+    \item \textbf{Telemedicine Escrow Ledger \& Financial Integrity:} Comprehensive zero-loss audit ledger tracking teleconsultation deposits held in atomic escrow until verified doctor review and single-use settlement (e.g., 3 completed teleconsultations, Rs.~450 clinician fee disbursements, and Rs.~45 platform margin dedicated to edge relay server operations).
+    \item \textbf{Executive Platform KPI Metrics Ribbon:} Real-time verified counts of active medical officers (3/3), registered citizens, dynamically resolved Jan Aushadhi and hospital facilities (18 facilities across Cuttack and Khordha districts), and epidemiological surveillance cases across Odisha public health circles.
 \end{itemize}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.95\textwidth]{image8.png}
-    \caption{System Administration Console, Platform KPI Metrics Ribbon \& Clinical Surveillance Audit}
+    \caption{System Administration Console, Platform KPI Metrics Ribbon \& Telemedicine Escrow Audit Ledger}
     \label{fig:admin_console}
+\end{figure}
+
+\section{Capability-First Nearby Healthcare Engine \& GPS Corridor Navigation}
+Rural and semi-urban emergency transit requires intelligent routing that prioritizes medical capability over simple geographic distance. When critical conditions occur (such as severe pediatric distress or acute hypertensive crisis), routing a patient to the nearest Primary Health Centre that lacks an operating oxygen cylinder or doctor on duty wastes golden-hour survival windows.
+
+The Nearby Healthcare Engine (\texttt{lib/nearby/*}, \texttt{app/nearby-care.tsx}) addresses this by implementing a two-phase algorithmic ranking pipeline:
+\begin{enumerate}[label=\textbf{\arabic*.}]
+    \item \textbf{Capability Filtering Phase:} The engine filters facilities against mandatory clinical equipment requirements (Emergency/ICU capability, oxygen concentrators, pediatric care, 24x7 doctor coverage, Jan Aushadhi generic dispensary).
+    \item \textbf{Haversine Spatial Proximity Phase:} Capable facilities are ranked according to spatial distance computed using the spherical Haversine formula:
+    \begin{equation}
+        d = 2R \arcsin \left( \sqrt{\sin^2\left(\frac{\Delta \phi}{2}\right) + \cos(\phi_1)\cos(\phi_2)\sin^2\left(\frac{\Delta \lambda}{2}\right)} \right)
+        \label{eq:haversine}
+    \end{equation}
+    where $\phi_1, \phi_2$ represent patient and facility latitudes, $\Delta \lambda$ is longitude separation, and $R = 6,371\text{ km}$ is Earth's mean radius.
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{image9.png}
+    \caption{Rural \& District Healthcare Finder with Dynamic GPS Corridor Selection (Cuttack Active)}
+    \label{fig:nearby_finder}
+\end{figure}
+
+The platform supports live GPS auto-detection (\texttt{navigator.geolocation}) alongside rapid district and corridor switching. In the production deployment covering the Cuttack--Bhubaneswar Twin-City Health Corridor:
+\begin{itemize}[leftmargin=1.5em]
+    \item When situated in the Shivaji Nagar / Tulasipur / CDA block, the system auto-identifies the \textbf{Urban Primary Health Centre (UPHC) Tulasipur (Ayushman Arogya Mandir)} as the closest immediate primary facility (0\,m, 2 mins by road), followed by \textbf{Sun Hospital} (695\,m, 24x7 Multi-Speciality \& Emergency), \textbf{Sadguru Medical Centre} (1.0\,km), and \textbf{Ashwini Hospital \& Trauma Centre} (1.4\,km, Level-1 Trauma along Ring Road bypass).
+    \item Figure \ref{fig:facility_directory} illustrates the categorized facility directory displaying 13 hospitals and clinics, 5 Jan Aushadhi Kendras, and active health camps with ABDM Health Facility Registry (HFR) verification tags.
+    \item Figure \ref{fig:gps_navigation} demonstrates the seamless integration with mobile mapping services, providing turn-by-turn road navigation via Kanika Road and Sun Hospital Road directly to the target healthcare facility.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{image10.png}
+    \caption{Nearby Healthcare Facility Directory (13 Hospitals, 5 Jan Aushadhi Kendras \& Ayushman Arogya Mandirs)}
+    \label{fig:facility_directory}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{image11.png}
+    \caption{Live GPS Turn-by-Turn Road Navigation to Nearest Healthcare Facility via Kanika Road}
+    \label{fig:gps_navigation}
+\end{figure}
+
+\section{Arogya Gyan Health Literacy \& District Health Outreach Camps}
+To bridge health literacy disparities in peripheral habitations, Arogya Relay incorporates two community-centric modules:
+
+\subsection{Arogya Gyan: Vernacular Disease Guidance \& Home Care}
+The Arogya Gyan portal (\texttt{app/disease-library.tsx}) provides rural citizens with accessible, peer-reviewed clinical knowledge translated into regional languages (Hindi, Odia, English). As illustrated in Figure \ref{fig:arogya_gyan}, the module covers prevalent regional and seasonal diseases including Malaria, Breakbone Dengue Fever, and Acute Diarrhea \& Dehydration. Each protocol provides:
+\begin{itemize}[leftmargin=1.5em]
+    \item \textbf{Layman Explanations:} Plain-language symptoms without confusing clinical jargon.
+    \item \textbf{Safe Home Measures:} Evidence-backed supportive care (e.g., ORS solution preparation, sponge hydration, paracetamol dosing guidelines, avoidance of NSAIDs in suspected dengue).
+    \item \textbf{Red-Flag Danger Signs:} Clear alerts specifying when immediate hospitalization or 108/112 ambulance transport is mandatory.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{image12.png}
+    \caption{Arogya Gyan: Localized Health Literacy \& Common Disease Home Care Protocols}
+    \label{fig:arogya_gyan}
+\end{figure}
+
+\subsection{District Health Camps \& Community Outreach Directory}
+The District Health Camp Finder (\texttt{app/health-camp-finder.tsx}) connects rural residents with free medical camps organized by state directorates, municipal corporations, and verified non-governmental organizations. Figure \ref{fig:district_camps} illustrates the Khordha and Cuttack district outreach registry:
+\begin{itemize}[leftmargin=1.5em]
+    \item \textbf{Ayush \& Non-Communicable Diseases (NCD) Wellness Camp:} Jatni Railway Community Centre, providing free homeopathic/ayurvedic consultations, cardiac risk screening, and diabetes profiling.
+    \item \textbf{Capital Maternal \& Child Health Outreach Camp:} UPHC Ghatikia, offering antenatal/postnatal care (ANC/PNC), universal childhood immunization, and free iron-folic acid dispensing.
+    \item \textbf{Offline-Ready Cache:} Camp schedules and location coordinates are stored in the client-side offline cache, ensuring that rural citizens can access camp timings even during network blackouts.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{image13.png}
+    \caption{District Health Camps \& Community Outreach Directory with Offline-Ready Cache}
+    \label{fig:district_camps}
 \end{figure}
 
 % -------------------------------------------------------------
