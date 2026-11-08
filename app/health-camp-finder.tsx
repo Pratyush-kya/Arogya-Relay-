@@ -88,7 +88,7 @@ export function HealthCampFinder({ onSelectCamp, className }: HealthCampFinderPr
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.15)", padding: "6px 14px", borderRadius: "20px" }}>
           <span>📶</span>
-          <span style={{ fontSize: "12px", fontWeight: "700" }}>Offline-Ready Cache</span>
+          <span style={{ fontSize: "12px", fontWeight: "700" }}>{t("camps.offlineCache")}</span>
         </div>
       </div>
 
@@ -124,7 +124,7 @@ export function HealthCampFinder({ onSelectCamp, className }: HealthCampFinderPr
           }}
         >
           <span>🏠</span>
-          <span>My Native District ({nativeDistrict})</span>
+          <span>{t("camps.myNativeDistrict")} ({nativeDistrict})</span>
         </button>
 
         <button
@@ -148,7 +148,7 @@ export function HealthCampFinder({ onSelectCamp, className }: HealthCampFinderPr
           }}
         >
           <span>🚗</span>
-          <span>Traveling? Search Another District</span>
+          <span>{t("camps.travelSearch")}</span>
         </button>
       </div>
 
@@ -169,7 +169,7 @@ export function HealthCampFinder({ onSelectCamp, className }: HealthCampFinderPr
         >
           <div>
             <span style={{ fontSize: "11px", fontWeight: 700, color: "#065f46", textTransform: "uppercase" }}>
-              Permanent Home District
+              {t("camps.permHome")}
             </span>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "2px" }}>
               <span style={{ fontSize: "20px" }}>🏡</span>
@@ -177,7 +177,7 @@ export function HealthCampFinder({ onSelectCamp, className }: HealthCampFinderPr
                 {nativeDistrict} District
               </strong>
               <span style={{ fontSize: "11.5px", background: "#dcfce7", color: "#166534", padding: "2px 8px", borderRadius: "10px", fontWeight: 700 }}>
-                Saved in Citizen Profile
+                {t("camps.savedProfile")}
               </span>
             </div>
           </div>
@@ -197,7 +197,7 @@ export function HealthCampFinder({ onSelectCamp, className }: HealthCampFinderPr
                 cursor: "pointer",
               }}
             >
-              ✏️ Change Native District
+              ✏️ {t("camps.changeDistrict")}
             </button>
           ) : (
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -233,7 +233,7 @@ export function HealthCampFinder({ onSelectCamp, className }: HealthCampFinderPr
                   cursor: "pointer",
                 }}
               >
-                Save
+                {t("camps.saveDistrict")}
               </button>
               <button
                 type="button"
@@ -248,7 +248,7 @@ export function HealthCampFinder({ onSelectCamp, className }: HealthCampFinderPr
                   cursor: "pointer",
                 }}
               >
-                Cancel
+                {t("common.back")}
               </button>
             </div>
           )}
@@ -299,7 +299,7 @@ export function HealthCampFinder({ onSelectCamp, className }: HealthCampFinderPr
 
           {/* Quick Popular Districts Suggestion Chips */}
           <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-            <span style={{ fontSize: "12px", color: "var(--muted)", fontWeight: 600 }}>Popular Districts:</span>
+            <span style={{ fontSize: "12px", color: "var(--muted)", fontWeight: 600 }}>{t("camps.popular")}</span>
             {availableDistricts.slice(0, 6).map((d) => (
               <button
                 key={d.district}
@@ -393,7 +393,7 @@ export function HealthCampFinder({ onSelectCamp, className }: HealthCampFinderPr
                       borderRadius: "6px",
                     }}
                   >
-                    ● {camp.status === "active" ? "Active Now" : "Upcoming Camp"}
+                    ● {camp.status === "active" ? t("camps.activeNow") : t("camps.upcomingCamp")}
                   </span>
                   <span style={{ fontSize: "11px", color: "var(--muted)", fontWeight: 600 }}>
                     {camp.district}, {camp.state}
@@ -403,7 +403,7 @@ export function HealthCampFinder({ onSelectCamp, className }: HealthCampFinderPr
                   {camp.title}
                 </h3>
                 <span style={{ fontSize: "12px", color: "var(--muted)", display: "block", marginTop: "3px" }}>
-                  Organized by: {camp.organizer}
+                  {t("camps.organizedBy")} {camp.organizer}
                 </span>
               </div>
 
@@ -438,7 +438,7 @@ export function HealthCampFinder({ onSelectCamp, className }: HealthCampFinderPr
               {/* Services Offered Badges */}
               <div>
                 <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
-                  Free Medical Services:
+                  {t("camps.freeMedicalServices")}
                 </span>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                   {camp.services.map((svc, i) => (
@@ -502,7 +502,7 @@ export function HealthCampFinder({ onSelectCamp, className }: HealthCampFinderPr
                       cursor: "pointer",
                     }}
                   >
-                    View Camp →
+                    {t("camps.viewCamp")}
                   </button>
                 )}
               </div>

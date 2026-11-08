@@ -222,16 +222,16 @@ export function ScreeningScreen({
               onClick={onBackToDashboard}
             >
               <span>←</span>
-              <span>Back to Dashboard</span>
+              <span>{t("screening.backToDashboard")}</span>
             </button>
           </IconTooltip>
 
           <div className="fullscreen-title-area">
             <h1>
               <span>📋</span>
-              <span>Clinical Field Screening & Triage Workstation</span>
+              <span>{t("screening.workstationTitle")}</span>
             </h1>
-            <p>Offline-first clinical intake · Real-time vitals alert & structured triage</p>
+            <p>{t("screening.subtitle")}</p>
           </div>
         </div>
 
@@ -277,7 +277,7 @@ export function ScreeningScreen({
             }}
           >
             <span>📚</span>
-            <span>Common Diseases & Remedies</span>
+            <span>{t("screening.commonDiseases")}</span>
           </button>
 
           <LanguageSwitcher />
@@ -288,7 +288,7 @@ export function ScreeningScreen({
             onClick={onBackToDashboard}
             style={{ padding: "8px 16px", fontSize: "12px" }}
           >
-            Cancel
+            {t("common.back")}
           </button>
           <button
             type="button"
@@ -297,7 +297,7 @@ export function ScreeningScreen({
             disabled={saving}
             style={{ padding: "8px 18px", fontSize: "12px", fontWeight: 700 }}
           >
-            {saving ? "Saving..." : "💾 Save & Enqueue Case"}
+            {saving ? "..." : `💾 ${t("screening.saveEnqueue")}`}
           </button>
         </div>
       </header>
@@ -380,7 +380,7 @@ export function ScreeningScreen({
                 <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: "12px" }}>
                   <div>
                     <label style={{ display: "block", fontSize: "11.5px", fontWeight: 700, marginBottom: "4px" }}>
-                      Patient Full Name *
+                      {t("screening.patientName")} *
                     </label>
                     <input
                       type="text"
@@ -394,7 +394,7 @@ export function ScreeningScreen({
 
                   <div>
                     <label style={{ display: "block", fontSize: "11.5px", fontWeight: 700, marginBottom: "4px" }}>
-                      Age (Years) *
+                      {t("screening.age")} *
                     </label>
                     <input
                       type="number"
@@ -409,16 +409,16 @@ export function ScreeningScreen({
 
                   <div>
                     <label style={{ display: "block", fontSize: "11.5px", fontWeight: 700, marginBottom: "4px" }}>
-                      Sex *
+                      {t("screening.biologicalSex")} *
                     </label>
                     <select
                       value={patientSex}
                       onChange={(e) => setPatientSex(e.target.value as any)}
                       style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "12.5px", background: "#fff" }}
                     >
-                      <option value="female">Female</option>
-                      <option value="male">Male</option>
-                      <option value="other">Other</option>
+                      <option value="female">{t("screening.genderFemale")}</option>
+                      <option value="male">{t("screening.genderMale")}</option>
+                      <option value="other">{t("screening.genderOther")}</option>
                     </select>
                   </div>
                 </div>
@@ -426,7 +426,7 @@ export function ScreeningScreen({
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                   <div>
                     <label style={{ display: "block", fontSize: "11.5px", fontWeight: 700, marginBottom: "4px" }}>
-                      Village / Habitation Block *
+                      {t("screening.village")} *
                     </label>
                     <input
                       type="text"

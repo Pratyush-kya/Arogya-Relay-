@@ -567,10 +567,10 @@ export default function NearbyCare() {
             📍 RURAL &amp; DISTRICT HEALTHCARE FINDER
           </span>
           <h1 style={{ fontSize: "24px", fontWeight: 800, margin: "4px 0" }}>
-            Hospitals, Medicine Stores &amp; Health Camps Nearby
+            {t("nearby.title")}
           </h1>
           <p style={{ color: "var(--muted, #64748b)", margin: 0, fontSize: "14px" }}>
-            Identify nearest 24/7 hospitals, subsidized Jan Aushadhi medicine shops, and ongoing free health checkup camps in your area.
+            {t("nearby.desc")}
           </p>
         </div>
       </div>
@@ -596,16 +596,16 @@ export default function NearbyCare() {
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <span style={{ fontSize: "22px" }}>🚨</span>
               <strong style={{ fontSize: "16px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                Golden-Hour Life-Saving Emergency Dispatch
+                {t("nearby.goldenHour")}
               </strong>
               <span style={{ background: "rgba(255,255,255,0.2)", padding: "2px 8px", borderRadius: "12px", fontSize: "11px", fontWeight: 700 }}>
-                Bypasses City Congestion
+                {t("nearby.bypassesCongestion")}
               </span>
             </div>
             <p style={{ margin: "6px 0 0", fontSize: "13.5px", opacity: 0.95, lineHeight: 1.4, maxWidth: "750px" }}>
               {(triageData?.primaryStabilization || emergencyFacility || nearestHospital?.facility) ? (
                 <>
-                  Recommended Closest Trauma Facility:{" "}
+                  {t("nearby.recommendedTrauma")}{" "}
                   <strong>{(triageData?.primaryStabilization || emergencyFacility || nearestHospital?.facility)?.name}</strong>
                   {" — "}
                   <span>
@@ -635,7 +635,7 @@ export default function NearbyCare() {
                 gap: "6px",
               }}
             >
-              <span>📞</span> Call 108
+              <span>📞</span> {t("nearby.call108")}
             </a>
             {(triageData?.primaryStabilization || emergencyFacility || nearestHospital?.facility) && (
               <a
@@ -656,7 +656,7 @@ export default function NearbyCare() {
                   boxShadow: "0 2px 8px rgba(22, 163, 74, 0.3)",
                 }}
               >
-                <span>🚗</span> Start Navigation
+                <span>🚗</span> {t("nearby.startNav")}
               </a>
             )}
           </div>
@@ -707,13 +707,13 @@ export default function NearbyCare() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px", marginBottom: "14px" }}>
           <div>
             <span style={{ fontSize: "11px", fontWeight: 800, color: "#047857", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-              STEP 1 · CHOOSE YOUR LOCATION
+              {t("nearby.step1")}
             </span>
             <h2 style={{ fontSize: "18px", fontWeight: 800, margin: "2px 0 4px", color: "var(--foreground, #0f172a)" }}>
-              📍 Where are you located right now?
+              📍 {t("nearby.whereLocated")}
             </h2>
             <p style={{ margin: 0, fontSize: "13px", color: "var(--muted, #64748b)" }}>
-              Select your district or click &quot;Auto-Detect GPS&quot; to see hospitals, pharmacies, and camps near you.
+              {t("nearby.selectDistrict")}
             </p>
           </div>
 
@@ -739,7 +739,7 @@ export default function NearbyCare() {
             }}
           >
             <span>{locState === "acquiring" ? "⏳" : "🎯"}</span>
-            {locState === "acquiring" ? "Detecting Location..." : "Auto-Detect My GPS"}
+            {locState === "acquiring" ? t("nearby.detecting") : t("nearby.autoGps")}
           </button>
         </div>
 
@@ -921,7 +921,7 @@ export default function NearbyCare() {
         >
           <div>
             <label style={{ fontSize: "11.5px", fontWeight: 700, color: "var(--muted)", display: "block", marginBottom: "4px" }}>
-              SELECT FROM ALL REGISTERED DISTRICTS:
+              {t("nearby.selectFromDistricts")}
             </label>
             <select
               value={activeDistrict}
@@ -948,7 +948,7 @@ export default function NearbyCare() {
 
           <div>
             <label style={{ fontSize: "11.5px", fontWeight: 700, color: "var(--muted)", display: "block", marginBottom: "4px" }}>
-              OR TYPE CUSTOM DISTRICT NAME:
+              {t("nearby.typeCustomDistrict")}
             </label>
             <div style={{ display: "flex", gap: "6px" }}>
               <input
@@ -989,7 +989,7 @@ export default function NearbyCare() {
                   cursor: "pointer",
                 }}
               >
-                Search
+                {t("nearby.searchBtn")}
               </button>
             </div>
           </div>
@@ -998,10 +998,10 @@ export default function NearbyCare() {
         {/* Telemetry Status Note */}
         <div style={{ marginTop: "10px", fontSize: "12px", color: "var(--muted)", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "6px" }}>
           <span>
-            📍 <strong>Active Focus:</strong> {activeDistrict} District · <span>{locNote}</span>
+            📍 <strong>{t("nearby.activeFocus")}</strong> {activeDistrict} District · <span>{locNote}</span>
           </span>
           <span style={{ fontWeight: 600, color: "#047857" }}>
-            ✓ Verified Registry &amp; OpenStreetMap Synced
+            ✓ {t("nearby.verifiedSynced")}
           </span>
         </div>
       </section>
@@ -1044,7 +1044,7 @@ export default function NearbyCare() {
                 {hospitalsAndClinics.length}
               </strong>
               <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--foreground)" }}>
-                Hospitals &amp; Clinics
+                {t("nearby.hospitalsTrauma")}
               </span>
             </div>
             <p style={{ margin: "2px 0 0", fontSize: "12px", color: "var(--muted)" }}>
@@ -1083,7 +1083,7 @@ export default function NearbyCare() {
                 {medicineStores.length}
               </strong>
               <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--foreground)" }}>
-                Jan Aushadhi &amp; Pharmacies
+                {t("nearby.janAushadhiStores")}
               </span>
             </div>
             <p style={{ margin: "2px 0 0", fontSize: "12px", color: "var(--muted)" }}>
@@ -1122,7 +1122,7 @@ export default function NearbyCare() {
                 {districtCamps.length}
               </strong>
               <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--foreground)" }}>
-                Active / Upcoming Camps
+                {t("nearby.healthCampsActive")}
               </span>
             </div>
             <p style={{ margin: "2px 0 0", fontSize: "12px", color: "var(--muted)" }}>
@@ -1159,7 +1159,7 @@ export default function NearbyCare() {
               cursor: "pointer",
             }}
           >
-            Show All ({results.length + districtCamps.length})
+            {t("nearby.tabAll")} ({results.length + districtCamps.length})
           </button>
           <button
             type="button"
@@ -1175,7 +1175,7 @@ export default function NearbyCare() {
               cursor: "pointer",
             }}
           >
-            🏥 Hospitals &amp; Clinics ({hospitalsAndClinics.length})
+            🏥 {t("nearby.tabHospitals")} ({hospitalsAndClinics.length})
           </button>
           <button
             type="button"
@@ -1191,7 +1191,7 @@ export default function NearbyCare() {
               cursor: "pointer",
             }}
           >
-            💊 Medicine Stores ({medicineStores.length})
+            💊 {t("nearby.tabPharmacies")} ({medicineStores.length})
           </button>
           <button
             type="button"
@@ -1207,7 +1207,7 @@ export default function NearbyCare() {
               cursor: "pointer",
             }}
           >
-            🏕️ Free Health Camps ({districtCamps.length})
+            🏕️ {t("nearby.tabCamps")} ({districtCamps.length})
           </button>
         </div>
 
@@ -1426,10 +1426,10 @@ export default function NearbyCare() {
                             gap: "4px",
                           }}
                         >
-                          <span>📞</span> Call
+                          <span>📞</span> {t("nearby.call")}
                         </a>
                       ) : (
-                        <span style={{ fontSize: "11px", color: "var(--muted)" }}>In-person walk-in</span>
+                        <span style={{ fontSize: "11px", color: "var(--muted)" }}>{t("nearby.walkIn")}</span>
                       )}
 
                       <a
@@ -1450,7 +1450,7 @@ export default function NearbyCare() {
                           gap: "4px",
                         }}
                       >
-                        <span>🧭</span> Directions ↗
+                        <span>🧭</span> {t("nearby.directions")}
                       </a>
                     </div>
                   </article>
@@ -1582,10 +1582,10 @@ export default function NearbyCare() {
                             gap: "4px",
                           }}
                         >
-                          <span>📞</span> Check Medicine Stock
+                          <span>📞</span> {t("nearby.checkStock")}
                         </a>
                       ) : (
-                        <span style={{ fontSize: "11px", color: "var(--muted)" }}>Open daily for walk-in</span>
+                        <span style={{ fontSize: "11px", color: "var(--muted)" }}>{t("nearby.openDaily")}</span>
                       )}
 
                       <a
@@ -1606,7 +1606,7 @@ export default function NearbyCare() {
                           gap: "4px",
                         }}
                       >
-                        <span>🧭</span> Navigate ↗
+                        <span>🧭</span> {t("nearby.navigate")}
                       </a>
                     </div>
                   </article>
@@ -1616,7 +1616,7 @@ export default function NearbyCare() {
           ) : (
             <div style={{ textAlign: "center", padding: "24px", background: "var(--surface, #ffffff)", borderRadius: "12px", border: "1px dashed var(--border)" }}>
               <p style={{ margin: 0, color: "var(--muted)", fontSize: "13px" }}>
-                No PMBJP generic medicine store registered in this immediate coordinate perimeter.
+                {t("nearby.noPharmacies")}
               </p>
             </div>
           )}
@@ -1762,7 +1762,7 @@ export default function NearbyCare() {
                           textDecoration: "none",
                         }}
                       >
-                        Venue Map ↗
+                        {t("nearby.venueMap")}
                       </a>
                     )}
                   </div>
@@ -1773,7 +1773,7 @@ export default function NearbyCare() {
             <div style={{ textAlign: "center", padding: "28px", background: "var(--surface, #ffffff)", borderRadius: "12px", border: "1px dashed var(--border)" }}>
               <span style={{ fontSize: "32px" }}>🏕️</span>
               <p style={{ margin: "6px 0 0", color: "var(--muted)", fontSize: "13px" }}>
-                No active mobile health camps currently registered in <strong>{activeDistrict} District</strong>. Check back soon or select another district above.
+                {t("nearby.noCamps")}
               </p>
             </div>
           )}

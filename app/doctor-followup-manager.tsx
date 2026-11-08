@@ -100,7 +100,7 @@ export function DoctorFollowupManager({
   const resolvedEmail =
     doctorEmail ||
     (doctorName.toLowerCase().includes("samarpit") ? "samarpitbiswal966@gmail.com" : "bishnuprasadsatapathy7846@gmail.com");
-  const { effectiveLang } = useLanguage();
+  const { t, effectiveLang } = useLanguage();
   const [followups, setFollowups] = useState<PrescriptionFollowUpRequest[]>([]);
   const [selectedFollowupId, setSelectedFollowupId] = useState<string | null>(null);
 
@@ -395,7 +395,7 @@ export function DoctorFollowupManager({
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
             <span style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px", opacity: 0.9 }}>
-              CLINICAL FOLLOW-UP &amp; DOSAGE COMMAND
+              {t("doctor.followupCommand")}
             </span>
             <span
               style={{
@@ -410,7 +410,7 @@ export function DoctorFollowupManager({
             </span>
           </div>
           <h2 style={{ fontSize: "22px", fontWeight: 800, margin: "2px 0 6px", color: "#ffffff" }}>
-            Patient Prescription Follow-ups ({followups.length})
+            {t("doctor.incomingFollowups")} ({followups.length})
           </h2>
           <p style={{ margin: 0, fontSize: "13.5px", opacity: 0.9, maxWidth: "620px", lineHeight: 1.4 }}>
             Review patient symptoms, prescribe revised dosage modifications, recommend closest verified Jan Aushadhi
@@ -419,7 +419,7 @@ export function DoctorFollowupManager({
         </div>
 
         <div style={{ background: "rgba(255,255,255,0.15)", padding: "12px 18px", borderRadius: "12px", textAlign: "right" }}>
-          <span style={{ fontSize: "11px", textTransform: "uppercase", opacity: 0.8, display: "block" }}>Verified Prescriber (No AI)</span>
+          <span style={{ fontSize: "11px", textTransform: "uppercase", opacity: 0.8, display: "block" }}>{t("doctor.verifiedPrescriber")}</span>
           <strong style={{ fontSize: "14px" }}>{doctorName}</strong>
           <span style={{ fontSize: "11.5px", display: "block", opacity: 0.9 }}>Reg: {doctorNmc}</span>
           <span style={{ fontSize: "11.5px", display: "block", color: "#bae6fd", fontWeight: 700, marginTop: "2px" }}>📧 {resolvedEmail}</span>
@@ -936,7 +936,7 @@ export function DoctorFollowupManager({
               <div style={{ background: "#fffbeb", border: "1px solid #fde68a", padding: "12px 14px", borderRadius: "10px", marginTop: "10px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontSize: "11px", fontWeight: 700, color: "#92400e", textTransform: "uppercase" }}>
-                    Patient Stated Issue / Symptoms:
+                    {t("doctor.statedSymptoms")}
                   </span>
                   <span style={{ fontSize: "11px", color: "#b45309", fontWeight: 600 }}>
                     Assigned: {selectedReq.doctorName}
@@ -951,7 +951,7 @@ export function DoctorFollowupManager({
             {/* Quick 1-Click Clinical Presets */}
             <div>
               <span style={{ display: "block", fontSize: "11.5px", fontWeight: 800, color: "#047857", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>
-                ⚡ Quick 1-Click Clinical Presets:
+                ⚡ {t("doctor.quickPresets")}
               </span>
               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                 {CLINICAL_PRESETS.map((preset) => (
@@ -985,13 +985,13 @@ export function DoctorFollowupManager({
             {/* Dose Adjustment & Chemist Suggestion Form */}
             <form onSubmit={handleSaveRevision} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
               <h4 style={{ margin: 0, fontSize: "14.5px", color: "#065f46", fontWeight: 700 }}>
-                1. Modify Dosages &amp; Prescription Instructions
+                {t("doctor.modifyDosages")}
               </h4>
 
               <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: "10px" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "11.5px", fontWeight: 700, color: "#475569", marginBottom: "4px" }}>
-                    Medicine Name
+                    {t("doctor.medName")}
                   </label>
                   <input
                     type="text"
@@ -1003,7 +1003,7 @@ export function DoctorFollowupManager({
                 </div>
                 <div>
                   <label style={{ display: "block", fontSize: "11.5px", fontWeight: 700, color: "#475569", marginBottom: "4px" }}>
-                    Dose Strength
+                    {t("doctor.doseStrength")}
                   </label>
                   <input
                     type="text"
@@ -1017,7 +1017,7 @@ export function DoctorFollowupManager({
 
               <div>
                 <label style={{ display: "block", fontSize: "11.5px", fontWeight: 700, color: "#475569", marginBottom: "4px" }}>
-                  Updated Schedule / Frequency
+                  {t("doctor.updatedSchedule")}
                 </label>
                 <input
                   type="text"
@@ -1030,7 +1030,7 @@ export function DoctorFollowupManager({
 
               <div>
                 <label style={{ display: "block", fontSize: "11.5px", fontWeight: 700, color: "#475569", marginBottom: "4px" }}>
-                  Doctor Reply &amp; Clinical Guidance to Patient
+                  {t("doctor.guidanceLabel")}
                 </label>
                 <textarea
                   rows={3}
@@ -1043,13 +1043,13 @@ export function DoctorFollowupManager({
               </div>
 
               <h4 style={{ margin: "6px 0 0", fontSize: "14.5px", color: "#065f46", fontWeight: 700 }}>
-                2. Suggest Nearest Verified Chemist &amp; Set Fair Price
+                {t("doctor.suggestChemist")}
               </h4>
 
               <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "10px" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "11.5px", fontWeight: 700, color: "#475569", marginBottom: "4px" }}>
-                    Recommend Nearest Chemist
+                    {t("doctor.recommendChemistLabel")}
                   </label>
                   <select
                     value={selectedChemistId}
@@ -1066,7 +1066,7 @@ export function DoctorFollowupManager({
 
                 <div>
                   <label style={{ display: "block", fontSize: "11.5px", fontWeight: 700, color: "#475569", marginBottom: "4px" }}>
-                    Government Price (₹)
+                    {t("doctor.govPriceLabel")}
                   </label>
                   <input
                     type="number"
@@ -1160,12 +1160,12 @@ export function DoctorFollowupManager({
                 <span style={{ fontSize: "17px" }}>{isSigning ? "⏳" : justSignedSuccess ? "✓" : "✍️"}</span>
                 <span>
                   {isSigning
-                    ? "Signing & Authorizing with NMC Credentials…"
+                    ? t("doctor.signing")
                     : justSignedSuccess
-                    ? "✓ Successfully Signed & Dispatched to Patient!"
+                    ? t("doctor.signedSuccess")
                     : selectedReq.status === "doctor_revised"
-                    ? "✓ Update & Re-Sign Revised Prescription"
-                    : "Sign & Send Revised Prescription to Patient"}
+                    ? `✓ ${t("doctor.signBtn")}`
+                    : t("doctor.signBtn")}
                 </span>
               </button>
             </form>

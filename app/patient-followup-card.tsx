@@ -26,7 +26,7 @@ export function PatientFollowupCard({
   patientName = "Citizen Patient",
   onNavigateToChemistMap,
 }: PatientFollowupCardProps) {
-  const { effectiveLang } = useLanguage();
+  const { t, effectiveLang } = useLanguage();
   const [prescriptions, setPrescriptions] = useState<PatientPrescription[]>([]);
   const [followups, setFollowups] = useState<PrescriptionFollowUpRequest[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
@@ -139,16 +139,11 @@ export function PatientFollowupCard({
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <span style={{ fontSize: "22px" }}>🩺</span>
               <strong style={{ fontSize: "16px", color: "#065f46" }}>
-                {effectiveLang === "hi"
-                  ? "डॉक्टर फॉलो-अप और खुराक बदलाव"
-                  : effectiveLang === "or"
-                  ? "ଡାକ୍ତର ଫଲୋ-ଅପ୍ ଓ ଔଷଧ ମାତ୍ରା ପରିବର୍ତ୍ତନ"
-                  : "Doctor Prescription Follow-up & Dosage Adjustment"}
+                {t("followup.title")}
               </strong>
             </div>
             <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#475569", lineHeight: 1.45 }}>
-              Facing side-effects, feeling unwell, or need a dose adjustment? Send a message directly to your doctor
-              referencing your prescription.
+              {t("followup.desc")}
             </p>
           </div>
 
@@ -171,7 +166,7 @@ export function PatientFollowupCard({
             }}
           >
             <span>✉️</span>
-            <span>Message Doctor / Adjust Dose</span>
+            <span>{t("followup.messageDoctor")}</span>
           </button>
         </div>
 
@@ -212,10 +207,10 @@ export function PatientFollowupCard({
                   }}
                 >
                   {activeFollowup.status === "doctor_revised"
-                    ? "✓ Doctor Revised Prescription Ready"
+                    ? `✓ ${t("followup.revisedReady")}`
                     : activeFollowup.status === "dispensed"
-                    ? "✓ Medicines Dispensed"
-                    : "⏳ Awaiting Doctor Review"}
+                    ? `✓ ${t("followup.medicinesDispensed")}`
+                    : `⏳ ${t("followup.pendingDoctor")}`}
                 </span>
                 <span style={{ fontSize: "12px", color: "#64748b" }}>
                   Ref: <strong>{activeFollowup.prescriptionId}</strong> · To: <strong>{activeFollowup.doctorName}</strong>
@@ -231,7 +226,7 @@ export function PatientFollowupCard({
                     borderRadius: "4px",
                   }}
                 >
-                  🛡️ Human Doctor (No AI)
+                  🛡️ {t("followup.humanDoctorBadge")}
                 </span>
               </div>
               <span style={{ fontSize: "11px", color: "#94a3b8" }}>
@@ -279,26 +274,26 @@ export function PatientFollowupCard({
                 }}
               >
                 <span>✉️</span>
-                <span>Open Gmail</span>
+                <span>{t("followup.openGmail")}</span>
               </a>
             </div>
 
             {/* Patient Query & Doctor Advice */}
             <div style={{ background: "#f8fafc", padding: "10px 14px", borderRadius: "8px", fontSize: "12.5px" }}>
               <div style={{ color: "#334155", marginBottom: activeFollowup.doctorReply ? "8px" : "0" }}>
-                <strong style={{ color: "#0f172a" }}>Your Message:</strong> &ldquo;{activeFollowup.patientMessage}&rdquo;
+                <strong style={{ color: "#0f172a" }}>{t("followup.yourMessage")}</strong> &ldquo;{activeFollowup.patientMessage}&rdquo;
               </div>
 
               {activeFollowup.status === "pending_doctor_review" && !activeFollowup.doctorReply && (
                 <div style={{ borderTop: "1px dashed #cbd5e1", paddingTop: "8px", color: "#b45309", fontSize: "12px" }}>
-                  ⏳ <strong>Awaiting Human Doctor Review:</strong> AI is strictly disabled for medical safety. {activeFollowup.doctorName} will answer you directly via Gmail or the Doctor Portal.
+                  ⏳ <strong>{t("followup.pendingDoctor")}:</strong> {activeFollowup.doctorName}
                 </div>
               )}
 
               {activeFollowup.doctorReply && (
                 <div style={{ borderTop: "1px dashed #cbd5e1", paddingTop: "8px", color: "#065f46" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
-                    <strong>👨‍⚕️ {activeFollowup.doctorName} Advice:</strong>
+                    <strong>👨‍⚕️ {activeFollowup.doctorName} {t("followup.doctorAdvice")}</strong>
                   </div>
                   <p style={{ margin: 0, fontStyle: "italic", lineHeight: 1.4 }}>
                     &ldquo;{activeFollowup.doctorReply}&rdquo;
@@ -322,7 +317,7 @@ export function PatientFollowupCard({
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
                   <strong style={{ fontSize: "13.5px", color: "#166534" }}>
-                    📋 Revised Medications (New Doses)
+                    📋 {t("followup.revisedMeds")}
                   </strong>
                   {/* Quality & Price Safety Badge */}
                   <div
@@ -340,7 +335,7 @@ export function PatientFollowupCard({
                     }}
                   >
                     <span>🛡️</span>
-                    <span>100% Non-Expired Stock · Verified Fair Price</span>
+                    <span>{t("followup.verifiedFairPrice")}</span>
                   </div>
                 </div>
 
@@ -393,7 +388,7 @@ export function PatientFollowupCard({
                         Government Jan Aushadhi Fair Price (MRP was ₹{activeFollowup.mrpPriceInr?.toFixed(2)})
                       </span>
                       <strong style={{ fontSize: "16px", color: "#047857" }}>
-                        Exact Total to Pay: ₹{activeFollowup.totalPriceInr.toFixed(2)}
+                        {t("followup.exactTotal")} ₹{activeFollowup.totalPriceInr.toFixed(2)}
                       </strong>
                     </div>
                     {activeFollowup.savingsPercent !== undefined && (
@@ -431,7 +426,7 @@ export function PatientFollowupCard({
                   >
                     <div>
                       <span style={{ fontSize: "11px", fontWeight: 700, color: "#1d4ed8", textTransform: "uppercase" }}>
-                        🏪 Recommended Nearest Medicine Shop:
+                        🏪 {t("followup.recommendedChemist")}
                       </span>
                       <strong style={{ fontSize: "13px", color: "#1e3a8a", display: "block" }}>
                         {activeFollowup.suggestedChemist.name}
@@ -455,7 +450,7 @@ export function PatientFollowupCard({
                             textDecoration: "none",
                           }}
                         >
-                          📞 Call Shop
+                          📞 {t("followup.callShop")}
                         </a>
                       )}
                       {onNavigateToChemistMap && (
@@ -473,7 +468,7 @@ export function PatientFollowupCard({
                             cursor: "pointer",
                           }}
                         >
-                          View Map ⌖
+                          {t("followup.viewMap")} ⌖
                         </button>
                       )}
                     </div>
@@ -493,7 +488,7 @@ export function PatientFollowupCard({
               color: "#64748b",
             }}
           >
-            No active follow-up message pending. Click <strong>&ldquo;Message Doctor / Adjust Dose&rdquo;</strong> anytime
+            {t("followup.noActive")} Click <strong>&ldquo;{t("followup.messageDoctor")}&rdquo;</strong> anytime
             you need dosage clarification or want to report symptoms.
           </div>
         )}
@@ -655,7 +650,7 @@ export function PatientFollowupCard({
                     cursor: "pointer",
                   }}
                 >
-                  Cancel
+                  {t("common.back")}
                 </button>
                 <button
                   type="submit"
@@ -672,7 +667,7 @@ export function PatientFollowupCard({
                     boxShadow: "0 2px 8px rgba(5, 150, 105, 0.3)",
                   }}
                 >
-                  {submitting ? "Delivering..." : "Send to Doctor →"}
+                  {submitting ? "..." : t("followup.sendToDoctor")}
                 </button>
               </div>
             </form>

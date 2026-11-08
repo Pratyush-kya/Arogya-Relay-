@@ -346,7 +346,7 @@ export function ChemistDispensary({
               }}
             >
               <span>🚪</span>
-              <span>Log Out</span>
+              <span>{t("auth.signOutBtn")}</span>
             </button>
           )}
         </div>
@@ -373,7 +373,7 @@ export function ChemistDispensary({
             }}
           >
             <span>📦</span>
-            <span>Incoming Prescription Orders</span>
+            <span>{t("chemist.incomingRx")}</span>
             <span
               style={{
                 background: activeTab === "queue" ? "rgba(255,255,255,0.25)" : "#e2e8f0",
@@ -393,6 +393,20 @@ export function ChemistDispensary({
             style={{
               padding: "10px 18px",
               borderRadius: "8px",
+              border: "none",
+              background: activeTab === "scanner" ? "#047857" : "transparent",
+              color: activeTab === "scanner" ? "#ffffff" : "#475569",
+              fontSize: "13.5px",
+              fontWeight: 700,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <span>📷</span>
+            <span>{t("chemist.scanQr")}</span>
+          </button>
               border: "none",
               background: activeTab === "scanner" ? "#0284c7" : "transparent",
               color: activeTab === "scanner" ? "#ffffff" : "#475569",

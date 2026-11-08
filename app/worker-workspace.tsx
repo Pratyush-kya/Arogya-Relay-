@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useLanguage } from "@/lib/i18n/provider";
+import { LanguageSwitcher } from "./language-switcher";
 import type { ScreeningRecord } from "@/lib/types";
 import DiseaseLibrary from "./disease-library";
 import { HealthCampFinder } from "./health-camp-finder";
@@ -121,31 +122,10 @@ export function WorkerWorkspace({
             }}
           >
             <span>＋</span>
-            <span>New Patient Screening</span>
+            <span>{t("worker.startScreening")}</span>
           </button>
 
-          <select
-            value={effectiveLang}
-            onChange={(e) => setLang(e.target.value as any)}
-            style={{
-              padding: "6px 12px",
-              borderRadius: "8px",
-              border: "1px solid var(--border, #cbd5e1)",
-              background: "var(--surface, #ffffff)",
-              fontSize: "12.5px",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
-            <option value="en">English</option>
-            <option value="hi">हिन्दी (Hindi)</option>
-            <option value="or">ଓଡ଼ିଆ (Odia)</option>
-            <option value="bn">বাংলা (Bengali)</option>
-            <option value="te">తెలుగు (Telugu)</option>
-            <option value="as">অসমীয়া (Assamese)</option>
-            <option value="mr">मराठी (Marathi)</option>
-            <option value="sat">ᱥᱟᱱᱛᱟᱲᱤ (Santali)</option>
-          </select>
+          <LanguageSwitcher />
 
           <button
             type="button"
@@ -165,7 +145,7 @@ export function WorkerWorkspace({
             }}
           >
             <span>🚪</span>
-            <span>Log Out</span>
+            <span>{t("auth.signOutBtn")}</span>
           </button>
         </div>
       </header>
@@ -183,10 +163,10 @@ export function WorkerWorkspace({
       >
         {[
           { id: "intake", label: `Field Screenings (${screenings.length})`, icon: "📋" },
-          { id: "camps", label: "Village Health Camps", icon: "📍" },
-          { id: "nearby", label: "Nearby Facilities & Kendras", icon: "⌖" },
-          { id: "care", label: "Field Care Guidance", icon: "✚" },
-          { id: "library", label: "Arogya Gyan Reference", icon: "📖" },
+          { id: "camps", label: t("patient.tabCamps"), icon: "📍" },
+          { id: "nearby", label: t("nearby.title"), icon: "⌖" },
+          { id: "care", label: t("nav.care"), icon: "✚" },
+          { id: "library", label: t("nav.library"), icon: "📖" },
         ].map((tab) => (
           <button
             key={tab.id}

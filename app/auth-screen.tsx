@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createClient, type Profile, ADMIN_EMAIL, isAdminEmail, uploadToStorage, DEFAULT_DEMO_USERS } from "@/lib/supabase/client";
+import { useLanguage } from "@/lib/i18n/provider";
 import { LanguageSwitcher } from "./language-switcher";
 import { IconTooltip } from "./icon-tooltip";
 
@@ -15,6 +16,7 @@ export interface AuthScreenProps {
 }
 
 export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSuccess }: AuthScreenProps) {
+  const { t } = useLanguage();
   const supabase = useMemo(() => createClient(), []);
   const [tab, setTab] = useState<"signin" | "signup" | "admin_console" | "profile">(
     initialMode === "admin"
@@ -460,16 +462,16 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
               onClick={onBackToDashboard}
             >
               <span>←</span>
-              <span>Back to Dashboard</span>
+              <span>{t("common.back")}</span>
             </button>
           </IconTooltip>
 
           <div className="fullscreen-title-area">
             <h1>
               <span>🛡️</span>
-              <span>Arogya Relay — Medical Identity & Authentication Portal</span>
+              <span>Arogya Relay — Medical Identity &amp; Authentication Portal</span>
             </h1>
-            <p>256-bit encrypted · Role-based clinical access & National Medical Commission (NMC) verification</p>
+            <p>256-bit encrypted · Role-based clinical access &amp; National Medical Commission (NMC) verification</p>
           </div>
         </div>
 
@@ -483,7 +485,7 @@ export function AuthScreen({ initialMode = "signin", onBackToDashboard, onSucces
               disabled={busy}
               style={{ padding: "6px 12px", fontSize: "11px", color: "#dc2626", borderColor: "#fecaca" }}
             >
-              Sign Out
+              {t("auth.signOutBtn")}
             </button>
           )}
         </div>
