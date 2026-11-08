@@ -925,55 +925,43 @@ The economic analytics indicate that substituting branded formulations with Jan 
 % -------------------------------------------------------------
 \chapter{Conclusion and Future Roadmap}
 
-\section{Summary of Contributions}
-This project has presented the design, implementation, and empirical evaluation of \textbf{Arogya Relay}: a zero-loss rural telehealth and distributed disease surveillance platform engineered specifically for low-connectivity rural health outposts. By reconceptualizing telemedicine from an ``always-connected cloud service'' into an intelligent, edge-distributed system, Arogya Relay resolves longstanding operational barriers that have plagued rural digital health initiatives across India and other LMIC environments.
+\section{Summary of Research Contributions}
+This work has presented the design, implementation, and empirical evaluation of \textbf{Arogya Relay}: an edge-distributed, zero-loss telemedicine and disease surveillance platform engineered for rural health outposts. By transforming telehealth from a cloud-dependent model into an edge-native distributed architecture, Arogya Relay resolves core operational bottlenecks across low-resource settings.
 
-The core technical and architectural contributions established in this work comprise:
-\begin{enumerate}[label=\textbf{\arabic*.},itemsep=0pt,topsep=0pt,parsep=0pt]
-    \item \textbf{High-Reliability Offline-First Architecture:} Engineered a persistent local transactional vault utilizing IndexedDB, LocalStorage, and Service Worker caching that guarantees 100\% operational continuity during complete cellular blackouts, achieving seamless background re-synchronization within 3.4 seconds upon 2G signal restoration.
-    \item \textbf{Deterministic Clinical Safety Gateways:} Implemented a rule-based triage hierarchy aligned with WHO IMCI and ICMR guidelines that classifies clinical urgency prior to any model augmentation, completely eliminating dangerous AI hallucinations and enforcing mandatory India 112 emergency routing.
-    \item \textbf{Single-Use Cryptographic Escrow Tokens:} Pioneered a tamper-proof digital prescription token mechanism integrated with government Jan Aushadhi dispensaries that burns tokens upon fulfillment, eliminates duplicate dispensing, and slashes patient medicine costs by 74.2\%.
-    \item \textbf{Inclusive Multilingual \& Voice Accessibility:} Delivered an offline-first i18n layer supporting eight Indian languages coupled with native Web Speech voice vitals dictation, enabling low-literacy community health workers and citizens to interact naturally with digital health records.
-    \item \textbf{Enterprise Security Hardening:} Eliminated recursive PostgreSQL policy loops via optimized \texttt{SECURITY DEFINER} routines, enforcing strict Row-Level Security and total role isolation across Citizen, Field Worker, Clinician, Chemist, and Administrator accounts.
+The key technical and architectural contributions established in this project include:
+\begin{enumerate}[label=\textbf{\arabic*.},itemsep=2pt,topsep=2pt,parsep=0pt]
+    \item \textbf{Offline-First Edge Sync Engine:} Engineered a persistent transactional vault via IndexedDB, LocalStorage, and PWA Service Workers, ensuring 100\% uptime during blackouts and background sync within 3.4\,s on 2G edge networks.
+    \item \textbf{Deterministic Clinical Safety Gateways:} Built an immutable triage hierarchy aligned with WHO IMCI and ICMR protocols that classifies urgency before AI processing, eliminating hallucinations and mandating India 112 routing.
+    \item \textbf{Single-Use Generic Escrow Ledger:} Pioneered a tamper-proof prescription token mechanism linked to PMBJP Jan Aushadhi dispensaries, preventing duplicate dispensing and slashing patient medicine costs by 74.2\%.
+    \item \textbf{Multilingual \& Voice Accessibility:} Delivered an offline-first i18n layer across 8 Indian languages with native Web Speech voice dictation, enabling low-literacy frontline workers to record vitals accurately.
+    \item \textbf{Enterprise Security Hardening:} Implemented non-recursive PostgreSQL \texttt{SECURITY DEFINER} routines, enforcing strict Row-Level Security and total role isolation across Citizen, ASHA, Clinician, and Admin personas.
 \end{enumerate}
 
-\enlargethispage{3.5\baselineskip}
 \section{Key Challenges and Lessons Learned}
-The engineering lifecycle of Arogya Relay provided critical insights into the design of mission-critical healthcare software for low-resource environments:
-\begin{itemize}[leftmargin=1.5em,itemsep=0.5pt,topsep=0.5pt,parsep=0pt]
-    \item \textbf{Asynchronous Distributed Concurrency:} Managing data consistency across disconnected edge clients requires an event-sourced, append-only synchronization philosophy. Treating clinical observations as immutable chronological events eliminates data loss and ensures longitudinal medical auditability.
-    \item \textbf{The Supremacy of Deterministic Rule Sets in Medicine:} While machine learning models offer immense promise for natural language processing and assistive translation, primary triage must remain anchored in deterministic, peer-reviewed clinical rules. Grounding automated guidance in authoritative literature citations is vital for building clinical trust.
-    \item \textbf{User-Centric Persona Engineering:} Frontline healthcare workers cannot be burdened with dense tabular interfaces or complex multi-step navigation. Streamlined, high-contrast touch chips, voice dictation, and automated summary cards dramatically reduce operational cognitive load.
+The development lifecycle of Arogya Relay provided critical engineering insights into mission-critical rural healthcare systems:
+\begin{itemize}[leftmargin=1.5em,itemsep=2pt,topsep=2pt,parsep=0pt]
+    \item \textbf{Asynchronous Distributed Concurrency:} Managing edge state across disconnected clients requires an event-sourced, append-only architecture. Treating clinical screenings as immutable historical events guarantees auditability without data collision.
+    \item \textbf{Deterministic Safety Over Heuristic Models:} While machine learning models offer valuable translation support, primary triage must remain anchored in deterministic, peer-reviewed clinical rules with verified literature citations.
+    \item \textbf{Field-Centric Persona Engineering:} Frontline healthcare staff cannot navigate complex multi-step forms. High-contrast touch chips, automated summaries, and voice dictation dramatically minimize cognitive burden in field environments.
 \end{itemize}
 
-\enlargethispage{3.5\baselineskip}
 \section{Alignment with National Digital Health Infrastructure}
 Arogya Relay is architected to align seamlessly with the foundational pillars of the Government of India's Ayushman Bharat Digital Mission (ABDM) \cite{abdm2022}:
-\begin{itemize}[leftmargin=1.5em,itemsep=1pt,topsep=1pt,parsep=0pt]
-    \item \textbf{Ayushman Bharat Health Account (ABHA):} The platform incorporates ABHA identifier fields within the patient schema, laying the groundwork for federated health records linked to national unique health identities.
-    \item \textbf{Healthcare Professionals Registry (HPR):} Physician onboarding and prescription authoring enforce NMC registration verification, matching HPR requirements for authenticated teleconsultation providers.
-    \item \textbf{Health Facility Registry (HFR):} The Nearby Care referral navigation module references verified HFR facility identifiers, enabling real-time facility capability mapping across public health centres.
+\begin{itemize}[leftmargin=1.5em,itemsep=3pt,topsep=3pt,parsep=0pt]
+    \item \textbf{Ayushman Bharat Health Account (ABHA):} The platform incorporates 14-digit ABHA identifier fields within patient schemas, enabling longitudinal health record federation linked to national unique health identities.
+    \item \textbf{Healthcare Professionals Registry (HPR):} Physician onboarding and prescription authoring enforce NMC registration verification (e.g., OMC state councils), fulfilling statutory criteria for authenticated teleconsultation providers.
+    \item \textbf{Health Facility Registry (HFR):} The Nearby Care referral module references verified ABDM HFR facility identifiers, enabling real-time capability mapping across public health centres and trauma units.
 \end{itemize}
 
-\enlargethispage{3\baselineskip}
 \section{Future Enhancements \& Production Roadmap}
-To transition Arogya Relay from an advanced functional prototype into a state-wide or nationwide public health deployment, several high-impact engineering enhancements are planned:
-\begin{enumerate}[label=\textbf{\arabic*.},itemsep=1pt,topsep=1pt,parsep=0pt]
-    \item \textbf{Direct Bluetooth Low Energy (BLE) Medical Sensor Integration:} Extending the field screening workstation to communicate directly via Web Bluetooth with low-cost digital pulse oximeters, blood pressure cuffs, and glucometers, eliminating manual vital entry entirely.
-    \item \textbf{Offline On-Device Small Language Models (SLMs):} Integrating compressed, quantized clinical language models (e.g., Med-Gemma 2B) running locally inside the browser via WebAssembly (Wasm) and WebGPU to deliver localized semantic search and clinical summarization completely offline.
-    \item \textbf{National FHIR Gateway Integration:} Implementing automated HL7 FHIR bundle generation to enable bidirectional data exchange with national public health registries and hospital management information systems (e-Hospital, HMIS).
-    \item \textbf{Community Peer-to-Peer Mesh Relay:} Implementing Wi-Fi Direct and BLE mesh routing protocols that enable adjacent ASHA field workers to relay screening payloads from phone to phone until a device reaches a cellular connectivity zone.
+To transition Arogya Relay from an advanced functional prototype into a state-wide public health deployment, four engineering enhancements are prioritized:
+\begin{enumerate}[label=\textbf{\arabic*.},itemsep=3pt,topsep=3pt,parsep=0pt]
+    \item \textbf{Direct Bluetooth Low Energy (BLE) Medical Sensor Integration:} Extending the screening workstation to pair via Web Bluetooth with low-cost digital pulse oximeters, blood pressure cuffs, and glucometers for automated vital entry.
+    \item \textbf{Offline On-Device Small Language Models (SLMs):} Integrating compressed, quantized clinical language models (e.g., Med-Gemma 2B) running in-browser via WebAssembly and WebGPU for localized offline summarization.
+    \item \textbf{National FHIR Gateway Integration:} Implementing automated HL7 FHIR Release 4 bundle generation to enable bidirectional data exchange with national public health platforms (e-Hospital, HMIS).
+    \item \textbf{Community Peer-to-Peer Mesh Relay:} Implementing Wi-Fi Direct and BLE mesh routing protocols enabling adjacent ASHA field workers to relay screening packets phone-to-phone until cellular connectivity is reached.
 \end{enumerate}
 
-% -------------------------------------------------------------
-% REFERENCES
-
-% -------------------------------------------------------------
-% APPENDICES
-
-% -------------------------------------------------------------
-% REFERENCES
-% -------------------------------------------------------------
 \begin{thebibliography}{99}
 \addcontentsline{toc}{chapter}{References}
 
