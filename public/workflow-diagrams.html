@@ -384,8 +384,8 @@
         <span class="nav-badge">Sequence</span>
       </a>
       <a href="#wf-nearby-referral" class="nav-item">
-        <span>4. Capability-First Care</span>
-        <span class="nav-badge">Referral</span>
+        <span>4. Interactive Map & Care</span>
+        <span class="nav-badge">MapLibre</span>
       </a>
       <a href="#wf-doctor-plan" class="nav-item">
         <span>5. Doctor Care Plan</span>
@@ -394,6 +394,18 @@
       <a href="#wf-rbac-security" class="nav-item">
         <span>6. RBAC & Security</span>
         <span class="nav-badge">Governance</span>
+      </a>
+      <a href="#wf-arogya-gyan" class="nav-item">
+        <span>7. Arogya Gyan Library</span>
+        <span class="nav-badge">Voice AI</span>
+      </a>
+      <a href="#wf-district-camps" class="nav-item">
+        <span>8. District Health Camps</span>
+        <span class="nav-badge">Outreach</span>
+      </a>
+      <a href="#wf-admin-governance" class="nav-item">
+        <span>9. Admin Console & KPIs</span>
+        <span class="nav-badge">Mission Admin</span>
       </a>
     </nav>
 
@@ -591,42 +603,58 @@ sequenceDiagram
         </div>
       </section>
 
-      <!-- Diagram 4: Capability-First Nearby Referral -->
+      <!-- Diagram 4: Interactive Health Map & Capability-First Nearby Referral -->
       <section id="wf-nearby-referral" class="diagram-card">
         <div class="card-header">
           <div class="card-title-group">
-            <h2>4. Capability-First Nearby Care & Referral System</h2>
-            <p>Prevents sending critical patients to closer but incapable facilities by prioritizing medical readiness over geographic distance.</p>
+            <h2>4. Interactive Geospatial Health Map & Capability-First Care System</h2>
+            <p>Prevents sending critical patients to closer but incapable facilities via MapLibre GL JS vector tiles, capability tiering, and offline GeoJSON caching.</p>
           </div>
         </div>
         <div class="card-body">
           <div class="mermaid">
 flowchart TD
-    Req(["Referral Triggered (from Triage / Screening)"]) --> Consent["Request Explicit Geolocation Consent\n(HTTPS navigator.geolocation)"]
+    subgraph GeoIntake["1. Geolocation & Spatial Privacy Intake"]
+        Req(["Referral Triggered (from Triage / Screening / Public)"]) --> Consent["Request Geolocation Consent\n(HTTPS navigator.geolocation)"]
+        Consent --> GeoCheck{"Consent Granted & Lat/Lng Received?"}
+        GeoCheck -- "Yes (Precise / Coarse GPS)" --> StatusTag["Tag Position Accuracy:\n• Verified GPS (Lat/Lng)\n• Reverse Geocode: Block / District"]
+        GeoCheck -- "No / Denied / Offline" --> ManualLoc["Manual Village & Block Selector\n(e.g., Khurda, Jatni, Banapur, Ganjam)"]
+    end
 
-    Consent --> GeoCheck{"Consent Granted & Lat/Lng Received?"}
-    GeoCheck -- "No / Denied / Unavailable" --> ManualLoc["Manual Location Selection\n(Select Village / Sub-District Block)"]
-    GeoCheck -- "Yes" --> StatusTag["Tag Position Accuracy:\n• Accurate | Approximate | Stale"]
+    subgraph CapabilityTiers["2. Capability-First Matching Engine"]
+        StatusTag --> CapEngine["Capability-First Filter Engine\n(lib/nearby/ranking.ts)"]
+        ManualLoc --> CapEngine
+        CapEngine --> MatchUrgency{"Match Required Care Level &\nClinical Equipment Readiness"}
+        
+        MatchUrgency -- "Emergency / Red-Flag" --> TierEmergency["Tier 1: Emergency & Critical Care\n• 24x7 Emergency OT, ICU, Ventilators, Blood Bank\n• Apex: AIIMS Bhubaneswar, Capital Hospital DHH\n• Direct 1-Click Dial: 112 / 108 Dispatch"]
+        MatchUrgency -- "Maternal & Child" --> TierMaternal["Tier 2: First Referral Unit (FRU)\n• 24x7 C-Section OT, NICU, Obstetrician\n• Community Health Centres (CHC Jatni, CHC Tangi)"]
+        MatchUrgency -- "Routine / Primary OPD" --> TierPrimary["Tier 3: Primary Healthcare Facilities\n• Primary Health Centres (PHC) & Ayushman Arogya Mandirs (AAM)\n• Maternal & Child Health (MCH), Immunization"]
+        MatchUrgency -- "Generic Medicines" --> TierPharma["Tier 4: Jan Aushadhi Generic Kendras\n• PMBJP Kendra #7402, North Ridge Dispensary\n• 80%+ Savings Generic Formularies"]
+    end
 
-    ManualLoc --> CapFilter["Capability-First Filter Engine"]
-    StatusTag --> CapFilter
+    subgraph GeospatialMap["3. Interactive Map & Routing Visualization"]
+        TierEmergency --> MapLibre["MapLibre GL JS Vector Tile Canvas\n• OpenStreetMap Raster/Vector Basemap\n• Color-Coded Facility Pins & Tiers\n• Offline GeoJSON Cache (Odisha Health Network)"]
+        TierMaternal --> MapLibre
+        TierPrimary --> MapLibre
+        TierPharma --> MapLibre
 
-    CapFilter --> MatchCap{"Match Required Care Level\n(Emergency, C-Section, NICU, Oxygen, MMU)"}
-    
-    MatchCap -- "Matches Level" --> GeoSort["Calculate Haversine Distance &\nSort by Distance + Verification Freshness"]
-    MatchCap -- "Does Not Match Level" --> ExcludeFacility["Exclude Facility\n(Prevents sending critical patients to incapable centres)"]
+        MapLibre --> DistanceCalc["Client-Side Haversine Distance Calc\n• Sort by Distance + Verified Operational Status\n• Estimated Travel Time (Road / MMU Route)"]
+        DistanceCalc --> InteractivePopup["Interactive Facility Popups\n• Facility Name, Phone & Timings\n• Verified Capabilities (Oxygen, C-Section, Beds)\n• 1-Click Dial Hotline & Google/OSM Directions"]
+    end
 
-    GeoSort --> OutputView["Present Referral Directory:\n1. Direct Call 112 (if Emergency)\n2. Accessible List View (Primary)\n3. MapLibre GL Tile Map (Attributed OSM)"]
-
-    OutputView --> ShareAction["Generate Referral Brief:\n• Patient Pseudonym / Ref ID\n• Vitals & Triage Tier\n• Target Facility & Handover Summary"]
+    subgraph Handover["4. Referral Brief & Telehealth Relay"]
+        InteractivePopup --> RefBrief["Generate Offline Referral Brief:\n• Patient Pseudonym / Health Token\n• Triage Score & Vital Trends Log\n• Target Facility Receiving Handover Brief"]
+        RefBrief --> DispatchSync["Relay Handover Slip via SMS / WhatsApp / Print"]
+    end
           </div>
         </div>
         <div class="card-footer">
-          <strong>Privacy By Design:</strong> Exact GPS coordinates are never transmitted to third-party tile servers; OpenStreetMap requests load only anonymous raster tiles.
+          <strong>Privacy By Design:</strong> Exact GPS coordinates are never transmitted to third-party tile servers; OpenStreetMap requests load only anonymous raster tiles. Client-side Haversine math executes 100% offline.
           <div class="tag-list">
             <span class="tag primary">Capability-First</span>
             <span class="tag accent">MapLibre GL</span>
-            <span class="tag">Explicit Consent</span>
+            <span class="tag">Offline GeoJSON</span>
+            <span class="tag">Emergency 112</span>
             <span class="tag">Referral Briefs</span>
           </div>
         </div>
@@ -710,6 +738,153 @@ flowchart TD
             <span class="tag accent">HMAC Signed Orders</span>
             <span class="tag">Audit Logs</span>
             <span class="tag">Least-Privilege</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Diagram 7: Arogya Gyan Multilingual Library -->
+      <section id="wf-arogya-gyan" class="diagram-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>7. Arogya Gyan — Multilingual Clinical Library & Voice Guidance Engine</h2>
+            <p>Offline-first vernacular clinical encyclopedia, WHO/MoHFW remedies, pictorial cards, and hallucination-free read-aloud.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="mermaid">
+flowchart TD
+    subgraph KnowledgeCore["1. Verified Clinical Knowledge Core (lib/clinical/)"]
+        Standards["National & Global Clinical Guidelines\n• WHO Integrated Management Protocols\n• ICMR Standard Treatment Workflows\n• National List of Essential Medicines (NLEM 2022)"] --> DB["Curated Disease & Remedy Catalog\n(lib/clinical/disease-library.ts)"]
+        DB --> Categories["5 Clinical Disease Categories:\n1. Dermatological (Ringworm, Scabies, Eczema)\n2. Fever & Vector-Borne (Malaria, Dengue, Typhoid)\n3. Gastrointestinal (Acute Diarrhea, Gastritis, ORS)\n4. Respiratory (Asthma, Bronchitis, Pneumonia, Duolin)\n5. Eye & ENT (Conjunctivitis, Otitis Media)"]
+    end
+
+    subgraph SafetyRules["2. Strict Tier-1 Clinical Safety Guardrail"]
+        Categories --> RuleEngine["Tier-1 Immutability Enforcement\n(lib/i18n/provider.tsx)"]
+        RuleEngine --> Tier1["Tier 1: Clinical Safety Concepts (English-Only Baseline)\n• Medicine Names & Dose Strengths\n• Red-Flag Danger Signs & Critical Thresholds\n🔒 Strictly Blocked from Machine Translation to Prevent Fatal Hallucinations"]
+        RuleEngine --> Tier2["Tier 2/3: Vernacular Patient Guidance\n• Approved Human Translations: Odia, Hindi, Santali (Ol Chiki)\n• Bengali, Telugu, Gujarati, Marathi\n• Script Hygiene: Dotted circle nukta prevention in Odia"]
+    end
+
+    subgraph VernacularDelivery["3. Multilingual Voice & Low-Literacy Delivery"]
+        Tier1 --> Presentation["Arogya Gyan Interactive Cards\n• Summary, Clinical Symptoms & Visual Markers\n• Safe Verified Home Remedies (Non-Pharmacological)\n• OTC Guidelines & Jan Aushadhi Alternatives\n• Red-Flag Hospital Referral Criteria"]
+        Tier2 --> Presentation
+        
+        Presentation --> AudioEngine["Multilingual Read-Aloud Engine\n(app/read-aloud.tsx & lib/i18n/voice.ts)\n• Web Speech Synthesis API (Local Browser TTS)\n• ElevenLabs High-Fidelity Voice Fallback\n• Hands-Free Audio Playback for Non-Literate Citizens"]
+        Presentation --> VisualCards["Low-Literacy Pictorial Cards\n• Visual Erythema Ratio & Color Indicators\n• Ring Margin & Texture Guides for ASHAs"]
+    end
+
+    subgraph ClinicalAction["4. Citizen & ASHA Community Actions"]
+        AudioEngine --> ActionChoice{"Citizen Severity Check"}
+        ActionChoice -- "Mild / Routine" --> SelfCare["Empowered Self-Care & Jan Aushadhi Fair-Price Purchase"]
+        ActionChoice -- "Danger Signs Present" --> Escalate["Trigger Instant Doctor Follow-up / Dial 112"]
+    end
+          </div>
+        </div>
+        <div class="card-footer">
+          <strong>Non-Hallucinatory Guarantee:</strong> Clinical dosing rules and danger thresholds are immutably tied to verified medical guidelines. Generative AI is prohibited from modifying therapeutic guidance.
+          <div class="tag-list">
+            <span class="tag primary">Arogya Gyan</span>
+            <span class="tag accent">Voice Read-Aloud</span>
+            <span class="tag">Tier-1 Safety</span>
+            <span class="tag">8 Indic Languages</span>
+            <span class="tag">NLEM Formulary</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Diagram 8: District Health Camps & MMU Outreach Lifecycle -->
+      <section id="wf-district-camps" class="diagram-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>8. District Health Camps & Mobile Medical Unit (MMU) Outreach Lifecycle</h2>
+            <p>District-level outreach scheduling, dynamic status filtering, time-bound consent capture, and on-site pharmacy relay.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="mermaid">
+flowchart TD
+    subgraph Intake["1. District Camp Planning & Roster Intake"]
+        NHM["National Health Mission (NHM) &\nDistrict Health Societies (DHS Odisha)"] --> CampRegistry["District Health Camp Registry\n(lib/nearby/district-camps.ts)"]
+        CampRegistry --> CampProfile["Camp Manifest:\n• District & Block (Ganjam, Khurda, Cuttack, Mayurbhanj, Koraput)\n• Venue (Gram Panchayat Hall, Ashram School, Coastal Sub-Centre)\n• Services: OPD, Blood Sugar, Malaria/Dengue RDT, Free Medicines"]
+        CampProfile --> MMU["Mobile Medical Unit (MMU) Deployment\n• Equipped Outreach Van with Basic Diagnostics\n• Assigned Medical Officer & ASHA Field Facilitators"]
+    end
+
+    subgraph LifecycleEngine["2. Temporal Lifecycle & Automatic Pruning Engine"]
+        CampRegistry --> DateCheck{"Temporal Filter Check\n(Date vs Current Local Time)"}
+        DateCheck -- "Start Date > Today" --> StatusUpcoming["Status: UPCOMING\n• Advance Public Notices & WhatsApp Citizen Alerts\n• ASHA House-to-House Camp Mobilization"]
+        DateCheck -- "Start Date <= Today <= End Date" --> StatusActive["Status: ACTIVE / ONGOING TODAY\n• Highlighted with Live Pulse Indicator\n• Venue Directions & Operating Timings Displayed"]
+        DateCheck -- "End Date < Today or Cancelled" --> StatusPrune["Status: COMPLETED / EXPIRED\n🧹 Automatically Pruned from Active Directory\n(Prevents rural patients travelling to obsolete venues)"]
+    end
+
+    subgraph FieldExecution["3. Offline Field Execution & Digital Consent"]
+        StatusActive --> FieldIntake["Citizen Arrival at Outreach Camp"]
+        FieldIntake --> ConsentGate["Time-Bound Digital Consent Capture\n• Cryptographic SHA-256 Consent Hash\n• Offline Local Storage Vault\n• Privacy-Preserving 30-Day Retention Window"]
+        ConsentGate --> DiagnosticStation["Point-of-Care Diagnostics\n• Digital BP, Pulse Oximeter SpO2, Glucometer\n• Rapid Malaria & Dengue Antigen Test Strip (RDT)\n• Structured Symptom Logging by ASHA Worker"]
+    end
+
+    subgraph FulfillmentRelay["4. Free Pharmacy Dispensing & Relay Sync"]
+        DiagnosticStation --> FreeJanAushadhi["On-Site PMBJP Jan Aushadhi Counter\n• Free Essential Generic Medications Provided\n• Batch Dispensing Log Recorded Locally"]
+        DiagnosticStation --> SyncEngine["Relay Synchronization Pipeline\n• Encrypted Camp Patient Records Stored in Local DB\n• MMU Returns to Cellular Connectivity\n• Automatic Upstream Sync to District Health Database"]
+    end
+          </div>
+        </div>
+        <div class="card-footer">
+          <strong>Community Outreach Resilience:</strong> Automatically hides obsolete camps to protect rural citizens from unnecessary travel while maintaining an encrypted offline-first diagnostic buffer.
+          <div class="tag-list">
+            <span class="tag primary">District Camps</span>
+            <span class="tag accent">MMU Van Fleet</span>
+            <span class="tag">Auto-Prune</span>
+            <span class="tag">Offline Consent</span>
+            <span class="tag">Free PMBJP Medicines</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Diagram 9: Admin Console, KPI Governance & Escrow Audit -->
+      <section id="wf-admin-governance" class="diagram-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>9. System Administration Console, Platform KPI Governance & Escrow Audit</h2>
+            <p>Central and State Health Mission governance, doctor credential verification, epidemiological surveillance, and escrow reconciliation.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="mermaid">
+flowchart TD
+    subgraph AuthGate["1. Restricted Administrator Authority Gate (app/admin/)"]
+        AdminReq(["Admin Access Request\n(/admin or Role = admin)"]) --> GateCheck{"Master Credential Verification"}
+        GateCheck -- "Cloud Mode" --> SupabaseAuth["Supabase PostgreSQL Cloud Auth\n(pratyushkiranrath4@gmail.com + Passphrase)"]
+        GateCheck -- "Blackout / Offline Mode" --> ResilientGate["Resilient Local Admin Gate\n(Master Security PIN: 112233 / admin)\n• Zero Downtime Emergency Governance"]
+        SupabaseAuth --> AdminSession["Unlock System Administrator Console\n(sessionStorage: arogya.admin.auth_session = active)"]
+        ResilientGate --> AdminSession
+    end
+
+    subgraph KPIRibbon["2. Executive Platform KPI Metrics Ribbon"]
+        AdminSession --> MetricsEngine["Realtime Platform Metrics Aggregator\n(fetchAllScreenings + Profiles Table)"]
+        MetricsEngine --> RibbonDisplay["Executive Governance KPI Ribbon:\n• Verified Medical Officers (NMC OMC Physicians)\n• Registered Citizens & ABHA Health Passes\n• Active ASHA Community Health Workers\n• PMBJP Jan Aushadhi Dispensary Kendras\n• Active Epidemiological Surveillance Cases\n• Pending Clinical Triage Requests"]
+    end
+
+    subgraph NMCAudit["3. Physician Credential Verification & Audit"]
+        AdminSession --> DocQueue["Doctor Verification Desk"]
+        DocQueue --> NMCInspect["Inspect Medical Council Credentials:\n• Medical Registration No (e.g. OMC-2020-54190, OMC-2018-88412)\n• State Medical Council Registration & MBBS/MD Certificates\n• Institutional Affiliation (AIIMS Bhubaneswar, Capital Hospital)"]
+        NMCInspect --> StatusToggle{"Admin Decision"}
+        StatusToggle -- "Approved" --> GrantPrescribe["Grant Verified Prescriber Status\n• Enable SHA-256 Cryptographic Signing\n• Unlock Clinical Cases Triage Queue"]
+        StatusToggle -- "Flagged / Rejected" --> Revoke["Revoke or Restrict Access\n• Read-only observation mode"]
+    end
+
+    subgraph SurveillanceEscrow["4. Clinical Surveillance & Escrow Financial Ledger"]
+        AdminSession --> SurveillanceAudit["Epidemiological Surveillance Radar\n• District-Wise Disease Cluster Analytics (Odisha Health Circles)\n• Red-Flag Outbreak Alerts (Respiratory, Diarrheal, Dengue/Malaria)\n• Longitudinal Trend Monitoring"]
+        AdminSession --> EscrowAudit["Single-Use Escrow Financial Ledger\n(lib/payments/escrow-engine.ts)\n• Cryptographic Token Verification & Burn Audit\n• PMBJP Chemist Generic Medicine Subsidy Settlement\n• Zero-Loss Platform Accounting Verification"]
+    end
+          </div>
+        </div>
+        <div class="card-footer">
+          <strong>Audit-Grade Governance:</strong> Full regulatory compliance under NMC Telemedicine Guidelines and Ayushman Bharat standards with immutable SHA-256 audit trails.
+          <div class="tag-list">
+            <span class="tag primary">Mission Admin</span>
+            <span class="tag accent">KPI Ribbon</span>
+            <span class="tag">NMC Verification</span>
+            <span class="tag">Outbreak Radar</span>
+            <span class="tag">Escrow Ledger</span>
           </div>
         </div>
       </section>

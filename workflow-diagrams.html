@@ -1,492 +1,504 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arogya Relay — System & Workflow Architecture</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --surface: #111827;
+      --surface-elevated: #1f2937;
+      --border: #374151;
+      --border-subtle: #242f42;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --primary: #38bdf8;
+      --primary-dim: rgba(56, 189, 248, 0.15);
+      --accent: #10b981;
+      --accent-dim: rgba(16, 185, 129, 0.15);
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --radius: 12px;
+      --font: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    [data-theme="light"] {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-elevated: #f1f5f9;
+      --border: #e2e8f0;
+      --border-subtle: #cbd5e1;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --text-dim: #94a3b8;
+      --primary: #0284c7;
+      --primary-dim: rgba(2, 132, 199, 0.12);
+      --accent: #059669;
+      --accent-dim: rgba(5, 150, 105, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font);
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      transition: background-color 0.2s, color 0.2s;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(12px);
+    }
+
+    .header-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, #0284c7, #10b981);
+      color: #fff;
+      padding: 0.35rem 0.65rem;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .brand-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .brand-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--surface-elevated);
+      color: var(--text);
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      border-color: var(--primary);
+      background: var(--primary-dim);
+      color: var(--primary);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #0b0f19;
+      border-color: var(--primary);
+    }
+
+    [data-theme="light"] .btn-primary {
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+      color: #0b0f19;
+    }
+
+    .layout {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 2rem;
+      flex: 1;
+      width: 100%;
+    }
+
+    @media (max-width: 1024px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      position: sticky;
+      top: 5.5rem;
+      align-self: start;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+
+    .sidebar-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      padding: 0.5rem 0.75rem;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 0.75rem;
+      border-radius: 8px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    .nav-item:hover, .nav-item.active {
+      background: var(--primary-dim);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .nav-badge {
+      margin-left: auto;
+      font-size: 0.7rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 999px;
+      background: var(--surface-elevated);
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+    }
+
+    /* Content Area */
+    .content {
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+    }
+
+    .diagram-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25);
+      scroll-margin-top: 6rem;
+    }
+
+    .card-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      background: var(--surface);
+    }
+
+    .card-title-group h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-title-group p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .card-body {
+      padding: 1.5rem;
+      background: var(--surface-elevated);
+      overflow-x: auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 380px;
+    }
+
+    .mermaid {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    .card-footer {
+      padding: 1rem 1.5rem;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .tag {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .tag.primary {
+      background: var(--primary-dim);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .tag.accent {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Print & Fullscreen */
+    @media print {
+      header, .sidebar, .card-actions {
+        display: none !important;
+      }
+      .layout {
+        display: block;
+        padding: 0;
+      }
+      .diagram-card {
+        box-shadow: none;
+        page-break-after: always;
+        border: 1px solid #ccc;
+      }
+      body {
+        background: white;
+        color: black;
+      }
+    }
+  </style>
+</head>
+<body data-theme="dark">
+
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-badge">ARCH</span>
+        <div>
+          <h1 class="brand-title">Arogya Relay — Workflow Architecture</h1>
+          <p class="brand-subtitle">Offline-First Disease Surveillance & Decision-Support System</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn" id="themeToggle" onclick="toggleTheme()">
+          🌓 Toggle Theme
+        </button>
+        <button class="btn" onclick="window.print()">
+          🖨️ Print / PDF
+        </button>
+        <a class="btn btn-primary" href="/" target="_blank">
+          🌐 Open Application
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="sidebar-title">Diagram Navigation</div>
+      <a href="#wf-end-to-end" class="nav-item active">
+        <span>1. End-to-End Workflow</span>
+        <span class="nav-badge">Flowchart</span>
+      </a>
+      <a href="#wf-care-guidance" class="nav-item">
+        <span>2. Clinical Care Guidance</span>
+        <span class="nav-badge">Safety</span>
+      </a>
+      <a href="#wf-offline-sync" class="nav-item">
+        <span>3. Offline-First Sync</span>
+        <span class="nav-badge">Sequence</span>
+      </a>
+      <a href="#wf-nearby-referral" class="nav-item">
+        <span>4. Interactive Map & Care</span>
+        <span class="nav-badge">MapLibre</span>
+      </a>
+      <a href="#wf-doctor-plan" class="nav-item">
+        <span>5. Doctor Care Plan</span>
+        <span class="nav-badge">Prescribing</span>
+      </a>
+      <a href="#wf-rbac-security" class="nav-item">
+        <span>6. RBAC & Security</span>
+        <span class="nav-badge">Governance</span>
+      </a>
+      <a href="#wf-arogya-gyan" class="nav-item">
+        <span>7. Arogya Gyan Library</span>
+        <span class="nav-badge">Voice AI</span>
+      </a>
+      <a href="#wf-district-camps" class="nav-item">
+        <span>8. District Health Camps</span>
+        <span class="nav-badge">Outreach</span>
+      </a>
+      <a href="#wf-admin-governance" class="nav-item">
+        <span>9. Admin Console & KPIs</span>
+        <span class="nav-badge">Mission Admin</span>
+      </a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="content">
+
+      <!-- Diagram 1: End-to-End Workflow -->
+      <section id="wf-end-to-end" class="diagram-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>1. End-to-End System & User Journey</h2>
+            <p>From community health worker (ASHA) field intake to deterministic triage, facility referral, doctor review, and adherence.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="mermaid">
+flowchart TD
+    %% User Roles
+    CHW["👩‍⚕️ Community Health Worker (ASHA)"]
+    Doc["👨‍⚕️ Registered Medical Practitioner (Doctor)"]
+    Patient["🧑 Patient / Caregiver"]
+
+    %% Step 1: Field Screening
+    subgraph S1["1. Field Intake & Screening"]
+        Intake["Conduct Field Screening\n(Symptoms, Vitals: Temp, SpO2, Age)"]
+        LocalStore[("Local Device Storage\n(localStorage / IndexedDB)")]
+    end
+
+    %% Step 2: Care Guidance
+    subgraph S2["2. Care Guidance & Triage"]
+        RedFlagEngine{"Deterministic Red-Flag\nSafety Engine"}
+        EmergencyAlert["🚨 EMERGENCY ACTION\n(Immediate Call 112 / Urgent Transfer)"]
+        KnowledgePack["Offline Curated Clinical RAG\n(WHO / ICMR / MoHFW Pack)"]
+        TriageDecision["Triage Tier Assigned:\nEmergency | Same Day | Clinician Review | Cleared"]
+    end
+
+    %% Step 3: Referral
+    subgraph S3["3. Referral & Navigation"]
+        NearbyCheck{"Requires Specialist\nReferral?"}
+        NearbyCare["Capability-First Nearby Care\n(Filter Level: PHC / CHC / Hospital)"]
+        ReferralBrief["Generate Structured\nReferral Brief"]
+    end
+
+    %% Step 4: Sync & Review
+    subgraph S4["4. Sync & Remote Doctor Evaluation"]
+        NetDetect{"Connectivity\nAvailable?"}
+        SyncWorker["Background Sync Engine\n(Cloudflare Worker / Supabase API)"]
+        CloudDB[("Supabase Cloud DB\n(RLS, Encrypted Audit Trail)")]
+        DocQueue["Doctor Case Review Queue\n(Prioritized: Urgent > Review > Evaluated)"]
+        DocEval["Doctor Diagnosis, Orders &\nPrescription Advice"]
+    end
+
+    %% Step 5: Care Plan
+    subgraph S5["5. Care Plan & Adherence"]
+        OrderVerify{"Doctor Auth &\nAmbiguity Check"}
+        ScheduleGen["Deterministic Scheduling Engine\n(Recurring / Taper / Interval)"]
+        Reminders["Patient Daily Care Plan\n(Web Push / ICS / Offline Card)"]
+        Adherence["Record Adherence\n(Self-reported 'Taken')"]
+    end
+
+    %% Flow Links
+    CHW --> Intake
+    Intake --> LocalStore
+    LocalStore --> RedFlagEngine
+
+    RedFlagEngine -- "Red Flag Triggered" --> EmergencyAlert
+    RedFlagEngine -- "Standard Path" --> KnowledgePack
+    KnowledgePack --> TriageDecision
+    TriageDecision --> NearbyCheck
+
+    NearbyCheck -- "Yes" --> NearbyCare
+    NearbyCare --> ReferralBrief
+    NearbyCheck -- "No / Routine" --> NetDetect
+    ReferralBrief --> NetDetect
+
+    NetDetect -- "Offline" --> LocalStore
+    NetDetect -- "Online / Signal Acquired" --> SyncWorker
+    SyncWorker --> CloudDB
+    CloudDB --> DocQueue
+
+    Doc --> DocQueue
+    DocQueue --> DocEval
+    DocEval --> OrderVerify
+
+    OrderVerify -- "Doctor Signed & Valid" --> ScheduleGen
+    ScheduleGen --> Reminders
+    Reminders --> Patient
+    Patient --> Adherence
+    Adherence -. "Syncs back to Field Overview" .-> CHW
+          </div>
+        </div>
+        <div class="card-footer">
+          <strong>Key Tenet:</strong> Field screening is immediately available offline. Emergencies jump directly to local call triggers (112), bypassing latency or network bottlenecks.
           <div class="tag-list">
             <span class="tag primary">Offline-First</span>
             <span class="tag accent">Deterministic Triage</span>
@@ -591,42 +603,58 @@ sequenceDiagram
         </div>
       </section>
 
-      <!-- Diagram 4: Capability-First Nearby Referral -->
+      <!-- Diagram 4: Interactive Health Map & Capability-First Nearby Referral -->
       <section id="wf-nearby-referral" class="diagram-card">
         <div class="card-header">
           <div class="card-title-group">
-            <h2>4. Capability-First Nearby Care & Referral System</h2>
-            <p>Prevents sending critical patients to closer but incapable facilities by prioritizing medical readiness over geographic distance.</p>
+            <h2>4. Interactive Geospatial Health Map & Capability-First Care System</h2>
+            <p>Prevents sending critical patients to closer but incapable facilities via MapLibre GL JS vector tiles, capability tiering, and offline GeoJSON caching.</p>
           </div>
         </div>
         <div class="card-body">
           <div class="mermaid">
 flowchart TD
-    Req(["Referral Triggered (from Triage / Screening)"]) --> Consent["Request Explicit Geolocation Consent\n(HTTPS navigator.geolocation)"]
+    subgraph GeoIntake["1. Geolocation & Spatial Privacy Intake"]
+        Req(["Referral Triggered (from Triage / Screening / Public)"]) --> Consent["Request Geolocation Consent\n(HTTPS navigator.geolocation)"]
+        Consent --> GeoCheck{"Consent Granted & Lat/Lng Received?"}
+        GeoCheck -- "Yes (Precise / Coarse GPS)" --> StatusTag["Tag Position Accuracy:\n• Verified GPS (Lat/Lng)\n• Reverse Geocode: Block / District"]
+        GeoCheck -- "No / Denied / Offline" --> ManualLoc["Manual Village & Block Selector\n(e.g., Khurda, Jatni, Banapur, Ganjam)"]
+    end
 
-    Consent --> GeoCheck{"Consent Granted & Lat/Lng Received?"}
-    GeoCheck -- "No / Denied / Unavailable" --> ManualLoc["Manual Location Selection\n(Select Village / Sub-District Block)"]
-    GeoCheck -- "Yes" --> StatusTag["Tag Position Accuracy:\n• Accurate | Approximate | Stale"]
+    subgraph CapabilityTiers["2. Capability-First Matching Engine"]
+        StatusTag --> CapEngine["Capability-First Filter Engine\n(lib/nearby/ranking.ts)"]
+        ManualLoc --> CapEngine
+        CapEngine --> MatchUrgency{"Match Required Care Level &\nClinical Equipment Readiness"}
+        
+        MatchUrgency -- "Emergency / Red-Flag" --> TierEmergency["Tier 1: Emergency & Critical Care\n• 24x7 Emergency OT, ICU, Ventilators, Blood Bank\n• Apex: AIIMS Bhubaneswar, Capital Hospital DHH\n• Direct 1-Click Dial: 112 / 108 Dispatch"]
+        MatchUrgency -- "Maternal & Child" --> TierMaternal["Tier 2: First Referral Unit (FRU)\n• 24x7 C-Section OT, NICU, Obstetrician\n• Community Health Centres (CHC Jatni, CHC Tangi)"]
+        MatchUrgency -- "Routine / Primary OPD" --> TierPrimary["Tier 3: Primary Healthcare Facilities\n• Primary Health Centres (PHC) & Ayushman Arogya Mandirs (AAM)\n• Maternal & Child Health (MCH), Immunization"]
+        MatchUrgency -- "Generic Medicines" --> TierPharma["Tier 4: Jan Aushadhi Generic Kendras\n• PMBJP Kendra #7402, North Ridge Dispensary\n• 80%+ Savings Generic Formularies"]
+    end
 
-    ManualLoc --> CapFilter["Capability-First Filter Engine"]
-    StatusTag --> CapFilter
+    subgraph GeospatialMap["3. Interactive Map & Routing Visualization"]
+        TierEmergency --> MapLibre["MapLibre GL JS Vector Tile Canvas\n• OpenStreetMap Raster/Vector Basemap\n• Color-Coded Facility Pins & Tiers\n• Offline GeoJSON Cache (Odisha Health Network)"]
+        TierMaternal --> MapLibre
+        TierPrimary --> MapLibre
+        TierPharma --> MapLibre
 
-    CapFilter --> MatchCap{"Match Required Care Level\n(Emergency, C-Section, NICU, Oxygen, MMU)"}
-    
-    MatchCap -- "Matches Level" --> GeoSort["Calculate Haversine Distance &\nSort by Distance + Verification Freshness"]
-    MatchCap -- "Does Not Match Level" --> ExcludeFacility["Exclude Facility\n(Prevents sending critical patients to incapable centres)"]
+        MapLibre --> DistanceCalc["Client-Side Haversine Distance Calc\n• Sort by Distance + Verified Operational Status\n• Estimated Travel Time (Road / MMU Route)"]
+        DistanceCalc --> InteractivePopup["Interactive Facility Popups\n• Facility Name, Phone & Timings\n• Verified Capabilities (Oxygen, C-Section, Beds)\n• 1-Click Dial Hotline & Google/OSM Directions"]
+    end
 
-    GeoSort --> OutputView["Present Referral Directory:\n1. Direct Call 112 (if Emergency)\n2. Accessible List View (Primary)\n3. MapLibre GL Tile Map (Attributed OSM)"]
-
-    OutputView --> ShareAction["Generate Referral Brief:\n• Patient Pseudonym / Ref ID\n• Vitals & Triage Tier\n• Target Facility & Handover Summary"]
+    subgraph Handover["4. Referral Brief & Telehealth Relay"]
+        InteractivePopup --> RefBrief["Generate Offline Referral Brief:\n• Patient Pseudonym / Health Token\n• Triage Score & Vital Trends Log\n• Target Facility Receiving Handover Brief"]
+        RefBrief --> DispatchSync["Relay Handover Slip via SMS / WhatsApp / Print"]
+    end
           </div>
         </div>
         <div class="card-footer">
-          <strong>Privacy By Design:</strong> Exact GPS coordinates are never transmitted to third-party tile servers; OpenStreetMap requests load only anonymous raster tiles.
+          <strong>Privacy By Design:</strong> Exact GPS coordinates are never transmitted to third-party tile servers; OpenStreetMap requests load only anonymous raster tiles. Client-side Haversine math executes 100% offline.
           <div class="tag-list">
             <span class="tag primary">Capability-First</span>
             <span class="tag accent">MapLibre GL</span>
-            <span class="tag">Explicit Consent</span>
+            <span class="tag">Offline GeoJSON</span>
+            <span class="tag">Emergency 112</span>
             <span class="tag">Referral Briefs</span>
           </div>
         </div>
@@ -714,6 +742,153 @@ flowchart TD
         </div>
       </section>
 
+      <!-- Diagram 7: Arogya Gyan Multilingual Library -->
+      <section id="wf-arogya-gyan" class="diagram-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>7. Arogya Gyan — Multilingual Clinical Library & Voice Guidance Engine</h2>
+            <p>Offline-first vernacular clinical encyclopedia, WHO/MoHFW remedies, pictorial cards, and hallucination-free read-aloud.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="mermaid">
+flowchart TD
+    subgraph KnowledgeCore["1. Verified Clinical Knowledge Core (lib/clinical/)"]
+        Standards["National & Global Clinical Guidelines\n• WHO Integrated Management Protocols\n• ICMR Standard Treatment Workflows\n• National List of Essential Medicines (NLEM 2022)"] --> DB["Curated Disease & Remedy Catalog\n(lib/clinical/disease-library.ts)"]
+        DB --> Categories["5 Clinical Disease Categories:\n1. Dermatological (Ringworm, Scabies, Eczema)\n2. Fever & Vector-Borne (Malaria, Dengue, Typhoid)\n3. Gastrointestinal (Acute Diarrhea, Gastritis, ORS)\n4. Respiratory (Asthma, Bronchitis, Pneumonia, Duolin)\n5. Eye & ENT (Conjunctivitis, Otitis Media)"]
+    end
+
+    subgraph SafetyRules["2. Strict Tier-1 Clinical Safety Guardrail"]
+        Categories --> RuleEngine["Tier-1 Immutability Enforcement\n(lib/i18n/provider.tsx)"]
+        RuleEngine --> Tier1["Tier 1: Clinical Safety Concepts (English-Only Baseline)\n• Medicine Names & Dose Strengths\n• Red-Flag Danger Signs & Critical Thresholds\n🔒 Strictly Blocked from Machine Translation to Prevent Fatal Hallucinations"]
+        RuleEngine --> Tier2["Tier 2/3: Vernacular Patient Guidance\n• Approved Human Translations: Odia, Hindi, Santali (Ol Chiki)\n• Bengali, Telugu, Gujarati, Marathi\n• Script Hygiene: Dotted circle nukta prevention in Odia"]
+    end
+
+    subgraph VernacularDelivery["3. Multilingual Voice & Low-Literacy Delivery"]
+        Tier1 --> Presentation["Arogya Gyan Interactive Cards\n• Summary, Clinical Symptoms & Visual Markers\n• Safe Verified Home Remedies (Non-Pharmacological)\n• OTC Guidelines & Jan Aushadhi Alternatives\n• Red-Flag Hospital Referral Criteria"]
+        Tier2 --> Presentation
+        
+        Presentation --> AudioEngine["Multilingual Read-Aloud Engine\n(app/read-aloud.tsx & lib/i18n/voice.ts)\n• Web Speech Synthesis API (Local Browser TTS)\n• ElevenLabs High-Fidelity Voice Fallback\n• Hands-Free Audio Playback for Non-Literate Citizens"]
+        Presentation --> VisualCards["Low-Literacy Pictorial Cards\n• Visual Erythema Ratio & Color Indicators\n• Ring Margin & Texture Guides for ASHAs"]
+    end
+
+    subgraph ClinicalAction["4. Citizen & ASHA Community Actions"]
+        AudioEngine --> ActionChoice{"Citizen Severity Check"}
+        ActionChoice -- "Mild / Routine" --> SelfCare["Empowered Self-Care & Jan Aushadhi Fair-Price Purchase"]
+        ActionChoice -- "Danger Signs Present" --> Escalate["Trigger Instant Doctor Follow-up / Dial 112"]
+    end
+          </div>
+        </div>
+        <div class="card-footer">
+          <strong>Non-Hallucinatory Guarantee:</strong> Clinical dosing rules and danger thresholds are immutably tied to verified medical guidelines. Generative AI is prohibited from modifying therapeutic guidance.
+          <div class="tag-list">
+            <span class="tag primary">Arogya Gyan</span>
+            <span class="tag accent">Voice Read-Aloud</span>
+            <span class="tag">Tier-1 Safety</span>
+            <span class="tag">8 Indic Languages</span>
+            <span class="tag">NLEM Formulary</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Diagram 8: District Health Camps & MMU Outreach Lifecycle -->
+      <section id="wf-district-camps" class="diagram-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>8. District Health Camps & Mobile Medical Unit (MMU) Outreach Lifecycle</h2>
+            <p>District-level outreach scheduling, dynamic status filtering, time-bound consent capture, and on-site pharmacy relay.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="mermaid">
+flowchart TD
+    subgraph Intake["1. District Camp Planning & Roster Intake"]
+        NHM["National Health Mission (NHM) &\nDistrict Health Societies (DHS Odisha)"] --> CampRegistry["District Health Camp Registry\n(lib/nearby/district-camps.ts)"]
+        CampRegistry --> CampProfile["Camp Manifest:\n• District & Block (Ganjam, Khurda, Cuttack, Mayurbhanj, Koraput)\n• Venue (Gram Panchayat Hall, Ashram School, Coastal Sub-Centre)\n• Services: OPD, Blood Sugar, Malaria/Dengue RDT, Free Medicines"]
+        CampProfile --> MMU["Mobile Medical Unit (MMU) Deployment\n• Equipped Outreach Van with Basic Diagnostics\n• Assigned Medical Officer & ASHA Field Facilitators"]
+    end
+
+    subgraph LifecycleEngine["2. Temporal Lifecycle & Automatic Pruning Engine"]
+        CampRegistry --> DateCheck{"Temporal Filter Check\n(Date vs Current Local Time)"}
+        DateCheck -- "Start Date > Today" --> StatusUpcoming["Status: UPCOMING\n• Advance Public Notices & WhatsApp Citizen Alerts\n• ASHA House-to-House Camp Mobilization"]
+        DateCheck -- "Start Date <= Today <= End Date" --> StatusActive["Status: ACTIVE / ONGOING TODAY\n• Highlighted with Live Pulse Indicator\n• Venue Directions & Operating Timings Displayed"]
+        DateCheck -- "End Date < Today or Cancelled" --> StatusPrune["Status: COMPLETED / EXPIRED\n🧹 Automatically Pruned from Active Directory\n(Prevents rural patients travelling to obsolete venues)"]
+    end
+
+    subgraph FieldExecution["3. Offline Field Execution & Digital Consent"]
+        StatusActive --> FieldIntake["Citizen Arrival at Outreach Camp"]
+        FieldIntake --> ConsentGate["Time-Bound Digital Consent Capture\n• Cryptographic SHA-256 Consent Hash\n• Offline Local Storage Vault\n• Privacy-Preserving 30-Day Retention Window"]
+        ConsentGate --> DiagnosticStation["Point-of-Care Diagnostics\n• Digital BP, Pulse Oximeter SpO2, Glucometer\n• Rapid Malaria & Dengue Antigen Test Strip (RDT)\n• Structured Symptom Logging by ASHA Worker"]
+    end
+
+    subgraph FulfillmentRelay["4. Free Pharmacy Dispensing & Relay Sync"]
+        DiagnosticStation --> FreeJanAushadhi["On-Site PMBJP Jan Aushadhi Counter\n• Free Essential Generic Medications Provided\n• Batch Dispensing Log Recorded Locally"]
+        DiagnosticStation --> SyncEngine["Relay Synchronization Pipeline\n• Encrypted Camp Patient Records Stored in Local DB\n• MMU Returns to Cellular Connectivity\n• Automatic Upstream Sync to District Health Database"]
+    end
+          </div>
+        </div>
+        <div class="card-footer">
+          <strong>Community Outreach Resilience:</strong> Automatically hides obsolete camps to protect rural citizens from unnecessary travel while maintaining an encrypted offline-first diagnostic buffer.
+          <div class="tag-list">
+            <span class="tag primary">District Camps</span>
+            <span class="tag accent">MMU Van Fleet</span>
+            <span class="tag">Auto-Prune</span>
+            <span class="tag">Offline Consent</span>
+            <span class="tag">Free PMBJP Medicines</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Diagram 9: Admin Console, KPI Governance & Escrow Audit -->
+      <section id="wf-admin-governance" class="diagram-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>9. System Administration Console, Platform KPI Governance & Escrow Audit</h2>
+            <p>Central and State Health Mission governance, doctor credential verification, epidemiological surveillance, and escrow reconciliation.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="mermaid">
+flowchart TD
+    subgraph AuthGate["1. Restricted Administrator Authority Gate (app/admin/)"]
+        AdminReq(["Admin Access Request\n(/admin or Role = admin)"]) --> GateCheck{"Master Credential Verification"}
+        GateCheck -- "Cloud Mode" --> SupabaseAuth["Supabase PostgreSQL Cloud Auth\n(pratyushkiranrath4@gmail.com + Passphrase)"]
+        GateCheck -- "Blackout / Offline Mode" --> ResilientGate["Resilient Local Admin Gate\n(Master Security PIN: 112233 / admin)\n• Zero Downtime Emergency Governance"]
+        SupabaseAuth --> AdminSession["Unlock System Administrator Console\n(sessionStorage: arogya.admin.auth_session = active)"]
+        ResilientGate --> AdminSession
+    end
+
+    subgraph KPIRibbon["2. Executive Platform KPI Metrics Ribbon"]
+        AdminSession --> MetricsEngine["Realtime Platform Metrics Aggregator\n(fetchAllScreenings + Profiles Table)"]
+        MetricsEngine --> RibbonDisplay["Executive Governance KPI Ribbon:\n• Verified Medical Officers (NMC OMC Physicians)\n• Registered Citizens & ABHA Health Passes\n• Active ASHA Community Health Workers\n• PMBJP Jan Aushadhi Dispensary Kendras\n• Active Epidemiological Surveillance Cases\n• Pending Clinical Triage Requests"]
+    end
+
+    subgraph NMCAudit["3. Physician Credential Verification & Audit"]
+        AdminSession --> DocQueue["Doctor Verification Desk"]
+        DocQueue --> NMCInspect["Inspect Medical Council Credentials:\n• Medical Registration No (e.g. OMC-2020-54190, OMC-2018-88412)\n• State Medical Council Registration & MBBS/MD Certificates\n• Institutional Affiliation (AIIMS Bhubaneswar, Capital Hospital)"]
+        NMCInspect --> StatusToggle{"Admin Decision"}
+        StatusToggle -- "Approved" --> GrantPrescribe["Grant Verified Prescriber Status\n• Enable SHA-256 Cryptographic Signing\n• Unlock Clinical Cases Triage Queue"]
+        StatusToggle -- "Flagged / Rejected" --> Revoke["Revoke or Restrict Access\n• Read-only observation mode"]
+    end
+
+    subgraph SurveillanceEscrow["4. Clinical Surveillance & Escrow Financial Ledger"]
+        AdminSession --> SurveillanceAudit["Epidemiological Surveillance Radar\n• District-Wise Disease Cluster Analytics (Odisha Health Circles)\n• Red-Flag Outbreak Alerts (Respiratory, Diarrheal, Dengue/Malaria)\n• Longitudinal Trend Monitoring"]
+        AdminSession --> EscrowAudit["Single-Use Escrow Financial Ledger\n(lib/payments/escrow-engine.ts)\n• Cryptographic Token Verification & Burn Audit\n• PMBJP Chemist Generic Medicine Subsidy Settlement\n• Zero-Loss Platform Accounting Verification"]
+    end
+          </div>
+        </div>
+        <div class="card-footer">
+          <strong>Audit-Grade Governance:</strong> Full regulatory compliance under NMC Telemedicine Guidelines and Ayushman Bharat standards with immutable SHA-256 audit trails.
+          <div class="tag-list">
+            <span class="tag primary">Mission Admin</span>
+            <span class="tag accent">KPI Ribbon</span>
+            <span class="tag">NMC Verification</span>
+            <span class="tag">Outbreak Radar</span>
+            <span class="tag">Escrow Ledger</span>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -763,4 +938,3 @@ flowchart TD
   </script>
 </body>
 </html>
-
