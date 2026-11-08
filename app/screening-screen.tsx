@@ -252,10 +252,10 @@ export function ScreeningScreen({
             <span>🩺</span>
             <div>
               <strong style={{ color: "var(--sc-accent, #17644f)", display: "block", fontSize: "11.5px" }}>
-                {currentProfile?.display_name || currentUser?.email || "Sunita Devi (ASHA)"}
+                {currentProfile?.display_name || currentUser?.email || "Ramesh Soren (Citizen Patient)"}
               </strong>
               <span style={{ fontSize: "9.5px", color: "#64748b" }}>
-                {currentProfile?.role?.toUpperCase() || "COMMUNITY HEALTH WORKER"} · {currentProfile?.facility_name || "Mawlynnong Unit"}
+                {currentProfile?.role?.toUpperCase() || "COMMUNITY HEALTH"} · {currentProfile?.facility_name || "Cuttack-Bhubaneswar Health Circle"}
               </span>
             </div>
           </div>

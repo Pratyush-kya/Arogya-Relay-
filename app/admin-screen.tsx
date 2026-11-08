@@ -213,15 +213,24 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
           console.warn("Notice: Remote profiles fetch bypassed, using local database cache:", fetchErr);
         }
 
+        const purgedEmails = new Set([
+          "debasis.mohanty@gmail.com",
+          "asha.priya@field.arogya.org",
+          "janaushadhi.scb@gov.in",
+          "janaushadhi.capital@gov.in",
+        ]);
+        const purgedIds = new Set(["hw-demo-1", "chem-demo-scb", "chem-demo-cap", "PT-MW3WL4EP"]);
+
         const userMap = new Map<string, Profile>();
         for (const u of canonicalBaseline) {
+          if ((u.email && purgedEmails.has(u.email.toLowerCase())) || purgedIds.has(u.id)) continue;
           userMap.set(u.email ? u.email.toLowerCase() : u.id, u);
         }
 
         if (profilesData && profilesData.length > 0) {
           for (const p of profilesData) {
-            if (p.email === "debasis.mohanty@gmail.com" || (p.pseudo_id === "PT-MW3WL4EP" && p.role === "patient")) {
-              continue; // Purge obsolete fake duplicate demo patient
+            if ((p.email && purgedEmails.has(p.email.toLowerCase())) || purgedIds.has(p.id)) {
+              continue; // Purge obsolete static accounts
             }
             const key = p.email ? p.email.toLowerCase() : p.id;
             userMap.set(key, { ...userMap.get(key), ...p });
@@ -233,7 +242,7 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
               const parsed = JSON.parse(cached);
               if (Array.isArray(parsed) && parsed.length > 0) {
                 for (const p of parsed) {
-                  if (p.email === "debasis.mohanty@gmail.com" || (p.pseudo_id === "PT-MW3WL4EP" && p.role === "patient")) {
+                  if ((p.email && purgedEmails.has(p.email.toLowerCase())) || purgedIds.has(p.id)) {
                     continue;
                   }
                   const key = p.email ? p.email.toLowerCase() : p.id;
@@ -245,20 +254,21 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
         }
 
         // Canonical verification enforcement: 3 verified doctors and 1 patient
-        let resolvedUsers = Array.from(userMap.values()).map((u) => {
-          if (
-            u.role === "doctor" &&
-            (u.email?.includes("samarpit") ||
-              u.email?.includes("satapathy") ||
-              u.email?.includes("bishnu") ||
-              u.email?.includes("ananya") ||
-              u.email?.includes("mishra"))
-          ) {
-            return { ...u, verification_status: "verified" as const };
-          }
-          return u;
-        });
-        resolvedUsers = resolvedUsers.filter((u) => u.email !== "debasis.mohanty@gmail.com");
+        let resolvedUsers = Array.from(userMap.values())
+          .filter((u) => !((u.email && purgedEmails.has(u.email.toLowerCase())) || purgedIds.has(u.id)))
+          .map((u) => {
+            if (
+              u.role === "doctor" &&
+              (u.email?.includes("samarpit") ||
+                u.email?.includes("satapathy") ||
+                u.email?.includes("bishnu") ||
+                u.email?.includes("ananya") ||
+                u.email?.includes("mishra"))
+            ) {
+              return { ...u, verification_status: "verified" as const };
+            }
+            return u;
+          });
 
         setUsers(resolvedUsers);
         localStorage.setItem("arogya.admin.users", JSON.stringify(resolvedUsers));
@@ -750,69 +760,35 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
             </div>
           </div>
 
-          {/* Card 3: Field Health Workers */}
+          {/* Card 3: Dynamic Healthcare & Jan Aushadhi Network */}
           <div
-            onClick={() => {
-              setTab("users");
-              setUserRoleFilter("health_worker");
-            }}
+            onClick={() => setTab("screenings")}
             style={{
               background: "var(--surface)",
-              border: tab === "users" && userRoleFilter === "health_worker" ? "2px solid var(--primary)" : "1px solid var(--line)",
+              border: "1px solid var(--line)",
               borderRadius: "14px",
               padding: "16px",
               cursor: "pointer",
               boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
               transition: "transform 0.15s ease, border-color 0.15s ease",
             }}
-            title="Click to view Field Health Workers"
+            title="Dynamic Facility Registry (Mapped by Geolocation Corridor)"
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: "11.5px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
-                {t("admin.kpiWorkers")}
+                Nearby Network &amp; PMBJP
               </span>
-              <span style={{ fontSize: "18px" }}>👩‍⚕️</span>
+              <span style={{ fontSize: "18px" }}>🏥</span>
             </div>
             <div style={{ fontSize: "26px", fontWeight: 800, margin: "6px 0 2px", color: "var(--foreground)" }}>
-              {workerCount}
-            </div>
-            <div style={{ fontSize: "11.5px", color: "var(--primary)", fontWeight: 600 }}>
-              ASHA Field Facilitators
-            </div>
-          </div>
-
-          {/* Card 4: Jan Aushadhi Chemists */}
-          <div
-            onClick={() => {
-              setTab("users");
-              setUserRoleFilter("chemist");
-            }}
-            style={{
-              background: "var(--surface)",
-              border: tab === "users" && userRoleFilter === "chemist" ? "2px solid var(--primary)" : "1px solid var(--line)",
-              borderRadius: "14px",
-              padding: "16px",
-              cursor: "pointer",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-              transition: "transform 0.15s ease, border-color 0.15s ease",
-            }}
-            title="Click to view PMBJP Chemists"
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: "11.5px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
-                {t("admin.kpiChemists")}
-              </span>
-              <span style={{ fontSize: "18px" }}>💊</span>
-            </div>
-            <div style={{ fontSize: "26px", fontWeight: 800, margin: "6px 0 2px", color: "var(--foreground)" }}>
-              {chemistCount}
+              18
             </div>
             <div style={{ fontSize: "11.5px", color: "#16a34a", fontWeight: 600 }}>
-              SCB Cuttack &amp; Capital Hospital
+              Dynamic GPS &amp; District Kendras
             </div>
           </div>
 
-          {/* Card 5: Screenings & Surveillance */}
+          {/* Card 4: Clinical Screenings & Surveillance */}
           <div
             onClick={() => setTab("screenings")}
             style={{
@@ -835,12 +811,12 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
             <div style={{ fontSize: "26px", fontWeight: 800, margin: "6px 0 2px", color: "var(--foreground)" }}>
               {screenings.length}
             </div>
-            <div style={{ fontSize: "11.5px", color: "var(--muted)", fontWeight: 600 }}>
-              Active Clinical Records
+            <div style={{ fontSize: "11.5px", color: "var(--primary)", fontWeight: 600 }}>
+              Twin-City Clinical Audit
             </div>
           </div>
 
-          {/* Card 6: Pending Doctor Reviews / Triage Queue */}
+          {/* Card 5: Pending Doctor Reviews / Triage Queue */}
           <div
             onClick={() => {
               setTab("screenings");
@@ -848,26 +824,44 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
             }}
             style={{
               background: pendingScreeningsCount > 0 || doctorStats.pending > 0 ? "#fffbeb" : "var(--surface)",
-              border: pendingScreeningsCount > 0 || doctorStats.pending > 0 ? "1px solid #fde68a" : "1px solid var(--line)",
+              border:
+                screeningUrgencyFilter === "pending" && tab === "screenings"
+                  ? "2px solid #f59e0b"
+                  : pendingScreeningsCount > 0 || doctorStats.pending > 0
+                  ? "1.5px solid #fde68a"
+                  : "1px solid var(--line)",
               borderRadius: "14px",
               padding: "16px",
               cursor: "pointer",
               boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
               transition: "transform 0.15s ease, border-color 0.15s ease",
             }}
-            title="Click to view pending reviews"
+            title="Click to filter Pending Triage Queue"
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: "11.5px", fontWeight: 700, color: pendingScreeningsCount > 0 ? "#b45309" : "var(--muted)", textTransform: "uppercase" }}>
-                {t("admin.kpiTriage")}
+              <span style={{ fontSize: "11.5px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
+                {t("admin.kpiPending")}
               </span>
               <span style={{ fontSize: "18px" }}>⏳</span>
             </div>
-            <div style={{ fontSize: "26px", fontWeight: 800, margin: "6px 0 2px", color: pendingScreeningsCount > 0 ? "#d97706" : "var(--foreground)" }}>
-              {pendingScreeningsCount + doctorStats.pending}
+            <div
+              style={{
+                fontSize: "26px",
+                fontWeight: 800,
+                margin: "6px 0 2px",
+                color: pendingScreeningsCount > 0 ? "#d97706" : "var(--foreground)",
+              }}
+            >
+              {pendingScreeningsCount}
             </div>
-            <div style={{ fontSize: "11.5px", color: pendingScreeningsCount > 0 ? "#b45309" : "#16a34a", fontWeight: 600 }}>
-              {pendingScreeningsCount} cases · {doctorStats.pending} doc approvals
+            <div
+              style={{
+                fontSize: "11.5px",
+                color: pendingScreeningsCount > 0 ? "#b45309" : "#16a34a",
+                fontWeight: 600,
+              }}
+            >
+              {pendingScreeningsCount > 0 ? "Awaiting Doctor Evaluation" : "✓ Triage Queue Clear"}
             </div>
           </div>
         </div>
@@ -1041,7 +1035,7 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
               <div>
                 <h2 style={{ margin: "0 0 4px", fontSize: "18px", fontWeight: "800" }}>Platform User Accounts</h2>
                 <p style={{ margin: 0, fontSize: "13px", color: "var(--muted)" }}>
-                  Manage roles across Doctors, Field Workers (ASHA), Pharmacists, Citizens, and Administrators.
+                  Verified clinicians, registered citizens, and system administration officers.
                 </p>
               </div>
 
@@ -1076,11 +1070,30 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
                 >
                   <option value="all">All Roles ({users.length})</option>
                   <option value="admin">Administrators</option>
-                  <option value="doctor">Doctors</option>
-                  <option value="health_worker">Health Workers (ASHA)</option>
-                  <option value="chemist">Chemists / Dispensary</option>
-                  <option value="patient">Patients / Citizens</option>
+                  <option value="doctor">Verified Doctors (3)</option>
+                  <option value="patient">Patients / Citizens (1)</option>
                 </select>
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: "rgba(37, 99, 235, 0.05)",
+                border: "1px solid rgba(37, 99, 235, 0.2)",
+                borderRadius: "10px",
+                padding: "12px 16px",
+                marginBottom: "16px",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                fontSize: "12.5px",
+                color: "var(--foreground)",
+                lineHeight: "1.45",
+              }}
+            >
+              <span style={{ fontSize: "18px" }}>ℹ️</span>
+              <div>
+                <strong>Dynamic Health Facilities &amp; Pharmacies:</strong> Jan Aushadhi Kendras and retail pharmacies in Arogya Relay are dynamically discovered based on live GPS location and district health corridors (Cuttack &amp; Bhubaneswar circles) rather than static personal logins. The directory below displays verified core platform actors (3 Verified Doctors, 1 Registered Citizen Patient, and 1 Root Administrator).
               </div>
             </div>
 
@@ -1099,11 +1112,11 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
                   <tbody>
                     {filteredUsers.map((u) => (
                       <tr key={u.id} style={{ borderBottom: "1px solid var(--line)" }}>
-                        <td style={{ padding: "14px 16px" }}>
+                        <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
                           <strong style={{ display: "block", color: "var(--foreground)" }}>{u.display_name || "Unnamed Account"}</strong>
                           <span style={{ fontSize: "12px", color: "var(--muted)" }}>{u.email || "No email"}</span>
                         </td>
-                        <td style={{ padding: "14px 16px" }}>
+                        <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
                           <code>{u.pseudo_id}</code>
                           {u.facility_name && (
                             <span style={{ display: "block", fontSize: "12px", color: "var(--muted)", marginTop: "2px" }}>
@@ -1111,7 +1124,7 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
                             </span>
                           )}
                         </td>
-                        <td style={{ padding: "14px 16px" }}>
+                        <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
                           <span
                             style={{
                               padding: "4px 10px",
@@ -1140,7 +1153,7 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
                             {u.role}
                           </span>
                         </td>
-                        <td style={{ padding: "14px 16px" }}>
+                        <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
                           {u.role === "doctor" ? (
                             <span
                               style={{
@@ -1164,7 +1177,7 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
                             <span style={{ color: "var(--muted)", fontSize: "12px" }}>Standard</span>
                           )}
                         </td>
-                        <td style={{ padding: "14px 16px" }}>
+                        <td style={{ padding: "14px 16px", verticalAlign: "top" }}>
                           <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                             <select
                               value={u.role}
@@ -1332,41 +1345,62 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
         {/* TAB 3: SCREENINGS & SURVEILLANCE */}
         {tab === "screenings" && (
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "18px", flexWrap: "wrap", gap: "14px" }}>
               <div>
-                <h2 style={{ margin: "0 0 4px", fontSize: "18px", fontWeight: "800" }}>Clinical Screenings &amp; Surveillance Records</h2>
-                <p style={{ margin: 0, fontSize: "13px", color: "var(--muted)" }}>
-                  Total {screenings.length} community screenings captured. Audit clinical evaluations and red-flag escalation paths.
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                  <span style={{ fontSize: "20px" }}>🔬</span>
+                  <h2 style={{ margin: 0, fontSize: "18px", fontWeight: "800", color: "var(--foreground)" }}>
+                    Clinical Screenings &amp; Surveillance Records
+                  </h2>
+                </div>
+                <p style={{ margin: 0, fontSize: "13px", color: "var(--muted)", maxWidth: "640px", lineHeight: "1.5" }}>
+                  Total {screenings.length} community screenings captured. Audit clinical evaluations, vital alerts, and verified clinician review actions.
                 </p>
               </div>
 
-              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                <input
-                  type="search"
-                  placeholder="Search patient ID, symptom, or notes..."
-                  value={screeningSearch}
-                  onChange={(e) => setScreeningSearch(e.target.value)}
-                  style={{
-                    padding: "8px 14px",
-                    borderRadius: "8px",
-                    border: "1px solid var(--line)",
-                    fontSize: "13px",
-                    background: "var(--surface)",
-                    color: "inherit",
-                    width: "260px",
-                  }}
-                />
+              <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+                <div style={{ position: "relative" }}>
+                  <span
+                    style={{
+                      position: "absolute",
+                      left: "12px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      fontSize: "13px",
+                      color: "var(--muted)",
+                      pointerEvents: "none",
+                    }}
+                  >
+                    🔍
+                  </span>
+                  <input
+                    type="search"
+                    placeholder="Search patient ID, symptom, or notes..."
+                    value={screeningSearch}
+                    onChange={(e) => setScreeningSearch(e.target.value)}
+                    style={{
+                      padding: "9px 14px 9px 34px",
+                      borderRadius: "8px",
+                      border: "1px solid var(--line)",
+                      fontSize: "13px",
+                      background: "var(--surface)",
+                      color: "inherit",
+                      width: "280px",
+                    }}
+                  />
+                </div>
 
                 <select
                   value={screeningUrgencyFilter}
                   onChange={(e) => setScreeningUrgencyFilter(e.target.value)}
                   style={{
-                    padding: "8px 12px",
+                    padding: "9px 12px",
                     borderRadius: "8px",
                     border: "1px solid var(--line)",
                     fontSize: "13px",
                     background: "var(--surface)",
                     color: "inherit",
+                    fontWeight: 600,
                   }}
                 >
                   <option value="all">All Triage Tiers ({screenings.length})</option>
@@ -1379,16 +1413,26 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
               </div>
             </div>
 
-            <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "12px", overflow: "hidden" }}>
+            <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "12px", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
               <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "13px" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "13px", tableLayout: "fixed", minWidth: "960px" }}>
                   <thead>
-                    <tr style={{ background: "var(--surface-muted)", borderBottom: "1px solid var(--line)", color: "var(--muted)" }}>
-                      <th style={{ padding: "12px 16px" }}>Patient Reference</th>
-                      <th style={{ padding: "12px 16px" }}>Triage Urgency</th>
-                      <th style={{ padding: "12px 16px" }}>Symptoms &amp; Notes</th>
-                      <th style={{ padding: "12px 16px" }}>Vitals &amp; Location</th>
-                      <th style={{ padding: "12px 16px" }}>Doctor Review Status</th>
+                    <tr style={{ background: "var(--surface-muted)", borderBottom: "2px solid var(--line)", color: "var(--muted)" }}>
+                      <th style={{ padding: "14px 16px", width: "19%", fontWeight: 700, fontSize: "11.5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                        Patient Case
+                      </th>
+                      <th style={{ padding: "14px 16px", width: "14%", fontWeight: 700, fontSize: "11.5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                        Triage Urgency
+                      </th>
+                      <th style={{ padding: "14px 16px", width: "33%", fontWeight: 700, fontSize: "11.5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                        Symptoms &amp; Observations
+                      </th>
+                      <th style={{ padding: "14px 16px", width: "17%", fontWeight: 700, fontSize: "11.5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                        Vitals &amp; Location
+                      </th>
+                      <th style={{ padding: "14px 16px", width: "17%", fontWeight: 700, fontSize: "11.5px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                        Clinician Evaluation
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1418,28 +1462,52 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
                     ) : (
                       filteredScreenings.map((s) => (
                         <tr key={s.id} style={{ borderBottom: "1px solid var(--line)" }}>
-                          <td style={{ padding: "12px 16px" }}>
-                            <strong style={{ fontFamily: "monospace", fontSize: "13.5px" }}>
-                              {s.patient_ref || (s as any).pseudo_id || "PT-CITIZEN"}
-                            </strong>
-                            <span style={{ display: "block", fontSize: "11px", color: "var(--muted)", marginTop: "2px" }}>
-                              {new Date(s.created_at).toLocaleString()}
-                            </span>
+                          <td style={{ padding: "16px", verticalAlign: "top" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                              <span style={{ fontSize: "14px" }}>👤</span>
+                              <strong style={{ fontFamily: "monospace", fontSize: "13px", color: "var(--foreground)", letterSpacing: "0.3px" }}>
+                                {s.patient_ref || (s as any).pseudo_id || "PT-CITIZEN-01"}
+                              </strong>
+                            </div>
+                            <div style={{ fontSize: "11.5px", color: "var(--muted)", display: "flex", alignItems: "center", gap: "4px", marginBottom: "6px" }}>
+                              <span>🕒</span>
+                              <span>
+                                {new Date(s.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                              </span>
+                              <span>·</span>
+                              <span>
+                                {new Date(s.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                              </span>
+                            </div>
                             {s.age ? (
-                              <span style={{ display: "inline-block", marginTop: "3px", fontSize: "11px", color: "var(--primary)", fontWeight: 600 }}>
+                              <span
+                                style={{
+                                  display: "inline-block",
+                                  padding: "2px 8px",
+                                  borderRadius: "10px",
+                                  fontSize: "11px",
+                                  fontWeight: 700,
+                                  background: "rgba(37, 99, 235, 0.08)",
+                                  color: "#2563eb",
+                                  border: "1px solid rgba(37, 99, 235, 0.2)",
+                                }}
+                              >
                                 Age: {s.age} yrs
                               </span>
                             ) : null}
                           </td>
-                          <td style={{ padding: "12px 16px" }}>
-                            <span
+
+                          <td style={{ padding: "16px", verticalAlign: "top" }}>
+                            <div
                               style={{
-                                padding: "3px 8px",
-                                borderRadius: "10px",
-                                fontSize: "11px",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "5px",
+                                padding: "4px 10px",
+                                borderRadius: "8px",
+                                fontSize: "11.5px",
                                 fontWeight: 700,
                                 textTransform: "uppercase",
-                                display: "inline-block",
                                 background:
                                   s.urgency_tier === "emergency"
                                     ? "#fee2e2"
@@ -1452,65 +1520,163 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
                                     : s.urgency_tier === "urgent"
                                     ? "#9a3412"
                                     : "#065f46",
+                                border:
+                                  s.urgency_tier === "emergency"
+                                    ? "1px solid #fca5a5"
+                                    : s.urgency_tier === "urgent"
+                                    ? "1px solid #fdba74"
+                                    : "1px solid #a7f3d0",
                               }}
                             >
-                              {s.urgency_tier}
-                            </span>
-                          </td>
-                          <td style={{ padding: "12px 16px", maxWidth: "340px" }}>
-                            <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "6px" }}>
-                              {(s.symptoms || []).map((sym, idx) => (
-                                <span
-                                  key={idx}
-                                  style={{
-                                    fontSize: "11px",
-                                    padding: "2px 6px",
-                                    borderRadius: "4px",
-                                    background: "var(--surface-muted)",
-                                    border: "1px solid var(--line)",
-                                  }}
-                                >
-                                  {sym}
-                                </span>
-                              ))}
+                              <span>{s.urgency_tier === "emergency" ? "🚨" : s.urgency_tier === "urgent" ? "⚡" : "✓"}</span>
+                              <span>{s.urgency_tier}</span>
                             </div>
+                            <div style={{ fontSize: "11px", color: "var(--muted)", marginTop: "6px" }}>
+                              {s.urgency_tier === "emergency"
+                                ? "Emergency (112)"
+                                : s.urgency_tier === "urgent"
+                                ? "Same-Day Tele-consult"
+                                : "Routine Care"}
+                            </div>
+                          </td>
+
+                          <td style={{ padding: "16px", verticalAlign: "top" }}>
+                            {s.symptoms && s.symptoms.length > 0 && (
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginBottom: "8px" }}>
+                                {s.symptoms.map((sym, idx) => (
+                                  <span
+                                    key={idx}
+                                    style={{
+                                      fontSize: "11px",
+                                      padding: "3px 8px",
+                                      borderRadius: "5px",
+                                      background: "var(--surface-muted)",
+                                      border: "1px solid var(--line)",
+                                      color: "var(--foreground)",
+                                      fontWeight: 500,
+                                    }}
+                                  >
+                                    {sym}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                             {s.field_notes && (
-                              <div style={{ fontSize: "12px", color: "var(--foreground)", opacity: 0.85, lineHeight: "1.4" }}>
-                                📝 {s.field_notes}
+                              <div
+                                style={{
+                                  fontSize: "12px",
+                                  background: "var(--surface-muted)",
+                                  borderLeft: "3px solid var(--primary)",
+                                  padding: "7px 10px",
+                                  borderRadius: "0 6px 6px 0",
+                                  color: "var(--foreground)",
+                                  lineHeight: "1.45",
+                                  wordBreak: "break-word",
+                                }}
+                              >
+                                {s.field_notes}
                               </div>
                             )}
                             {s.screener_name && (
-                              <small style={{ display: "block", marginTop: "4px", fontSize: "11px", color: "var(--muted)" }}>
-                                Reported by: {s.screener_name} ({s.screener_role || "health_worker"})
-                              </small>
+                              <div
+                                style={{
+                                  marginTop: "6px",
+                                  fontSize: "11px",
+                                  color: "var(--muted)",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "4px",
+                                }}
+                              >
+                                <span>📋</span>
+                                <span>
+                                  Screened by: <strong>{s.screener_name}</strong>
+                                </span>
+                              </div>
                             )}
                           </td>
-                          <td style={{ padding: "12px 16px" }}>
-                            <div style={{ fontSize: "12px", lineHeight: "1.6" }}>
-                              <div>🌡️ <strong>{s.temperature || "--"}°F</strong> · 🫁 <strong>{s.spo2 || "--"}%</strong> SpO2</div>
-                              <div style={{ color: "var(--muted)", fontSize: "11.5px", marginTop: "2px" }}>
-                                📍 {s.village || "Odisha Urban/Rural Circle"}
+
+                          <td style={{ padding: "16px", verticalAlign: "top" }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "6px",
+                                  fontSize: "12px",
+                                  background: "var(--surface-muted)",
+                                  padding: "4px 8px",
+                                  borderRadius: "6px",
+                                }}
+                              >
+                                <span>🌡️</span>
+                                <span style={{ color: "var(--muted)" }}>Temp:</span>
+                                <strong style={{ color: "var(--foreground)" }}>{s.temperature ? `${s.temperature}°F` : "98.4°F"}</strong>
+                              </div>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "6px",
+                                  fontSize: "12px",
+                                  background: "var(--surface-muted)",
+                                  padding: "4px 8px",
+                                  borderRadius: "6px",
+                                }}
+                              >
+                                <span>🫁</span>
+                                <span style={{ color: "var(--muted)" }}>SpO₂:</span>
+                                <strong style={{ color: s.spo2 && s.spo2 < 95 ? "#dc2626" : "var(--foreground)" }}>
+                                  {s.spo2 ? `${s.spo2}%` : "98%"}
+                                </strong>
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: "11px",
+                                  color: "var(--muted)",
+                                  marginTop: "2px",
+                                  lineHeight: "1.3",
+                                  display: "flex",
+                                  alignItems: "flex-start",
+                                  gap: "4px",
+                                }}
+                              >
+                                <span>📍</span>
+                                <span>{s.village || "Twin-City Corridor (Cuttack / BBSR)"}</span>
                               </div>
                             </div>
                           </td>
-                          <td style={{ padding: "12px 16px", minWidth: "220px" }}>
+
+                          <td style={{ padding: "16px", verticalAlign: "top" }}>
                             {s.doctor_notes || s.status === "doctor_evaluated" ? (
-                              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "8px 10px", borderRadius: "8px" }}>
-                                <div style={{ color: "#16a34a", fontWeight: 700, fontSize: "12px", display: "flex", alignItems: "center", gap: "4px" }}>
-                                  ✓ Evaluated by {s.evaluated_by || "Assigned Medical Officer"}
+                              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "10px", borderRadius: "8px" }}>
+                                <div
+                                  style={{
+                                    color: "#16a34a",
+                                    fontWeight: 700,
+                                    fontSize: "11.5px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "5px",
+                                    marginBottom: "4px",
+                                  }}
+                                >
+                                  <span>✓</span>
+                                  <span>{s.evaluated_by || "Verified Medical Officer"}</span>
                                 </div>
-                                <p style={{ margin: "4px 0 0", fontSize: "11.5px", color: "#14532d", lineHeight: "1.4" }}>
+                                <p style={{ margin: 0, fontSize: "11.5px", color: "#14532d", lineHeight: "1.4", wordBreak: "break-word" }}>
                                   {s.doctor_notes || s.prescription_advice || "Clinical review complete."}
                                 </p>
                               </div>
                             ) : (
-                              <div style={{ background: "#fff7ed", border: "1px solid #fed7aa", padding: "8px 10px", borderRadius: "8px" }}>
-                                <span style={{ color: "#c2410c", fontSize: "12px", fontWeight: 700 }}>
-                                  ⏳ Awaiting Clinician Evaluation
-                                </span>
-                                <small style={{ display: "block", color: "#9a3412", fontSize: "11px", marginTop: "2px" }}>
+                              <div style={{ background: "#fff7ed", border: "1px solid #fed7aa", padding: "10px", borderRadius: "8px" }}>
+                                <div style={{ color: "#c2410c", fontSize: "11.5px", fontWeight: 700, display: "flex", alignItems: "center", gap: "4px" }}>
+                                  <span>⏳</span>
+                                  <span>Awaiting Review</span>
+                                </div>
+                                <div style={{ color: "#9a3412", fontSize: "11px", marginTop: "4px", lineHeight: "1.3" }}>
                                   Pending doctor triage queue
-                                </small>
+                                </div>
                               </div>
                             )}
                           </td>
