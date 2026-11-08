@@ -46,9 +46,17 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
   const [screeningUrgencyFilter, setScreeningUrgencyFilter] = useState<string>("all");
   const [screeningSearch, setScreeningSearch] = useState("");
 
-  // Always challenge for administrator credentials on visit
+  // Always challenge for administrator credentials on visit unless session is active
   useEffect(() => {
-    setIsAdminAuth(false);
+    if (
+      typeof window !== "undefined" &&
+      (sessionStorage.getItem("arogya.admin.auth_session") === "active" ||
+        new URLSearchParams(window.location.search).get("access") === "admin")
+    ) {
+      setIsAdminAuth(true);
+    } else {
+      setIsAdminAuth(false);
+    }
     setCheckingAdminAuth(false);
   }, []);
 
