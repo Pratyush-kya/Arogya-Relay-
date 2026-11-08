@@ -36,7 +36,22 @@
 \usepackage{subcaption}
 \usepackage{listings}
 \usepackage{microtype}
+\microtypesetup{protrusion=true}
 \usepackage{enumitem}
+\usepackage[htt]{hyphenat}
+\usepackage{xurl}
+
+% Alignment, Hyphenation & Spacing Parameters
+\setlength{\emergencystretch}{2.5em}
+\tolerance=1500
+\hbadness=1500
+
+% Custom tabularx column types for clean wrapping and alignment
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{Z}{>{\centering\arraybackslash}X}
 
 \usepackage[
     colorlinks=true,
@@ -45,7 +60,9 @@
     urlcolor=blue!80!black,
     bookmarks=true,
     bookmarksnumbered=true,
-    pdfauthor={Bishnu Prasad and Project Team},
+    plainpages=false,
+    pdfpagelabels=true,
+    pdfauthor={Pratyush Kiran Rath, Samarpit Biswal, Bishnu Prasad Satapathy, Bibhu Prasad Dhal},
     pdftitle={Arogya Relay: A Doctor-Linked Patient Follow-up, Dosage Modification & Fair-Price Pharma Telehealth Platform}
 ]{hyperref}
 
@@ -131,10 +148,11 @@
     {\large \bfseries A PROJECT REPORT} \\[0.5cm]
     
     \textit{Submitted by} \\[0.4cm]
-    {\large \bfseries SAMARPIT BISWAL (Reg. No: 250301120012)} \\[0.2cm]
-    {\bfseries Team Members:} \\[0.1cm]
-    {\normalsize \textbf{250301120008} \quad \textbf{250301120011} \quad \textbf{250301120030}} \\[0.5cm]
-    \textit{in partial fulfilment for the award of the degree of} \\[0.6cm]
+    {\large \bfseries PRATYUSH KIRAN RATH \quad (Reg. No: 250301120001)} \\[0.2cm]
+    {\large \bfseries SAMARPIT BISWAL \quad (Reg. No: 250301120012)} \\[0.2cm]
+    {\large \bfseries BISHNU PRASAD SATAPATHY \quad (Reg. No: 250301120011)} \\[0.2cm]
+    {\large \bfseries BIBHU PRASAD DHAL \quad (Reg. No: 250301120009)} \\[0.6cm]
+    \textit{in partial fulfilment for the award of the degree of} \\[0.5cm]
     
     {\Large \bfseries BACHELOR OF TECHNOLOGY} \\[0.3cm]
     \textit{in} \\[0.3cm]
@@ -174,7 +192,7 @@
 \chapter*{Bonafide Certificate}
 \addcontentsline{toc}{chapter}{Bonafide Certificate}
 
-This is to certify that this project report entitled \textbf{``AROGYA RELAY: A ZERO-LOSS RURAL TELEHEALTH PLATFORM WITH DISTRIBUTED OFFLINE-RESILIENT ARCHITECTURE''} is the bonafide work carried out by \textbf{Samarpit Biswal (Reg. No: 250301120012)} and team members (\textbf{250301120008}, \textbf{250301120011}, \textbf{250301120030}) in partial fulfilment for the award of the degree of \textbf{Bachelor of Technology in Computer Science and Engineering} at \textbf{Centurion University of Technology and Management, Odisha, India}, under our academic supervision and guidance during the academic year 2025--2026.
+This is to certify that this project report entitled \textbf{``AROGYA RELAY: A ZERO-LOSS RURAL TELEHEALTH PLATFORM WITH\\ DISTRIBUTED OFFLINE-RESILIENT ARCHITECTURE''} is the bonafide work carried out by \textbf{Pratyush Kiran Rath (Reg. No: 250301120001)}, \textbf{Samarpit Biswal (Reg. No: 250301120012)}, \textbf{Bishnu Prasad Satapathy (Reg. No: 250301120011)}, and \textbf{Bibhu Prasad Dhal (Reg. No: 250301120009)} in partial fulfilment for the award of the degree of \textbf{Bachelor of Technology in Computer Science and Engineering} at \textbf{Centurion University of Technology and Management, Bhubaneswar Campus, Odisha, India}, under our academic supervision and guidance during the academic year 2025--2026.
 
 \vspace{0.5cm}
 This is further to certify to the best of our knowledge that the engineering implementation and empirical findings presented in this report have not formed the basis for the award of any other Degree, Diploma, or Fellowship in this or any other University or Institution.
@@ -182,14 +200,15 @@ This is further to certify to the best of our knowledge that the engineering imp
 \vspace{2.5cm}
 
 \noindent
-\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}cc}
-    \textbf{SUPERVISOR / FACULTY GUIDE} & \textbf{HEAD OF THE DEPARTMENT} \\[0.2cm]
+\begin{tabularx}{\textwidth}{@{} Z @{\hspace{1.2cm}} Z @{}}
+    \textbf{SUPERVISOR / FACULTY GUIDE} & \textbf{HEAD OF THE DEPARTMENT} \\[1.0cm]
+    \rule{5.8cm}{0.4pt} & \rule{5.8cm}{0.4pt} \\[0.2cm]
     \textbf{Assistant Prof. Sanjib Kumar Naik} & \textbf{Dr. Rahul Roy} \\
     Assistant Professor & Professor \& Head \\
     Dept. of Computer Science \& Engg. & Dept. of Computer Science \& Engg. \\
     School of Engineering \& Technology & School of Engineering \& Technology \\
     Centurion University of Technology \& Management & Centurion University of Technology \& Management
-\end{tabular*}
+\end{tabularx}
 
 \vspace{1.5cm}
 \begin{center}
@@ -204,7 +223,7 @@ This is further to certify to the best of our knowledge that the engineering imp
 \chapter*{Declaration}
 \addcontentsline{toc}{chapter}{Declaration}
 
-I hereby declare that the capstone project work entitled \textbf{``AROGYA RELAY: A ZERO-LOSS RURAL TELEHEALTH PLATFORM WITH DISTRIBUTED OFFLINE-RESILIENT ARCHITECTURE''} submitted to the \textbf{Department of Computer Science and Engineering, School of Engineering and Technology, Centurion University of Technology and Management, Odisha}, for the award of the degree of \textbf{Bachelor of Technology}, is a record of original engineering research and software implementation carried out under the academic guidance of \textbf{Assistant Prof. Sanjib Kumar Naik}.
+We hereby declare that the capstone project work entitled \textbf{``AROGYA RELAY: A ZERO-LOSS RURAL TELEHEALTH PLATFORM WITH\\ DISTRIBUTED OFFLINE-RESILIENT ARCHITECTURE''} submitted to the \textbf{Department of Computer Science and Engineering, School of Engineering and Technology, Centurion University of Technology and Management, Bhubaneswar Campus, Odisha}, for the award of the degree of \textbf{Bachelor of Technology}, is a record of original engineering research and software implementation carried out under the academic guidance of \textbf{Assistant Prof. Sanjib Kumar Naik}.
 
 \vspace{0.4cm}
 We further confirm that:
@@ -214,27 +233,31 @@ We further confirm that:
     \item All test data, patient vitals, and facility coordinates utilized in performance benchmarking and demonstration environments are entirely synthetic, ensuring zero violation of patient data privacy.
 \end{enumerate}
 
-\vspace{1.2cm}
+\vspace{0.8cm}
 
 \noindent
 \textbf{Place:} Bhubaneswar, Odisha \\
 \textbf{Date:} 8th November 2026
 
-\vspace{1.5cm}
+\vspace{0.8cm}
 
 \noindent
-\textbf{Candidate Signatures:} \\[0.8cm]
-1. \underline{\hspace{6cm}} \quad (\textbf{Samarpit Biswal} -- Reg. No: 250301120012) \\[0.5cm]
-2. \underline{\hspace{6cm}} \quad (\textbf{Team Member} -- Reg. No: 250301120008) \\[0.5cm]
-3. \underline{\hspace{6cm}} \quad (\textbf{Team Member} -- Reg. No: 250301120011) \\[0.5cm]
-4. \underline{\hspace{6cm}} \quad (\textbf{Team Member} -- Reg. No: 250301120030)
+\textbf{Candidate Signatures:} \\[0.6cm]
+\begin{tabularx}{\textwidth}{@{} Y Y @{}}
+1. \underline{\hspace{4.5cm}} & 2. \underline{\hspace{4.5cm}} \\
+\textbf{Pratyush Kiran Rath} & \textbf{Samarpit Biswal} \\
+(Reg. No: 250301120001) & (Reg. No: 250301120012) \\[0.8cm]
+3. \underline{\hspace{4.5cm}} & 4. \underline{\hspace{4.5cm}} \\
+\textbf{Bishnu Prasad Satapathy} & \textbf{Bibhu Prasad Dhal} \\
+(Reg. No: 250301120011) & (Reg. No: 250301120009)
+\end{tabularx}
 
 \newpage
 
 % -------------------------------------------------------------
 % ACADEMIC ASSESSMENT RUBRICS & CO ATTAINMENT
 % -------------------------------------------------------------
-\chapter*{Academic Assessment \& Evaluation Rubrics}
+\chapter*{Academic Assessment \&\\ Evaluation Rubrics}
 \addcontentsline{toc}{chapter}{Academic Assessment \& Evaluation Rubrics}
 
 The evaluation record of the project performance against university accreditation standards, NAAC/NBA criteria, and academic learning outcome rubrics is summarized below:
@@ -244,7 +267,7 @@ The evaluation record of the project performance against university accreditatio
 \centering
 \small
 \renewcommand{\arraystretch}{1.3}
-\begin{tabularx}{\textwidth}{c X c c X}
+\begin{tabularx}{\textwidth}{c Y c c Y}
 \toprule
 \textbf{Sl.} & \textbf{Evaluation Rubric Criteria} & \textbf{Max} & \textbf{Marks} & \textbf{Faculty Remarks} \\
 \midrule
@@ -364,7 +387,7 @@ However, their day-to-day operational efficacy is severely curtailed by paper-ba
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.95\textwidth]{image1.png}
-    \caption{Public Portal \& Global Architecture of Arogya Relay Platform}
+    \caption[Public Portal \& System Architecture]{Public Portal \& Global Architecture of Arogya Relay Platform}
     \label{fig:public_portal}
 \end{figure}
 
@@ -388,7 +411,7 @@ Table \ref{tab:system_constraints} summarizes how these physical and systemic co
 \centering
 \small
 \renewcommand{\arraystretch}{1.3}
-\begin{tabularx}{\textwidth}{p{3.2cm} X X}
+\begin{tabularx}{\textwidth}{L{3.0cm} Y Y}
 \toprule
 \textbf{Infrastructure Dimension} & \textbf{Conventional Telehealth Model} & \textbf{Arogya Relay Distributed Architecture} \\
 \midrule
@@ -457,7 +480,7 @@ To establish the novelty and architectural positioning of Arogya Relay, a compar
 \centering
 \small
 \renewcommand{\arraystretch}{1.3}
-\begin{tabularx}{\textwidth}{p{2.8cm} p{2.8cm} X p{2.8cm} X}
+\begin{tabularx}{\textwidth}{L{2.5cm} L{2.2cm} Y L{2.5cm} Y}
 \toprule
 \textbf{Platform} & \textbf{Offline Support} & \textbf{Triage Decision Model} & \textbf{Drug Dispensing Model} & \textbf{Language \& Voice Support} \\
 \midrule
@@ -533,7 +556,7 @@ Arogya Relay employs a hybrid, edge-distributed architecture designed for extrem
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.95\textwidth]{image2.png}
-    \caption{High-Level Distributed System Topology \& Edge Sync Pipeline}
+    \caption[Distributed Topology \& Edge Sync Pipeline]{High-Level Distributed System Topology \& Edge Sync Pipeline}
     \label{fig:arch_topology}
 \end{figure}
 
@@ -542,7 +565,7 @@ Figure \ref{fig:workflow_state_engine} details the complete multi-actor operatio
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.85\textwidth]{image3.png}
-    \caption{Complete Multi-Actor Operational Workflow \& Lifecycle State Engine}
+    \caption[Operational Workflow \& Lifecycle Engine]{Complete Multi-Actor Operational Workflow \& Lifecycle State Engine}
     \label{fig:workflow_state_engine}
 \end{figure}
 
@@ -581,7 +604,7 @@ The relational database schema is structured into normalized tables optimized fo
 \centering
 \small
 \renewcommand{\arraystretch}{1.3}
-\begin{tabularx}{\textwidth}{p{2.5cm} p{2.2cm} X X}
+\begin{tabularx}{\textwidth}{L{2.8cm} L{2.1cm} Y Y}
 \toprule
 \textbf{Table Name} & \textbf{Primary Key} & \textbf{Foreign Keys \& Relationships} & \textbf{Storage \& Security Scope} \\
 \midrule
@@ -610,7 +633,7 @@ The deterministic rules engine (\texttt{lib/clinical/rules-engine.ts}) executes 
 \centering
 \small
 \renewcommand{\arraystretch}{1.3}
-\begin{tabularx}{\textwidth}{p{2.5cm} X X p{3.2cm}}
+\begin{tabularx}{\textwidth}{L{2.5cm} Y Y L{3.2cm}}
 \toprule
 \textbf{Triage Action} & \textbf{Clinical Trigger Criteria} & \textbf{Mandated Protocol Response} & \textbf{System Action Override} \\
 \midrule
@@ -664,7 +687,7 @@ where $R = 6371\text{ km}$ represents the mean radius of the Earth. Table \ref{t
 \centering
 \small
 \renewcommand{\arraystretch}{1.3}
-\begin{tabularx}{\textwidth}{p{3.2cm} X X p{2.8cm}}
+\begin{tabularx}{\textwidth}{L{3.2cm} Y Y L{2.8cm}}
 \toprule
 \textbf{Facility Tier} & \textbf{Standard Equipment \& Services} & \textbf{Referral Scope} & \textbf{Operating Hours} \\
 \midrule
@@ -690,12 +713,12 @@ To overcome linguistic barriers and digital illiteracy in rural outposts, Arogya
 Furthermore, the field screening workstation integrates the Web Speech API (\texttt{lib/voice/*}, \texttt{app/screening-screen.tsx}) to support Voice Vitals Dictation. Frontline health workers can speak conversational regional sentences. A local regular expression parser extracts numeric vital signs in real time, automatically populating the temperature, pulse, and $\text{SpO}_2$ fields without requiring manual keyboard entry.
 
 \section{Patient Follow-up \& Dosage Modification System}
-The Patient Follow-up module (\texttt{app/patient-followup-card.tsx}, \texttt{app/prescription-tracker.tsx}) enables citizens who have already consulted a doctor to communicate directly regarding dosage adjustments or side effects referencing their original prescription token.
+The Patient Follow-up module (\path{app/patient-followup-card.tsx}, \path{app/prescription-tracker.tsx}) enables citizens who have already consulted a doctor to communicate directly regarding dosage adjustments or side effects referencing their original prescription token.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.95\textwidth]{image4.png}
-    \caption{Doctor-Linked Follow-up, Dosage Modification \& Fair-Price Pharmacy Interface}
+    \caption[Doctor-Linked Follow-up \& Dosage Modification]{Doctor-Linked Follow-up, Dosage Modification \& Fair-Price Pharmacy Interface}
     \label{fig:followup_system}
 \end{figure}
 
@@ -713,7 +736,7 @@ The Doctor Workstation (\texttt{app/doctor-workspace.tsx}) serves as the clinica
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.95\textwidth]{image5.png}
-    \caption{Doctor Workstation, Clinical Cases Queue \& Digital Signature Signing}
+    \caption[Doctor Workstation \& Clinical Cases Queue]{Doctor Workstation, Clinical Cases Queue \& Digital Signature Signing}
     \label{fig:doctor_workstation}
 \end{figure}
 
@@ -730,7 +753,7 @@ The Jan Aushadhi Dispensary Workstation (\texttt{app/chemist-dispensary.tsx}) br
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.95\textwidth]{image6.png}
-    \caption{Jan Aushadhi Dispensary Counter, Token Verification \& Escrow Burn}
+    \caption[Jan Aushadhi Dispensary Counter \& Escrow Burn]{Jan Aushadhi Dispensary Counter, Token Verification \& Escrow Burn}
     \label{fig:dispensary_counter}
 \end{figure}
 
@@ -750,7 +773,7 @@ The Citizen Portal (\texttt{app/patient-workspace.tsx}, \texttt{app/health-pass-
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.95\textwidth]{image7.png}
-    \caption{Citizen Health Pass, Personalized Dosage Alarms \& Generic Formulary}
+    \caption[Citizen Health Pass \& Dosage Alarms]{Citizen Health Pass, Personalized Dosage Alarms \& Generic Formulary}
     \label{fig:citizen_health_pass}
 \end{figure}
 
@@ -773,7 +796,7 @@ The Administrative Governance Console (\texttt{app/admin/page.tsx}, \texttt{app/
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.95\textwidth]{image8.png}
-    \caption{System Administration Console, Platform KPI Metrics Ribbon \& Telemedicine Escrow Audit Ledger}
+    \caption[System Admin Console \& Escrow Audit Ledger]{System Administration Console, Platform KPI Metrics Ribbon \& Telemedicine Escrow Audit Ledger}
     \label{fig:admin_console}
 \end{figure}
 
@@ -794,7 +817,7 @@ The Nearby Healthcare Engine (\texttt{lib/nearby/*}, \texttt{app/nearby-care.tsx
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.95\textwidth]{image9.png}
-    \caption{Rural \& District Healthcare Finder with Dynamic GPS Corridor Selection (Cuttack Active)}
+    \caption[Capability-First Nearby Healthcare Engine]{Rural \& District Healthcare Finder with Dynamic GPS Corridor Selection (Cuttack Active)}
     \label{fig:nearby_finder}
 \end{figure}
 
@@ -808,14 +831,14 @@ The platform supports live GPS auto-detection (\texttt{navigator.geolocation}) a
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.95\textwidth]{image10.png}
-    \caption{Nearby Healthcare Facility Directory (13 Hospitals, 5 Jan Aushadhi Kendras \& Ayushman Arogya Mandirs)}
+    \caption[Primary Care Facility Directory]{Nearby Healthcare Facility Directory (13 Hospitals, 5 Jan Aushadhi Kendras \& Ayushman Arogya Mandirs)}
     \label{fig:facility_directory}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.95\textwidth]{image11.png}
-    \caption{Live GPS Turn-by-Turn Road Navigation to Nearest Healthcare Facility via Kanika Road}
+    \caption[Autonomous GPS Route Navigation Corridor]{Live GPS Turn-by-Turn Road Navigation to Nearest Healthcare Facility via Kanika Road}
     \label{fig:gps_navigation}
 \end{figure}
 
@@ -833,7 +856,7 @@ The Arogya Gyan portal (\texttt{app/disease-library.tsx}) provides rural citizen
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.95\textwidth]{image12.png}
-    \caption{Arogya Gyan: Localized Health Literacy \& Common Disease Home Care Protocols}
+    \caption[Arogya Gyan Localized Disease Knowledge Base]{Arogya Gyan: Localized Health Literacy \& Common Disease Home Care Protocols}
     \label{fig:arogya_gyan}
 \end{figure}
 
@@ -848,7 +871,7 @@ The District Health Camp Finder (\texttt{app/health-camp-finder.tsx}) connects r
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.95\textwidth]{image13.png}
-    \caption{District Health Camps \& Community Outreach Directory with Offline-Ready Cache}
+    \caption[District Health Camps Outreach Directory]{District Health Camps \& Community Outreach Directory with Offline-Ready Cache}
     \label{fig:district_camps}
 \end{figure}
 
@@ -864,15 +887,15 @@ To ensure production reliability and prevent clinical software regressions, Arog
 \centering
 \small
 \renewcommand{\arraystretch}{1.3}
-\begin{tabularx}{\textwidth}{p{3.8cm} p{2.8cm} X c}
+\begin{tabularx}{\textwidth}{L{4.2cm} L{2.6cm} Y C{2.2cm}}
 \toprule
 \textbf{Test Module} & \textbf{Target Component} & \textbf{Test Invariants \& Assertions} & \textbf{Result} \\
 \midrule
-\texttt{telemedicine-pipeline.test.mts} & Prescription \& Escrow Engine & Token generation, single-use burn, double-dispense rejection, doctor pool TTL. & \textbf{PASS (100\%)} \\
-\texttt{care-plan.test.mts} & Care Plan \& Schedules & Dosage scheduling, adherence tracking, drug interaction alerts, FHIR conversion. & \textbf{PASS (100\%)} \\
-\texttt{nearby-care.test.mts} & Referral Ranking Engine & Capability filtering, distance sorting, emergency 112 routing, camp expiration. & \textbf{PASS (100\%)} \\
-\texttt{i18n.test.mts} & Multilingual Localization & 8 languages verified, Tier 1 clinical strings locked, fallback cascade. & \textbf{PASS (100\%)} \\
-\texttt{rendered-html.test.mjs} & Role Isolation \& Security & Zero cross-role UI bleed, absence of phantom auth buttons, security headers. & \textbf{PASS (100\%)} \\
+\path{telemedicine-pipeline.test.mts} & Prescription \& Escrow Engine & Token generation, single-use burn, double-dispense rejection, doctor pool TTL. & \textbf{PASS (100\%)} \\
+\path{care-plan.test.mts} & Care Plan \& Schedules & Dosage scheduling, adherence tracking, drug interaction alerts, FHIR conversion. & \textbf{PASS (100\%)} \\
+\path{nearby-care.test.mts} & Referral Ranking Engine & Capability filtering, distance sorting, emergency 112 routing, camp expiration. & \textbf{PASS (100\%)} \\
+\path{i18n.test.mts} & Multilingual Localization & 8 languages verified, Tier 1 clinical strings locked, fallback cascade. & \textbf{PASS (100\%)} \\
+\path{rendered-html.test.mjs} & Role Isolation \& Security & Zero cross-role UI bleed, absence of phantom auth buttons, security headers. & \textbf{PASS (100\%)} \\
 \bottomrule
 \end{tabularx}
 \caption{Comprehensive Automated Test Suite Execution Matrix (48/48 Passing)}
@@ -886,7 +909,7 @@ To quantify system performance under simulated rural telecommunications conditio
 \centering
 \small
 \renewcommand{\arraystretch}{1.3}
-\begin{tabularx}{\textwidth}{p{3.2cm} c c c c}
+\begin{tabularx}{\textwidth}{L{2.8cm} Z Z Z Z}
 \toprule
 \textbf{Network Profile} & \textbf{Screening Save (Offline)} & \textbf{Re-sync Latency (10 records)} & \textbf{Payload Size (per record)} & \textbf{Sync Reliability} \\
 \midrule
@@ -924,15 +947,15 @@ The percentage cost saving is computed as:
 \centering
 \small
 \renewcommand{\arraystretch}{1.3}
-\begin{tabularx}{\textwidth}{X c c c c}
+\begin{tabularx}{\textwidth}{Y C{2.2cm} C{2.2cm} C{2.2cm} C{1.8cm}}
 \toprule
 \textbf{Therapeutic Molecule / Formulation} & \textbf{Branded Retail (Rs.)} & \textbf{Jan Aushadhi (Rs.)} & \textbf{Absolute Savings (Rs.)} & \textbf{\% Savings} \\
 \midrule
-Amoxicillin + Clavulanic Acid 625mg (10 tabs) & Rs. 204.00 & Rs. 58.50 & Rs. 145.50 & 71.3\% \\
-Metformin 500mg (10 tabs) & Rs. 42.00 & Rs. 9.00 & Rs. 33.00 & 78.6\% \\
-Amlodipine 5mg (10 tabs) & Rs. 38.00 & Rs. 6.50 & Rs. 31.50 & 82.9\% \\
-Paracetamol 650mg (10 tabs) & Rs. 32.00 & Rs. 8.20 & Rs. 23.80 & 74.4\% \\
-Azithromycin 500mg (3 tabs) & Rs. 118.00 & Rs. 32.00 & Rs. 86.00 & 72.9\% \\
+Amoxicillin + Clavulanic Acid 625mg (10 tabs) & Rs.~204.00 & Rs.~58.50 & Rs.~145.50 & 71.3\% \\
+Metformin 500mg (10 tabs) & Rs.~42.00 & Rs.~9.00 & Rs.~33.00 & 78.6\% \\
+Amlodipine 5mg (10 tabs) & Rs.~38.00 & Rs.~6.50 & Rs.~31.50 & 82.9\% \\
+Paracetamol 650mg (10 tabs) & Rs.~32.00 & Rs.~8.20 & Rs.~23.80 & 74.4\% \\
+Azithromycin 500mg (3 tabs) & Rs.~118.00 & Rs.~32.00 & Rs.~86.00 & 72.9\% \\
 \midrule
 \textbf{Average Formulation Savings} & --- & --- & --- & \textbf{74.2\%} \\
 \bottomrule
@@ -1067,5 +1090,82 @@ Vercel Inc. and Next.js Community,
 Developer Documentation, 2024.
 
 \end{thebibliography}
+
+% -------------------------------------------------------------
+% APPENDICES
+% -------------------------------------------------------------
+\appendix
+
+\chapter{Platform User Directory \& Test Credential Matrix}
+\label{app:user_directory}
+
+To facilitate seamless administrative verification, viva-voce demonstrations, and automated end-to-end integration testing, Table \ref{tab:app_users} documents the complete platform directory configured within the Arogya Relay PostgreSQL identity vault. Each user account corresponds to a verified stakeholder persona with strict Row-Level Security (RLS) policies enforcing role boundaries.
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{c L{3.5cm} C{2.2cm} L{3.6cm} Y}
+\toprule
+\textbf{\#} & \textbf{User Display Name} & \textbf{Role Badge} & \textbf{Login Email Address} & \textbf{Operational Scope \& Permissions} \\
+\midrule
+1 & Pratyush Kiran Rath & \textbf{ADMIN} & \path{pratyushkiranrath4@gmail.com} & System Governance, Doctor NMC verification, Escrow audit ledger. \\
+2 & Dr.~Samarpit Biswal & \textbf{DOCTOR} & \path{dr.biswal@ruralhealth.org} & Verified Physician, Clinical Triage Queue, Digital Rx Signing (OMC-2020-54190). \\
+3 & Dr.~Bishnu Prasad Satapathy & \textbf{DOCTOR} & \path{dr.satapathy@ruralhealth.org} & Verified Medical Officer, General Medicine, Teleconsultations (OMC-2018-88412). \\
+4 & Dr.~Ananya Mishra & \textbf{DOCTOR} & \path{dr.ananya@health.gov.in} & Verified NMC Specialist, Paediatrics \& Maternal Triage (OMC-2019-72415). \\
+5 & Ramesh Soren & \textbf{CITIZEN} & \path{citizen.ramesh@gmail.com} & Citizen Health Pass, Regional Disease Library, Medication Alarms (Hindi/Odia). \\
+\bottomrule
+\end{tabularx}
+\caption{Production Platform User Directory \& Security Scope}
+\label{tab:app_users}
+\end{table}
+
+\noindent
+\textbf{Demonstration Authentication Credentials:} Non-admin demonstration accounts utilize the standardized sandbox passcode \texttt{demo123} for 1-click evaluation. The primary system administrator account utilizes \texttt{admin123} to access administrative security and audit consoles.
+
+\chapter[Reproduction Guide \& Cloud Deployment]{Reproduction Guide, Verification \&\\ Cloud Deployment}
+\label{app:reproduction}
+
+\section{Local Reproduction \& Test Execution Guide}
+Arogya Relay is designed with a zero-friction local setup workflow. The entire platform---including offline Service Workers, IndexedDB local persistence, and clinical decision support engines---can be reproduced on any developer workstation running Node.js 18+ and Python 3.10+.
+
+\begin{lstlisting}[language=bash, caption={Local Repository Setup, Test Execution \& Development Server Launch}, label={lst:local_setup}]
+# 1. Clone the repository
+git clone https://github.com/Pratyush-kya/Arogya-Relay-.git
+cd Arogya-Relay
+
+# 2. Install production dependencies
+npm install
+
+# 3. Configure environment variables (copy from template)
+cp .env.example .env.local
+
+# 4. Execute automated verification test suite (48/48 passing)
+npm test
+
+# 5. Launch local edge development server
+npm run dev
+# Server listening on http://localhost:3000
+\end{lstlisting}
+
+\section{Cloud Deployment \& Production Hosting Topology}
+Arogya Relay supports three cost-effective, high-availability deployment routes tailored for state health missions and academic research laboratories, summarized in Table \ref{tab:app_deployment}.
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{L{3.2cm} L{2.8cm} Y C{2.2cm}}
+\toprule
+\textbf{Deployment Route} & \textbf{Hosting Infrastructure} & \textbf{Edge Routing \& Security Capabilities} & \textbf{Cost Tier} \\
+\midrule
+\textbf{Live Production Demo (Active)} & Vercel Edge Platform & Edge runtime SSR, global CDN caching, automatic SSL, zero-downtime updates. & Free Tier / Open Source \\
+\textbf{State Health Mission} & Cloudflare Workers + Supabase D1 & Custom domain routing, enterprise WAF, geo-fenced data sovereignty, 2G optimization. & Standard State Gov-Cloud \\
+\textbf{Air-Gapped Outpost} & Local Micro-Server / Raspberry Pi 5 & Embedded SQLite edge sync, local Wi-Fi Hotspot relay, offline mesh broadcasting. & Low-cost Edge Hardware ($<\text{Rs. }8,000$) \\
+\bottomrule
+\end{tabularx}
+\caption{Production Cloud Deployment Targets \& Architectural Mapping}
+\label{tab:app_deployment}
+\end{table}
 
 \end{document}
