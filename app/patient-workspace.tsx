@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useLanguage } from "@/lib/i18n/provider";
+import { LanguageSwitcher } from "./language-switcher";
 import { HealthCampFinder } from "./health-camp-finder";
 import PrescriptionTracker from "./prescription-tracker";
 import { TWO_AVAILABLE_DOCTORS, getDoctorGmailComposeUrl } from "@/lib/prescriptions/types";
@@ -61,7 +62,7 @@ export function PatientWorkspace({
                 Arogya Relay
               </strong>
               <span style={{ fontSize: "10.5px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                Citizen &amp; Family Health Portal
+                {t("patient.portalTitle")}
               </span>
             </div>
           </div>
@@ -88,28 +89,7 @@ export function PatientWorkspace({
 
         {/* Right Nav: Language & Logout */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <select
-            value={effectiveLang}
-            onChange={(e) => setLang(e.target.value as any)}
-            style={{
-              padding: "6px 12px",
-              borderRadius: "8px",
-              border: "1px solid var(--border, #cbd5e1)",
-              background: "var(--surface, #ffffff)",
-              fontSize: "12.5px",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
-            <option value="en">English</option>
-            <option value="hi">हिन्दी (Hindi)</option>
-            <option value="or">ଓଡ଼ିଆ (Odia)</option>
-            <option value="bn">বাংলা (Bengali)</option>
-            <option value="te">తెలుగు (Telugu)</option>
-            <option value="as">অসমীয়া (Assamese)</option>
-            <option value="mr">मराठी (Marathi)</option>
-            <option value="sat">ᱥᱟᱱᱛᱟᱲᱤ (Santali)</option>
-          </select>
+          <LanguageSwitcher />
 
           <button
             type="button"
@@ -129,7 +109,7 @@ export function PatientWorkspace({
             }}
           >
             <span>🚪</span>
-            <span>Log Out</span>
+            <span>{t("patient.logout")}</span>
           </button>
         </div>
       </header>
@@ -146,11 +126,11 @@ export function PatientWorkspace({
         }}
       >
         {[
-          { id: "overview", label: "Overview & Health Pass", icon: "⌂" },
-          { id: "camps", label: "District Health Camps", icon: "📍" },
-          { id: "prescriptions", label: "My Prescriptions", icon: "💊" },
-          { id: "gyan", label: "Arogya Gyan (Remedies)", icon: "📖" },
-          { id: "nearby", label: "Nearby Healthcare", icon: "⌖" },
+          { id: "overview", label: t("patient.tabOverview"), icon: "⌂" },
+          { id: "camps", label: t("patient.tabCamps"), icon: "📍" },
+          { id: "prescriptions", label: t("patient.tabPrescriptions"), icon: "💊" },
+          { id: "gyan", label: t("patient.tabGyan"), icon: "📖" },
+          { id: "nearby", label: t("patient.tabNearby"), icon: "⌖" },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -198,13 +178,13 @@ export function PatientWorkspace({
             >
               <div>
                 <span style={{ fontSize: "11px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px", opacity: 0.9 }}>
-                  🌟 UNIVERSAL CITIZEN HEALTH PORTAL
+                  🌟 {t("patient.welcomeBanner")}
                 </span>
                 <h1 style={{ fontSize: "24px", fontWeight: 800, margin: "6px 0", color: "#ffffff" }}>
-                  Namaste, {displayName}
+                  {t("patient.welcomeHello")}, {displayName}
                 </h1>
                 <p style={{ margin: 0, fontSize: "14px", opacity: 0.92, maxWidth: "600px", lineHeight: 1.45 }}>
-                  Access your digital prescriptions, verified home remedies with voice narration, and locate nearby health camps in your district.
+                  {t("patient.welcomeDesc")}
                 </p>
                 <div style={{ display: "flex", gap: "8px", marginTop: "12px", flexWrap: "wrap" }}>
                   <button
@@ -225,7 +205,7 @@ export function PatientWorkspace({
                     }}
                   >
                     <span>📖</span>
-                    <span>How to Use Guide</span>
+                    <span>{t("patient.howToGuide")}</span>
                   </button>
                   <button
                     type="button"
@@ -245,7 +225,7 @@ export function PatientWorkspace({
                     }}
                   >
                     <span>💬</span>
-                    <span>Facing an Issue? Give Feedback</span>
+                    <span>{t("patient.facingIssue")}</span>
                   </button>
                 </div>
               </div>
@@ -292,10 +272,10 @@ export function PatientWorkspace({
                 <span style={{ fontSize: "22px" }}>🚨</span>
                 <div>
                   <strong style={{ fontSize: "14px", color: "#991b1b", display: "block" }}>
-                    Emergency Medical Assistance (Free 24x7)
+                    {t("patient.emergencyAssistance")}
                   </strong>
                   <span style={{ fontSize: "12px", color: "#b91c1c" }}>
-                    Call 112 immediately for severe chest pain, breathing difficulty, or trauma.
+                    {t("patient.emergencyDesc")}
                   </span>
                 </div>
               </div>
@@ -314,7 +294,7 @@ export function PatientWorkspace({
                   gap: "6px",
                 }}
               >
-                📞 Call 112
+                {t("patient.call112Btn")}
               </a>
             </div>
 
@@ -336,11 +316,11 @@ export function PatientWorkspace({
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <span style={{ fontSize: "22px" }}>🩺</span>
                     <h2 style={{ fontSize: "17.5px", fontWeight: 800, margin: 0, color: "var(--foreground, #0f172a)" }}>
-                      Your Verified Doctors (Met in Person)
+                      {t("patient.verifiedDoctorsHeader")}
                     </h2>
                   </div>
                   <p style={{ margin: "4px 0 0", fontSize: "13px", color: "var(--muted, #64748b)" }}>
-                    Submit clinical reports, describe side effects, or request medicine dosage changes directly to your real examining doctors.
+                    {t("patient.verifiedDoctorsSubtitle")}
                   </p>
                 </div>
 
@@ -359,7 +339,7 @@ export function PatientWorkspace({
                   }}
                 >
                   <span>🟢</span>
-                  <span>2 Verified Doctors Available</span>
+                  <span>{t("patient.availableDoctorsCount")}</span>
                 </div>
               </div>
 
@@ -452,7 +432,7 @@ export function PatientWorkspace({
                           }}
                         >
                           <span>📤</span>
-                          <span>Submit Report / Dose Change</span>
+                          <span>{t("patient.submitDoseChange")}</span>
                         </button>
 
                         <button
@@ -470,7 +450,7 @@ export function PatientWorkspace({
                             cursor: "pointer",
                           }}
                         >
-                          View Status / Reply
+                          {t("patient.viewReply")}
                         </button>
                       </div>
 
@@ -499,7 +479,7 @@ export function PatientWorkspace({
                         }}
                       >
                         <span>✉️</span>
-                        <span>Open Gmail &amp; Write to Doctor Directly (No AI)</span>
+                        <span>{t("patient.directGmail")}</span>
                       </a>
                     </div>
                   </div>
@@ -537,13 +517,13 @@ export function PatientWorkspace({
               >
                 <span style={{ fontSize: "32px" }}>💊</span>
                 <h3 style={{ fontSize: "18px", fontWeight: 800, margin: 0, color: "var(--foreground, #0f172a)" }}>
-                  My Prescriptions &amp; Alarms
+                  {t("patient.cardPrescriptionsTitle")}
                 </h3>
                 <p style={{ margin: 0, fontSize: "13.5px", color: "var(--muted, #64748b)", lineHeight: 1.45 }}>
-                  Submit reports to doctors, view modified doses with Jan Aushadhi fair price guarantee, and set daily reminder alarms.
+                  {t("patient.cardPrescriptionsDesc")}
                 </p>
                 <span style={{ marginTop: "auto", fontWeight: 700, fontSize: "13.5px", color: "#0284c7" }}>
-                  Open Prescriptions &amp; Alarms →
+                  {t("patient.cardPrescriptionsAction")}
                 </span>
               </div>
 
@@ -567,13 +547,13 @@ export function PatientWorkspace({
               >
                 <span style={{ fontSize: "32px" }}>📍</span>
                 <h3 style={{ fontSize: "18px", fontWeight: 800, margin: 0, color: "var(--foreground, #0f172a)" }}>
-                  District Health Camps
+                  {t("patient.cardCampsTitle")}
                 </h3>
                 <p style={{ margin: 0, fontSize: "13.5px", color: "var(--muted, #64748b)", lineHeight: 1.45 }}>
-                  Find free eye checkups, mobile health units, and generic medicine distribution in your native district or while traveling.
+                  {t("patient.cardCampsDesc")}
                 </p>
                 <span style={{ marginTop: "auto", fontWeight: 700, fontSize: "13.5px", color: "#047857" }}>
-                  Find Nearby Camps →
+                  {t("patient.cardCampsAction")}
                 </span>
               </div>
 
@@ -597,13 +577,13 @@ export function PatientWorkspace({
               >
                 <span style={{ fontSize: "32px" }}>📖</span>
                 <h3 style={{ fontSize: "18px", fontWeight: 800, margin: 0, color: "var(--foreground, #0f172a)" }}>
-                  Arogya Gyan (Remedies)
+                  {t("patient.cardGyanTitle")}
                 </h3>
                 <p style={{ margin: 0, fontSize: "13.5px", color: "var(--muted, #64748b)", lineHeight: 1.45 }}>
-                  10+ verified illnesses, safe home remedies, and danger signs with on-device HD voice narration in your mother tongue.
+                  {t("patient.cardGyanDesc")}
                 </p>
                 <span style={{ marginTop: "auto", fontWeight: 700, fontSize: "13.5px", color: "#8b5cf6" }}>
-                  Explore Remedies →
+                  {t("patient.cardGyanAction")}
                 </span>
               </div>
             </div>

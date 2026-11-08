@@ -1,6 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/lib/i18n/provider";
+import { LanguageSwitcher } from "./language-switcher";
 import { DoctorFollowupManager } from "./doctor-followup-manager";
 
 interface DoctorWorkspaceProps {
@@ -22,7 +23,7 @@ export function DoctorWorkspace({
   currentProfile,
   onSignOut,
 }: DoctorWorkspaceProps) {
-  const { effectiveLang, setLang } = useLanguage();
+  const { t } = useLanguage();
 
   const isSamarpit =
     currentUser?.email?.includes("samarpit") || currentUser?.email?.includes("samarpitbiswal966");
@@ -83,7 +84,7 @@ export function DoctorWorkspace({
                 Arogya Relay
               </strong>
               <span style={{ fontSize: "10.5px", fontWeight: 700, color: "var(--muted, #64748b)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                Doctor Clinical Workstation
+                {t("doctor.workstationTitle")}
               </span>
             </div>
           </div>
@@ -112,24 +113,7 @@ export function DoctorWorkspace({
 
         {/* Right Nav: Language & Logout */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <select
-            value={effectiveLang}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            onChange={(e) => setLang(e.target.value as any)}
-            style={{
-              padding: "6px 12px",
-              borderRadius: "8px",
-              border: "1px solid var(--border, #cbd5e1)",
-              background: "var(--surface, #ffffff)",
-              fontSize: "12.5px",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
-            <option value="en">English</option>
-            <option value="hi">हिन्दी (Hindi)</option>
-            <option value="or">ଓଡ଼ିଆ (Odia)</option>
-          </select>
+          <LanguageSwitcher />
 
           <button
             type="button"
@@ -149,7 +133,7 @@ export function DoctorWorkspace({
             }}
           >
             <span>🚪</span>
-            <span>Log Out</span>
+            <span>{t("patient.logout")}</span>
           </button>
         </div>
       </header>

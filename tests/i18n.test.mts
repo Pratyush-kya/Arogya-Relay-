@@ -45,7 +45,19 @@ test("formatted translations preserve counts and use the selected language", () 
 });
 
 test("all major website surfaces consume the shared language provider", async () => {
-  for (const file of ["page.tsx", "symptom-checker.tsx", "care-guidance.tsx", "nearby-care.tsx", "care-plan.tsx", "read-aloud.tsx"]) {
+  for (const file of [
+    "page.tsx",
+    "symptom-checker.tsx",
+    "care-guidance.tsx",
+    "nearby-care.tsx",
+    "care-plan.tsx",
+    "read-aloud.tsx",
+    "public-landing.tsx",
+    "patient-workspace.tsx",
+    "doctor-workspace.tsx",
+    "admin-screen.tsx",
+    "health-camp-finder.tsx",
+  ]) {
     const source = await readFile(new URL(`../app/${file}`, import.meta.url), "utf8");
     assert.match(source, /useLanguage\(/, `${file} must use the global language context`);
   }

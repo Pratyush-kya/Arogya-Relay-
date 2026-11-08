@@ -80,10 +80,10 @@ export function HealthCampFinder({ onSelectCamp, className }: HealthCampFinderPr
             📍 RURAL HEALTH OUTREACH DIRECTORY
           </span>
           <h2 style={{ fontSize: "20px", fontWeight: "800", margin: "4px 0 6px", color: "#ffffff" }}>
-            District-Based Health Camps &amp; Mobile Medical Units
+            {t("camps.title")}
           </h2>
           <p style={{ margin: 0, fontSize: "13.5px", opacity: 0.92, maxWidth: "620px", lineHeight: "1.4" }}>
-            Discover free local clinical checkups, eye surgery camps, immunization drives, and generic medicine distribution in your native district or while traveling.
+            {t("camps.subtitle")}
           </p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.15)", padding: "6px 14px", borderRadius: "20px" }}>

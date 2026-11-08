@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { LanguageSwitcher } from "./language-switcher";
+import { useLanguage } from "@/lib/i18n/provider";
 import { createClient, ADMIN_EMAIL, isAdminEmail, type Profile, DEFAULT_DEMO_USERS } from "@/lib/supabase/client";
 import {
   HeroFeedbackModal,
@@ -18,6 +19,7 @@ export interface PublicLandingProps {
 
 export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPortal, onOpenChemistPortal }: PublicLandingProps) {
   const supabase = createClient();
+  const { t, effectiveLang } = useLanguage();
 
   // Active Logged In Session State
   const [activeSessionUser, setActiveSessionUser] = useState<{ email: string; role: string; displayName?: string } | null>(null);
@@ -326,27 +328,27 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
               letterSpacing: "0.4px",
             }}
           >
-            🇮🇳 NATIONAL DIGITAL HEALTH RELAY
+            🇮🇳 {t("landing.emergencyRelay")}
           </span>
-          <span>Emergency Services:</span>
+          <span>{t("landing.emergencyServices")}</span>
           <a href="tel:112" style={{ color: "#a7f3d0", fontWeight: 700, textDecoration: "none" }}>
-            🚨 112 (Emergency)
+            🚨 {t("landing.emergency112")}
           </a>
           <span style={{ opacity: 0.5 }}>|</span>
           <a href="tel:108" style={{ color: "#a7f3d0", fontWeight: 700, textDecoration: "none" }}>
-            🚑 108 (Ambulance)
+            🚑 {t("landing.ambulance108")}
           </a>
           <span style={{ opacity: 0.5 }}>|</span>
           <a href="tel:104" style={{ color: "#a7f3d0", fontWeight: 700, textDecoration: "none" }}>
-            📞 104 (Health Help)
+            📞 {t("landing.healthHelp104")}
           </a>
           <span style={{ opacity: 0.5 }}>|</span>
           <a href="tel:14416" style={{ color: "#a7f3d0", fontWeight: 700, textDecoration: "none" }}>
-            🩺 14416 (Tele-MANAS)
+            🩺 {t("landing.teleManas")}
           </a>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <span style={{ fontSize: "11px", color: "#6ee7b7" }}>● 100% Offline-Resilient Network Node</span>
+          <span style={{ fontSize: "11px", color: "#6ee7b7" }}>{t("landing.offlineNode")}</span>
         </div>
       </div>
 
@@ -395,7 +397,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                 gap: "8px",
               }}
             >
-              Arogya Relay
+              {t("app.title")}
               <span
                 style={{
                   fontSize: "11px",
@@ -406,11 +408,11 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                   borderRadius: "12px",
                 }}
               >
-                ABDM Verified
+                {t("landing.abdmVerified")}
               </span>
             </h1>
             <p style={{ margin: 0, fontSize: "11.5px", color: "#64748b" }}>
-              Offline-First Community Healthcare &amp; Clinical Relay System
+              {t("landing.appSubtitle")}
             </p>
           </div>
         </div>
@@ -434,7 +436,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
             }}
           >
             <span>📖</span>
-            <span>How to Use</span>
+            <span>{t("landing.howToUse")}</span>
           </button>
           <button
             type="button"
@@ -454,7 +456,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
             }}
           >
             <span>💬</span>
-            <span>Report Issue / Feedback</span>
+            <span>{t("landing.reportIssue")}</span>
           </button>
           <LanguageSwitcher />
         </div>
@@ -496,7 +498,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                 marginBottom: "12px",
               }}
             >
-              <span>🛡️</span> Zero-Loss Clinical Relay · 2G &amp; Offline Resilient
+              <span>🛡️</span> {t("landing.heroBadge")}
             </div>
 
             <h2
@@ -509,7 +511,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                 margin: "0 0 10px",
               }}
             >
-              Institutional Health Access for Bharat, Connected or Disconnected.
+              {t("landing.heroTitle")}
             </h2>
 
             <p
@@ -520,8 +522,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                 margin: 0,
               }}
             >
-              A direct digital healthcare network linking citizens with verified doctors for prescription follow-ups,
-              dosage adjustments, guaranteed authentic generic medicines at fair prices, health camps, and emergency care.
+              {t("landing.heroDesc")}
             </p>
           </div>
 
@@ -540,9 +541,9 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
             >
               <span style={{ fontSize: "20px" }}>👤</span>
               <div>
-                <strong style={{ fontSize: "13.5px", color: "#0f172a", display: "block" }}>Citizen: Follow-up &amp; Fair Price</strong>
+                <strong style={{ fontSize: "13.5px", color: "#0f172a", display: "block" }}>{t("landing.pillarCitizenTitle")}</strong>
                 <span style={{ fontSize: "12px", color: "#64748b" }}>
-                  Message your doctor using your prescription, request dosage changes, view transparent medicine costs &amp; find nearby chemists.
+                  {t("landing.pillarCitizenDesc")}
                 </span>
               </div>
             </div>
@@ -560,9 +561,9 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
             >
               <span style={{ fontSize: "20px" }}>🩺</span>
               <div>
-                <strong style={{ fontSize: "13.5px", color: "#0f172a", display: "block" }}>Doctor Workstation &amp; Chemist Audit</strong>
+                <strong style={{ fontSize: "13.5px", color: "#0f172a", display: "block" }}>{t("landing.pillarDoctorTitle")}</strong>
                 <span style={{ fontSize: "12px", color: "#64748b" }}>
-                  Review patient issues, modify doses, suggest the closest verified pharmacy, and check if the chemist dispensed the right medicine.
+                  {t("landing.pillarDoctorDesc")}
                 </span>
               </div>
             </div>
@@ -580,9 +581,9 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
             >
               <span style={{ fontSize: "20px" }}>🏪</span>
               <div>
-                <strong style={{ fontSize: "13.5px", color: "#0f172a", display: "block" }}>Jan Aushadhi Chemist &amp; Fair Price Lock</strong>
+                <strong style={{ fontSize: "13.5px", color: "#0f172a", display: "block" }}>{t("landing.pillarChemistTitle")}</strong>
                 <span style={{ fontSize: "12px", color: "#64748b" }}>
-                  QR token fulfillment, guaranteed 100% non-expired batch stock, and zero fake or inflated medicine prices.
+                  {t("landing.pillarChemistDesc")}
                 </span>
               </div>
             </div>
@@ -636,13 +637,13 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                   marginBottom: "10px",
                 }}
               >
-                {activeSessionUser.role === "patient" ? "Citizen / Patient Session Active" : `${activeSessionUser.role.toUpperCase()} Session Active`}
+                {activeSessionUser.role === "patient" ? (effectiveLang === "hi" ? "नागरिक / रोगी सत्र सक्रिय" : effectiveLang === "or" ? "ନାଗରିକ / ରୋଗୀ ସତ୍ର ସକ୍ରିୟ" : "Citizen / Patient Session Active") : `${activeSessionUser.role.toUpperCase()} ${t("landing.sessionActive")}`}
               </span>
               <h3 style={{ margin: "0 0 6px", fontSize: "19px", color: "#0f172a", fontWeight: 800 }}>
-                Welcome back, {activeSessionUser.displayName || activeSessionUser.email}!
+                {t("landing.welcomeBack")}, {activeSessionUser.displayName || activeSessionUser.email}!
               </h3>
               <p style={{ margin: "0 0 22px", fontSize: "13px", color: "#64748b", lineHeight: 1.5 }}>
-                You are currently signed into your personalized health portal.
+                {effectiveLang === "hi" ? "आप वर्तमान में अपने व्यक्तिगत स्वास्थ्य पोर्टल में साइन इन हैं।" : effectiveLang === "or" ? "ଆପଣ ବର୍ତ୍ତମାନ ଆପଣଙ୍କର ବ୍ୟକ୍ତିଗତ ସ୍ୱାସ୍ଥ୍ୟ ପୋର୍ଟାଲରେ ଲଗ ଇନ ଅଛନ୍ତି।" : "You are currently signed into your personalized health portal."}
               </p>
 
               <div style={{ display: "grid", gap: "12px" }}>
@@ -661,7 +662,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                     boxShadow: "0 4px 14px rgba(5,150,105,0.3)",
                   }}
                 >
-                  Enter My Health Dashboard →
+                  {t("landing.enterDashboard")}
                 </button>
 
                 <button
@@ -683,7 +684,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                   }}
                 >
                   <span>🚪</span>
-                  <span>Log Out of Current Session</span>
+                  <span>{t("landing.logoutSession")}</span>
                 </button>
               </div>
             </div>
@@ -710,7 +711,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                     fontStyle: "italic",
                   }}
                 >
-                  &ldquo;Your Health, Our Priority. Your Trust, Our Promise&rdquo;
+                  {t("landing.motto")}
                 </p>
               </div>
 
@@ -744,7 +745,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                 transition: "all 0.15s ease",
               }}
             >
-              🔐 Sign In
+              🔐 {t("landing.signInTab")}
             </button>
             <button
               type="button"
@@ -765,7 +766,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                 transition: "all 0.15s ease",
               }}
             >
-              ✍️ Sign Up (Register)
+              ✍️ {t("landing.registerTab")}
             </button>
           </div>
 
@@ -808,7 +809,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
             <form onSubmit={handleHeroSignIn} style={{ display: "grid", gap: "14px" }}>
               <div>
                 <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "5px" }}>
-                  Email Address
+                  {t("landing.emailLabel")}
                 </label>
                 <input
                   type="email"
@@ -829,7 +830,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
 
               <div>
                 <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "5px" }}>
-                  Password
+                  {t("landing.passwordLabel")}
                 </label>
                 <div style={{ position: "relative" }}>
                   <input
@@ -886,17 +887,17 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                   transition: "opacity 0.15s ease",
                 }}
               >
-                {status.tone === "busy" ? "Signing In..." : "Sign In to Your Health Portal →"}
+                {status.tone === "busy" ? (effectiveLang === "hi" ? "साइन इन हो रहा है..." : effectiveLang === "or" ? "ସାଇନ ଇନ ହେଉଛି..." : "Signing In...") : t("landing.signInBtn")}
               </button>
 
               <p style={{ margin: "4px 0 0", fontSize: "11.5px", color: "#64748b", textAlign: "center" }}>
-                Don't have an account?{" "}
+                {t("landing.noAccount")}{" "}
                 <button
                   type="button"
                   onClick={() => setAuthTab("signup")}
                   style={{ background: "none", border: "none", color: "#059669", fontWeight: 700, cursor: "pointer", padding: 0 }}
                 >
-                  Create New Account
+                  {t("landing.createAccount")}
                 </button>
               </p>
 
@@ -910,7 +911,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                   <span style={{ fontSize: "11px", fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                    ⚡ Quick Demo Accounts (Pass: demo123)
+                    {t("landing.quickDemo")}
                   </span>
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
@@ -988,12 +989,12 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
               {/* Role Selection */}
               <div>
                 <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "6px" }}>
-                  Select Your Account Role
+                  {t("landing.roleLabel")}
                 </label>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
                   {[
-                    { id: "patient", icon: "👤", label: "Citizen / Patient" },
-                    { id: "doctor", icon: "🩺", label: "Doctor" },
+                    { id: "patient", icon: "👤", label: t("landing.rolePatient") },
+                    { id: "doctor", icon: "🩺", label: t("landing.roleDoctor") },
                   ].map((item) => (
                     <button
                       key={item.id}
@@ -1023,7 +1024,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
 
               <div>
                 <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "4px" }}>
-                  Full Name
+                  {t("landing.nameLabel")}
                 </label>
                 <input
                   type="text"
@@ -1045,7 +1046,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "4px" }}>
-                    Email ID
+                    {t("landing.emailLabel")}
                   </label>
                   <input
                     type="email"
@@ -1065,7 +1066,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                 </div>
                 <div>
                   <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "4px" }}>
-                    Password
+                    {t("landing.passwordLabel")}
                   </label>
                   <input
                     type="password"
@@ -1090,7 +1091,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                 <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "10px", borderRadius: "8px", display: "grid", gap: "8px" }}>
                   <div>
                     <label style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "#166534", marginBottom: "3px" }}>
-                      NMC Registration Number
+                      {t("landing.nmcLabel")}
                     </label>
                     <input
                       type="text"
@@ -1132,17 +1133,17 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                   marginTop: "4px",
                 }}
               >
-                {status.tone === "busy" ? "Registering..." : `Create Account (${role.toUpperCase()}) →`}
+                {status.tone === "busy" ? (effectiveLang === "hi" ? "पंजीकरण हो रहा है..." : effectiveLang === "or" ? "ପଞ୍ଜୀକରଣ ହେଉଛି..." : "Registering...") : t("landing.registerBtn")}
               </button>
 
               <p style={{ margin: "2px 0 0", fontSize: "11.5px", color: "#64748b", textAlign: "center" }}>
-                Already registered?{" "}
+                {t("landing.alreadyRegistered")}{" "}
                 <button
                   type="button"
                   onClick={() => setAuthTab("signin")}
                   style={{ background: "none", border: "none", color: "#059669", fontWeight: 700, cursor: "pointer", padding: 0 }}
                 >
-                  Sign In
+                  {t("landing.signInTab")}
                 </button>
               </p>
             </form>
@@ -1162,10 +1163,10 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
       >
         <div style={{ textAlign: "center", marginBottom: "24px" }}>
           <h3 style={{ margin: 0, fontSize: "22px", fontWeight: 800, color: "#0f172a" }}>
-            Four Dedicated Role Interfaces
+            {t("landing.roleInterfacesTitle")}
           </h3>
           <p style={{ margin: "4px 0 0", fontSize: "14px", color: "#64748b" }}>
-            Each persona receives a strictly isolated workstation customized to their specific clinical responsibility.
+            {t("landing.roleInterfacesSubtitle")}
           </p>
         </div>
 
@@ -1190,10 +1191,10 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
           >
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
               <span style={{ fontSize: "24px" }}>👤</span>
-              <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>Citizen &amp; Patient</h4>
+              <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>{t("landing.pillarCitizenTitle")}</h4>
             </div>
             <p style={{ margin: "0 0 16px", fontSize: "13px", color: "#64748b", lineHeight: 1.5, flex: 1 }}>
-              Universal ABHA health pass, doctor consultation bookings, Arogya Gyan evidence-based home remedies, and PMBJP generic drug cost comparisons.
+              {t("landing.pillarCitizenDesc")}
             </p>
             <button
               type="button"
@@ -1209,7 +1210,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                 cursor: "pointer",
               }}
             >
-              Select Citizen Role ↑
+              {t("landing.selectRolePatient")}
             </button>
           </div>
 
@@ -1227,10 +1228,10 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
           >
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
               <span style={{ fontSize: "24px" }}>🩺</span>
-              <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>Medical Doctor</h4>
+              <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>{t("landing.pillarDoctorTitle")}</h4>
             </div>
             <p style={{ margin: "0 0 16px", fontSize: "13px", color: "#64748b", lineHeight: 1.5, flex: 1 }}>
-              NMC-verified clinical triage workstation, review patient follow-ups, adjust medicine dosages, suggest nearest chemist, and audit dispense integrity.
+              {t("landing.pillarDoctorDesc")}
             </p>
             <button
               type="button"
@@ -1246,7 +1247,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                 cursor: "pointer",
               }}
             >
-              Select Doctor Role ↑
+              {t("landing.selectRoleDoctor")}
             </button>
           </div>
 
@@ -1264,10 +1265,10 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
           >
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
               <span style={{ fontSize: "24px" }}>🏪</span>
-              <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>Jan Aushadhi Kendras</h4>
+              <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>{t("landing.pillarChemistTitle")}</h4>
             </div>
             <p style={{ margin: "0 0 16px", fontSize: "13px", color: "#64748b", lineHeight: 1.5, flex: 1 }}>
-              Direct integration with nearest verified PMBJP Kendras (PMBJP Kendra #7402). Transparent 70%+ savings, non-expired batch assurance, and direct pickup or doorstep fulfillment.
+              {t("landing.pillarChemistDesc")}
             </p>
             <button
               type="button"
@@ -1283,7 +1284,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
                 cursor: "pointer",
               }}
             >
-              Access Patient Portal ↑
+              {t("landing.selectRoleChemist")}
             </button>
           </div>
         </div>
@@ -1301,10 +1302,7 @@ export function PublicLanding({ onSignIn, onSignUp, onOpenAdmin, onOpenDoctorPor
         }}
       >
         <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-          <strong style={{ color: "#0f172a" }}>Arogya Relay</strong> · Ayushman Bharat Digital Mission aligned clinical relay.
-          <p style={{ margin: "6px 0 0" }}>
-            Not a diagnostic medical device. Clinical triage decisions must be confirmed by qualified medical officers.
-          </p>
+          <strong style={{ color: "#0f172a" }}>Arogya Relay</strong> · {t("landing.footerNotice")}
         </div>
       </footer>
 

@@ -10,6 +10,7 @@ import {
 } from "@/lib/supabase/client";
 import { fetchAllScreenings, type ScreeningRecord } from "@/lib/supabase/screenings";
 import { getLocalFollowUps } from "@/lib/prescriptions/storage";
+import { useLanguage } from "@/lib/i18n/provider";
 import { LanguageSwitcher } from "./language-switcher";
 import { IconTooltip } from "./icon-tooltip";
 import { getStoredFeedbackReports, type FeedbackReport } from "./hero-feedback-and-instructions";
@@ -22,6 +23,7 @@ export interface AdminScreenProps {
 type AdminTab = "users" | "doctors" | "screenings" | "escrow" | "security" | "feedback";
 
 export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminScreenProps) {
+  const { t } = useLanguage();
   const supabase = useMemo(() => createClient(), []);
   const [tab, setTab] = useState<AdminTab>("users");
   const [users, setUsers] = useState<Profile[]>([]);
@@ -564,7 +566,7 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <span style={{ fontSize: "20px" }}>🛡️</span>
-              <h1 style={{ margin: 0, fontSize: "18px", fontWeight: "800" }}>System Administration Console</h1>
+              <h1 style={{ margin: 0, fontSize: "18px", fontWeight: "800" }}>{t("admin.portalTitle")}</h1>
               <span
                 style={{
                   background: "#fef3c7",
@@ -576,7 +578,7 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
                   borderRadius: "12px",
                 }}
               >
-                ROOT GOVERNANCE
+                {t("admin.rootGovernance")}
               </span>
             </div>
             <small style={{ color: "var(--muted)", fontSize: "12px" }}>
@@ -604,7 +606,7 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
             style={{ fontSize: "12px", padding: "6px 12px", color: "#dc2626", borderColor: "#fecaca", cursor: "pointer", fontWeight: 700 }}
             title="Lock administrative console and exit"
           >
-            🔒 Lock Console &amp; Exit
+            🔒 {t("admin.lockExit")}
           </button>
         </div>
       </header>
@@ -652,7 +654,7 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: "11.5px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
-                Verified Doctors
+                {t("admin.kpiDoctors")}
               </span>
               <span style={{ fontSize: "18px" }}>🩺</span>
             </div>
@@ -686,7 +688,7 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: "11.5px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
-                Registered Patients
+                {t("admin.kpiPatients")}
               </span>
               <span style={{ fontSize: "18px" }}>👥</span>
             </div>
@@ -717,7 +719,7 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: "11.5px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
-                Health Workers
+                {t("admin.kpiWorkers")}
               </span>
               <span style={{ fontSize: "18px" }}>👩‍⚕️</span>
             </div>
@@ -748,7 +750,7 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: "11.5px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
-                PMBJP Chemists
+                {t("admin.kpiChemists")}
               </span>
               <span style={{ fontSize: "18px" }}>💊</span>
             </div>
@@ -776,7 +778,7 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: "11.5px", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase" }}>
-                Surveillance Cases
+                {t("admin.kpiCases")}
               </span>
               <span style={{ fontSize: "18px" }}>🔬</span>
             </div>
@@ -807,7 +809,7 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: "11.5px", fontWeight: 700, color: pendingScreeningsCount > 0 ? "#b45309" : "var(--muted)", textTransform: "uppercase" }}>
-                Pending Triage
+                {t("admin.kpiTriage")}
               </span>
               <span style={{ fontSize: "18px" }}>⏳</span>
             </div>
@@ -847,7 +849,7 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
               gap: "8px",
             }}
           >
-            <span>👥</span> Users &amp; Roles <b>({users.length})</b>
+            <span>👥</span> {t("admin.tabUsers")} <b>({users.length})</b>
           </button>
 
           <button
@@ -867,7 +869,7 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
               gap: "8px",
             }}
           >
-            <span>🩺</span> Doctor Verifications
+            <span>🩺</span> {t("admin.tabDoctors")}
             {pendingDoctorsCount > 0 && (
               <span
                 style={{
@@ -901,7 +903,7 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
               gap: "8px",
             }}
           >
-            <span>🔬</span> Screenings &amp; Surveillance <b>({screenings.length})</b>
+            <span>🔬</span> {t("admin.tabScreenings")} <b>({screenings.length})</b>
           </button>
 
           <button
@@ -921,7 +923,7 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
               gap: "8px",
             }}
           >
-            <span>💳</span> Telemedicine Escrow Ledger
+            <span>💳</span> {t("admin.tabEscrow")}
           </button>
 
           <button
@@ -941,7 +943,7 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
               gap: "8px",
             }}
           >
-            <span>🔒</span> Security &amp; Database Health
+            <span>🔒</span> {t("admin.tabSecurity")}
           </button>
 
           <button
@@ -964,7 +966,7 @@ export function AdminScreen({ onBackToDashboard, onOpenSupabaseConfig }: AdminSc
               gap: "8px",
             }}
           >
-            <span>💬</span> User Feedback &amp; Issues
+            <span>💬</span> {t("admin.tabFeedback")}
             {feedbackReports.length > 0 && (
               <span
                 style={{

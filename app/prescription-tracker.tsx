@@ -778,7 +778,7 @@ export default function PrescriptionTracker({
             }}
           >
             <span style={{ fontSize: "16px" }}>📤</span>
-            <span>Section 1: Submit Report</span>
+            <span>{t("tracker.section1")}</span>
           </button>
 
           {/* Section 2 Button */}
@@ -802,7 +802,7 @@ export default function PrescriptionTracker({
             }}
           >
             <span style={{ fontSize: "16px" }}>📩</span>
-            <span>Section 2: Doctor Response ({followups.length})</span>
+            <span>{t("tracker.section2")} ({followups.length})</span>
           </button>
 
           {/* Section 3 Button */}
@@ -826,7 +826,7 @@ export default function PrescriptionTracker({
             }}
           >
             <span style={{ fontSize: "16px" }}>⏰</span>
-            <span>Section 3: Set Alarms ({todayReminders.length})</span>
+            <span>{t("tracker.section3")} ({todayReminders.length})</span>
           </button>
         </div>
       )}
@@ -863,7 +863,7 @@ export default function PrescriptionTracker({
             {/* Doctor Selection: Two Real Available Doctors */}
             <div>
               <label style={{ fontSize: "13.5px", fontWeight: 700, display: "block", marginBottom: "10px", color: "#065f46" }}>
-                Select Your Verified Doctor (Met in Person):
+                {t("tracker.selectDoctorTitle")}
               </label>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "12px" }}>
                 {getAvailableDoctors().map((doc) => {
@@ -989,7 +989,7 @@ export default function PrescriptionTracker({
 
             {/* Detailed Description */}
             <label style={{ fontSize: "13px", fontWeight: 600, display: "flex", flexDirection: "column", gap: "6px" }}>
-              Describe Your Symptoms / Specific Question for Doctor:
+              {t("tracker.describeSymptoms")}
               <textarea
                 rows={4}
                 required
@@ -1021,7 +1021,7 @@ export default function PrescriptionTracker({
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
                 <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--foreground, #0f172a)" }}>
-                  📄 Attach Prescription Slip or Lab Report (File Upload / 1-Click Sample)
+                  📄 {t("tracker.uploadSlip")}
                 </span>
                 <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
                   <button
@@ -1703,7 +1703,7 @@ export default function PrescriptionTracker({
                   {activeFollowup.revisedMedicines && activeFollowup.revisedMedicines.length > 0 && (
                     <div>
                       <strong style={{ fontSize: "14px", display: "block", marginBottom: "10px", color: "var(--foreground, #0f172a)" }}>
-                        💊 Revised Medicines &amp; Dosages:
+                        💊 {t("tracker.revisedMeds")}
                       </strong>
                       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                         {activeFollowup.revisedMedicines.map((med) => (
@@ -2260,7 +2260,7 @@ export default function PrescriptionTracker({
                   className="secondary-button"
                   style={{ fontSize: "12.5px", padding: "8px 16px", borderRadius: "8px" }}
                 >
-                  🔊 Test Alarm Chime
+                  {t("tracker.testChime")}
                 </button>
               )}
             </div>

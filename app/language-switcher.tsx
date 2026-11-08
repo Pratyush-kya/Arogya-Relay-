@@ -121,7 +121,7 @@ export function LanguageSwitcher() {
           <div style={{ display: "grid", gap: "3px", maxHeight: "250px", overflowY: "auto", paddingRight: "2px" }}>
             {LANGUAGES.map((l) => {
               const isSelected = l.code === lang;
-              const isComplete = l.packStatus === "complete";
+              const isVerifiedComplete = l.code === "en" || l.code === "hi" || l.code === "or";
               return (
                 <button
                   key={l.code}
@@ -150,7 +150,9 @@ export function LanguageSwitcher() {
                 >
                   <div style={{ display: "flex", flexDirection: "column" }}>
                     <span style={{ fontSize: "12.5px" }}>{l.nativeName}</span>
-                    <span style={{ fontSize: "10px", opacity: 0.7 }}>{l.englishName}</span>
+                    <span style={{ fontSize: "10px", opacity: 0.7 }}>
+                      {l.englishName} {isVerifiedComplete ? "" : "· In Development"}
+                    </span>
                   </div>
                   <div style={{ textAlign: "right" }}>
                     <span
@@ -159,12 +161,12 @@ export function LanguageSwitcher() {
                         fontWeight: 700,
                         padding: "2px 6px",
                         borderRadius: "4px",
-                        background: isComplete ? "#dcfce7" : "#fef3c7",
-                        color: isComplete ? "#15803d" : "#b45309",
+                        background: isVerifiedComplete ? "#dcfce7" : "#fef3c7",
+                        color: isVerifiedComplete ? "#15803d" : "#b45309",
                         display: "inline-block",
                       }}
                     >
-                      {isComplete ? "✓ Complete" : "⚡ Fallback Active"}
+                      {isVerifiedComplete ? "✓ Complete" : "🛠️ In Development"}
                     </span>
                   </div>
                 </button>
