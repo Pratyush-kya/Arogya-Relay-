@@ -337,7 +337,7 @@ However, their day-to-day operational efficacy is severely curtailed by paper-ba
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.76\textwidth,height=7.0cm,keepaspectratio]{image1.png}
+    \includegraphics[width=0.82\textwidth,height=7.0cm,keepaspectratio]{image1.png}
     \caption[Public Portal \& System Architecture]{Public Portal \& Global Architecture of Arogya Relay Platform}
     \label{fig:public_portal}
 \end{figure}
@@ -459,6 +459,7 @@ Computer science literature provides several theoretical frameworks for distribu
 
 For example, if an ASHA worker records a patient's systolic blood pressure as 160 mmHg offline, while a Primary Health Centre physician simultaneously updates the patient's record to 130 mmHg during an in-clinic consultation, an automated mathematical merge would obscure the hypertensive crisis observed in the field. Arogya Relay addresses this challenge by adopting an \textbf{Event-Sourced Append-Only Audit Architecture}. Screening evaluations, vital-sign recordings, and clinical observations are modeled as immutable historical events. When connectivity resumes, offline event queues replay to the central server using idempotent upserts, preserving every longitudinal record without destructive overwrites.
 
+\enlargethispage{2\baselineskip}
 \section{Regulatory, Ethical \& Clinical Safety Frameworks (MoHFW/NMC)}
 Deploying digital health technologies in India necessitates strict adherence to statutory regulatory standards codified by the Ministry of Health and Family Welfare and the National Medical Commission:
 
@@ -506,7 +507,7 @@ Arogya Relay employs a hybrid, edge-distributed architecture designed for extrem
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.74\textwidth,height=6.8cm,keepaspectratio]{image2.png}
+    \includegraphics[width=0.88\textwidth,height=5.6cm,keepaspectratio]{image2.png}
     \caption[Distributed Topology \& Edge Sync Pipeline]{High-Level Distributed System Topology \& Edge Sync Pipeline}
     \label{fig:arch_topology}
 \end{figure}
@@ -515,11 +516,12 @@ Figure \ref{fig:workflow_state_engine} details the complete multi-actor operatio
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.74\textwidth,height=6.8cm,keepaspectratio]{image3.png}
+    \includegraphics[width=0.60\textwidth,height=5.8cm,keepaspectratio]{image3.png}
     \caption[Operational Workflow \& Lifecycle Engine]{Complete Multi-Actor Operational Workflow \& Lifecycle State Engine}
     \label{fig:workflow_state_engine}
 \end{figure}
 
+\enlargethispage{3\baselineskip}
 \section{Offline Storage Vault \& Transaction Pipeline}
 The offline transactional engine operates through a three-stage lifecycle: \textbf{Capture, Vault, and Relay}:
 \begin{enumerate}[label=\textbf{\arabic*.},itemsep=1pt,topsep=1pt,parsep=0pt]
@@ -529,7 +531,8 @@ The offline transactional engine operates through a three-stage lifecycle: \text
 \end{enumerate}
 
 \section{Security Hardening: Row-Level Security (RLS) \& Role Isolation}
-A primary architectural contribution of Arogya Relay is the complete elimination of cross-role UI bleed and recursive policy loops in PostgreSQL \cite{supabase2024}. In complex multi-role systems, standard RLS policies that query the \texttt{profiles} table to check administrative permissions often trigger infinite recursive loops, leading to database lockups and authorization failures.
+A primary architectural contribution of Arogya Relay is the complete elimination of cross-role UI bleed and recursive policy loops in PostgreSQL \cite{supabase2024}. In complex multi-role systems, standard RLS policies that query the \texttt{profiles} table to check administrative permissions \enlargethispage{4\baselineskip}
+often trigger infinite recursive loops, leading to database lockups and authorization failures.
 
 To eliminate this vulnerability, Arogya Relay implements non-recursive security functions utilizing PostgreSQL's \texttt{SECURITY DEFINER} attribute with search-path pinning:
 
@@ -551,11 +554,11 @@ By encapsulating privilege verification inside isolated database routines, RLS p
 \section{Database Schema Design (PostgreSQL / Supabase D1)}
 The relational database schema is structured into normalized tables optimized for transactional integrity, auditability, and offline reconciliation. Table \ref{tab:db_schema} enumerates the primary entity tables and schema constraints.
 
-\begin{table}[!htbp]
+\begin{table}[H]
 \centering
 \small
-\renewcommand{\arraystretch}{1.3}
-\begin{tabularx}{\textwidth}{L{2.8cm} L{2.1cm} Y Y}
+\renewcommand{\arraystretch}{1.08}
+\begin{tabularx}{\textwidth}{L{2.2cm} L{1.8cm} Y Y}
 \toprule
 \textbf{Table Name} & \textbf{Primary Key} & \textbf{Foreign Keys \& Relationships} & \textbf{Storage \& Security Scope} \\
 \midrule
@@ -668,7 +671,7 @@ The Patient Follow-up module (\path{app/patient-followup-card.tsx}, \path{app/pr
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.76\textwidth,height=7.0cm,keepaspectratio]{image4.png}
+    \includegraphics[width=0.88\textwidth,height=5.8cm,keepaspectratio]{image4.png}
     \caption[Doctor-Linked Follow-up \& Dosage Modification]{Doctor-Linked Follow-up, Dosage Modification \& Fair-Price Pharmacy Interface}
     \label{fig:followup_system}
 \end{figure}
@@ -686,7 +689,7 @@ The Doctor Workstation (\texttt{app/doctor-workspace.tsx}) serves as the clinica
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.76\textwidth,height=7.0cm,keepaspectratio]{image5.png}
+    \includegraphics[width=0.46\textwidth,height=6.2cm,keepaspectratio]{image5.png}
     \caption[Doctor Workstation \& Clinical Cases Queue]{Doctor Workstation, Clinical Cases Queue \& Digital Signature Signing}
     \label{fig:doctor_workstation}
 \end{figure}
@@ -703,7 +706,7 @@ The Jan Aushadhi Dispensary Workstation (\texttt{app/chemist-dispensary.tsx}) br
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.76\textwidth,height=7.0cm,keepaspectratio]{image6.png}
+    \includegraphics[width=0.88\textwidth,height=5.8cm,keepaspectratio]{image6.png}
     \caption[Jan Aushadhi Dispensary Counter \& Escrow Burn]{Jan Aushadhi Dispensary Counter, Token Verification \& Escrow Burn}
     \label{fig:dispensary_counter}
 \end{figure}
@@ -723,7 +726,7 @@ The Citizen Portal (\texttt{app/patient-workspace.tsx}, \texttt{app/health-pass-
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.76\textwidth,height=7.0cm,keepaspectratio]{image7.png}
+    \includegraphics[width=0.88\textwidth,height=5.8cm,keepaspectratio]{image7.png}
     \caption[Citizen Health Pass \& Dosage Alarms]{Citizen Health Pass, Personalized Dosage Alarms \& Generic Formulary}
     \label{fig:citizen_health_pass}
 \end{figure}
@@ -746,7 +749,7 @@ The Administrative Governance Console (\texttt{app/admin/page.tsx}, \texttt{app/
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.76\textwidth,height=7.0cm,keepaspectratio]{image8.png}
+    \includegraphics[width=0.46\textwidth,height=6.0cm,keepaspectratio]{image8.png}
     \caption[System Admin Console \& Escrow Audit Ledger]{System Administration Console, Platform KPI Metrics Ribbon \& Telemedicine Escrow Audit Ledger}
     \label{fig:admin_console}
 \end{figure}
@@ -767,7 +770,7 @@ The Nearby Healthcare Engine (\texttt{lib/nearby/*}, \texttt{app/nearby-care.tsx
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.76\textwidth,height=7.0cm,keepaspectratio]{image9.png}
+    \includegraphics[width=0.46\textwidth,height=6.0cm,keepaspectratio]{image9.png}
     \caption[Capability-First Nearby Healthcare Engine]{Rural \& District Healthcare Finder with Dynamic GPS Corridor Selection (Cuttack Active)}
     \label{fig:nearby_finder}
 \end{figure}
@@ -781,14 +784,14 @@ The platform supports live GPS auto-detection (\texttt{navigator.geolocation}) a
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.74\textwidth,height=6.8cm,keepaspectratio]{image10.png}
+    \includegraphics[width=0.88\textwidth,height=5.6cm,keepaspectratio]{image10.png}
     \caption[Primary Care Facility Directory]{Nearby Healthcare Facility Directory (13 Hospitals, 5 Jan Aushadhi Kendras \& Ayushman Arogya Mandirs)}
     \label{fig:facility_directory}
 \end{figure}
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.74\textwidth,height=6.8cm,keepaspectratio]{image11.png}
+    \includegraphics[width=0.88\textwidth,height=5.6cm,keepaspectratio]{image11.png}
     \caption[Autonomous GPS Route Navigation Corridor]{Live GPS Turn-by-Turn Road Navigation to Nearest Healthcare Facility via Kanika Road}
     \label{fig:gps_navigation}
 \end{figure}
@@ -806,7 +809,7 @@ The Arogya Gyan portal (\texttt{app/disease-library.tsx}) provides rural citizen
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.74\textwidth,height=6.8cm,keepaspectratio]{image12.png}
+    \includegraphics[width=0.88\textwidth,height=5.6cm,keepaspectratio]{image12.png}
     \caption[Arogya Gyan Localized Disease Knowledge Base]{Arogya Gyan: Localized Health Literacy \& Common Disease Home Care Protocols}
     \label{fig:arogya_gyan}
 \end{figure}
@@ -821,7 +824,7 @@ The District Health Camp Finder (\texttt{app/health-camp-finder.tsx}) connects r
 
 \begin{figure}[!htbp]
     \centering
-    \includegraphics[width=0.74\textwidth,height=6.8cm,keepaspectratio]{image13.png}
+    \includegraphics[width=0.88\textwidth,height=5.6cm,keepaspectratio]{image13.png}
     \caption[District Health Camps Outreach Directory]{District Health Camps \& Community Outreach Directory with Offline-Ready Cache}
     \label{fig:district_camps}
 \end{figure}
@@ -926,7 +929,7 @@ The economic analytics indicate that substituting branded formulations with Jan 
 This project has presented the design, implementation, and empirical evaluation of \textbf{Arogya Relay}: a zero-loss rural telehealth and distributed disease surveillance platform engineered specifically for low-connectivity rural health outposts. By reconceptualizing telemedicine from an ``always-connected cloud service'' into an intelligent, edge-distributed system, Arogya Relay resolves longstanding operational barriers that have plagued rural digital health initiatives across India and other LMIC environments.
 
 The core technical and architectural contributions established in this work comprise:
-\begin{enumerate}[label=\textbf{\arabic*.},itemsep=1pt,topsep=1pt,parsep=0pt]
+\begin{enumerate}[label=\textbf{\arabic*.},itemsep=0pt,topsep=0pt,parsep=0pt]
     \item \textbf{High-Reliability Offline-First Architecture:} Engineered a persistent local transactional vault utilizing IndexedDB, LocalStorage, and Service Worker caching that guarantees 100\% operational continuity during complete cellular blackouts, achieving seamless background re-synchronization within 3.4 seconds upon 2G signal restoration.
     \item \textbf{Deterministic Clinical Safety Gateways:} Implemented a rule-based triage hierarchy aligned with WHO IMCI and ICMR guidelines that classifies clinical urgency prior to any model augmentation, completely eliminating dangerous AI hallucinations and enforcing mandatory India 112 emergency routing.
     \item \textbf{Single-Use Cryptographic Escrow Tokens:} Pioneered a tamper-proof digital prescription token mechanism integrated with government Jan Aushadhi dispensaries that burns tokens upon fulfillment, eliminates duplicate dispensing, and slashes patient medicine costs by 74.2\%.
@@ -934,14 +937,16 @@ The core technical and architectural contributions established in this work comp
     \item \textbf{Enterprise Security Hardening:} Eliminated recursive PostgreSQL policy loops via optimized \texttt{SECURITY DEFINER} routines, enforcing strict Row-Level Security and total role isolation across Citizen, Field Worker, Clinician, Chemist, and Administrator accounts.
 \end{enumerate}
 
+\enlargethispage{3.5\baselineskip}
 \section{Key Challenges and Lessons Learned}
 The engineering lifecycle of Arogya Relay provided critical insights into the design of mission-critical healthcare software for low-resource environments:
-\begin{itemize}[leftmargin=1.5em,itemsep=1pt,topsep=1pt,parsep=0pt]
+\begin{itemize}[leftmargin=1.5em,itemsep=0.5pt,topsep=0.5pt,parsep=0pt]
     \item \textbf{Asynchronous Distributed Concurrency:} Managing data consistency across disconnected edge clients requires an event-sourced, append-only synchronization philosophy. Treating clinical observations as immutable chronological events eliminates data loss and ensures longitudinal medical auditability.
     \item \textbf{The Supremacy of Deterministic Rule Sets in Medicine:} While machine learning models offer immense promise for natural language processing and assistive translation, primary triage must remain anchored in deterministic, peer-reviewed clinical rules. Grounding automated guidance in authoritative literature citations is vital for building clinical trust.
     \item \textbf{User-Centric Persona Engineering:} Frontline healthcare workers cannot be burdened with dense tabular interfaces or complex multi-step navigation. Streamlined, high-contrast touch chips, voice dictation, and automated summary cards dramatically reduce operational cognitive load.
 \end{itemize}
 
+\enlargethispage{3.5\baselineskip}
 \section{Alignment with National Digital Health Infrastructure}
 Arogya Relay is architected to align seamlessly with the foundational pillars of the Government of India's Ayushman Bharat Digital Mission (ABDM) \cite{abdm2022}:
 \begin{itemize}[leftmargin=1.5em,itemsep=1pt,topsep=1pt,parsep=0pt]
@@ -950,6 +955,7 @@ Arogya Relay is architected to align seamlessly with the foundational pillars of
     \item \textbf{Health Facility Registry (HFR):} The Nearby Care referral navigation module references verified HFR facility identifiers, enabling real-time facility capability mapping across public health centres.
 \end{itemize}
 
+\enlargethispage{3\baselineskip}
 \section{Future Enhancements \& Production Roadmap}
 To transition Arogya Relay from an advanced functional prototype into a state-wide or nationwide public health deployment, several high-impact engineering enhancements are planned:
 \begin{enumerate}[label=\textbf{\arabic*.},itemsep=1pt,topsep=1pt,parsep=0pt]
@@ -964,80 +970,6 @@ To transition Arogya Relay from an advanced functional prototype into a state-wi
 
 % -------------------------------------------------------------
 % APPENDICES
-% -------------------------------------------------------------
-\appendix
-
-\chapter{Platform User Directory \& Test Credential Matrix}
-\label{app:user_directory}
-
-To facilitate seamless administrative verification, viva-voce demonstrations, and automated end-to-end integration testing, Table \ref{tab:app_users} documents the complete platform directory configured within the Arogya Relay PostgreSQL identity vault. Each user account corresponds to a verified stakeholder persona with strict Row-Level Security (RLS) policies enforcing role boundaries.
-
-\begin{table}[!htbp]
-\centering
-\small
-\renewcommand{\arraystretch}{1.3}
-\begin{tabularx}{\textwidth}{c L{3.5cm} C{2.2cm} L{3.6cm} Y}
-\toprule
-\textbf{\#} & \textbf{User Display Name} & \textbf{Role Badge} & \textbf{Login Email Address} & \textbf{Operational Scope \& Permissions} \\
-\midrule
-1 & Pratyush Kiran Rath & \textbf{ADMIN} & \path{pratyushkiranrath4@gmail.com} & System Governance, Doctor NMC verification, Escrow audit ledger. \\
-2 & Dr.~Samarpit Biswal & \textbf{DOCTOR} & \path{dr.biswal@ruralhealth.org} & Verified Physician, Clinical Triage Queue, Digital Rx Signing (OMC-2020-54190). \\
-3 & Dr.~Bishnu Prasad Satapathy & \textbf{DOCTOR} & \path{dr.satapathy@ruralhealth.org} & Verified Medical Officer, General Medicine, Teleconsultations (OMC-2018-88412). \\
-4 & Dr.~Ananya Mishra & \textbf{DOCTOR} & \path{dr.ananya@health.gov.in} & Verified NMC Specialist, Paediatrics \& Maternal Triage (OMC-2019-72415). \\
-5 & Ramesh Soren & \textbf{CITIZEN} & \path{citizen.ramesh@gmail.com} & Citizen Health Pass, Regional Disease Library, Medication Alarms (Hindi/Odia). \\
-\bottomrule
-\end{tabularx}
-\caption{Production Platform User Directory \& Security Scope}
-\label{tab:app_users}
-\end{table}
-
-\noindent
-\textbf{Demonstration Authentication Credentials:} Non-admin demonstration accounts utilize the standardized sandbox passcode \texttt{demo123} for 1-click evaluation. The primary system administrator account utilizes \texttt{admin123} to access administrative security and audit consoles.
-
-\chapter[Reproduction Guide \& Cloud Deployment]{Reproduction Guide, Verification \&\\ Cloud Deployment}
-\label{app:reproduction}
-
-\section{Local Reproduction \& Test Execution Guide}
-Arogya Relay is designed with a zero-friction local setup workflow. The entire platform---including offline Service Workers, IndexedDB local persistence, and clinical decision support engines---can be reproduced on any developer workstation running Node.js 18+ and Python 3.10+.
-
-\begin{lstlisting}[language=bash, caption={Local Repository Setup, Test Execution \& Development Server Launch}, label={lst:local_setup}]
-# 1. Clone the repository
-git clone https://github.com/Pratyush-kya/Arogya-Relay-.git
-cd Arogya-Relay
-
-# 2. Install production dependencies
-npm install
-
-# 3. Configure environment variables (copy from template)
-cp .env.example .env.local
-
-# 4. Execute automated verification test suite (48/48 passing)
-npm test
-
-# 5. Launch local edge development server
-npm run dev
-# Server listening on http://localhost:3000
-\end{lstlisting}
-
-\section{Cloud Deployment \& Production Hosting Topology}
-Arogya Relay supports three cost-effective, high-availability deployment routes tailored for state health missions and academic research laboratories, summarized in Table \ref{tab:app_deployment}.
-
-\begin{table}[!htbp]
-\centering
-\small
-\renewcommand{\arraystretch}{1.3}
-\begin{tabularx}{\textwidth}{L{3.2cm} L{2.8cm} Y C{2.2cm}}
-\toprule
-\textbf{Deployment Route} & \textbf{Hosting Infrastructure} & \textbf{Edge Routing \& Security Capabilities} & \textbf{Cost Tier} \\
-\midrule
-\textbf{Live Production Demo (Active)} & Vercel Edge Platform & Edge runtime SSR, global CDN caching, automatic SSL, zero-downtime updates. & Free Tier / Open Source \\
-\textbf{State Health Mission} & Cloudflare Workers + Supabase D1 & Custom domain routing, enterprise WAF, geo-fenced data sovereignty, 2G optimization. & Standard State Gov-Cloud \\
-\textbf{Air-Gapped Outpost} & Local Micro-Server / Raspberry Pi 5 & Embedded SQLite edge sync, local Wi-Fi Hotspot relay, offline mesh broadcasting. & Low-cost Edge Hardware ($<\text{Rs. }8,000$) \\
-\bottomrule
-\end{tabularx}
-\caption{Production Cloud Deployment Targets \& Architectural Mapping}
-\label{tab:app_deployment}
-\end{table}
 
 % -------------------------------------------------------------
 % REFERENCES
@@ -1125,40 +1057,43 @@ Developer Documentation, 2024.
 % -------------------------------------------------------------
 % ACADEMIC ASSESSMENT RUBRICS & CO ATTAINMENT
 % -------------------------------------------------------------
-\chapter*{Academic Assessment \&\\ Evaluation Rubrics}
+\enlargethispage{3\baselineskip}
+\enlargethispage{3\baselineskip}
+\chapter*{Academic Assessment \& Evaluation Rubrics}
 \addcontentsline{toc}{chapter}{Academic Assessment \& Evaluation Rubrics}
 \thispagestyle{plain}
+\vspace{-0.5cm}
 
 The official evaluation record of the capstone project performance against Centurion University accreditation standards, NBA/NAAC criteria, and learning outcome rubrics is documented below. Marks and evaluative remarks are recorded by the evaluation committee during viva-voce examination:
-
-\vspace{0.2cm}
-\begin{center}
-\small
-\renewcommand{\arraystretch}{1.15}
-\begin{tabularx}{\textwidth}{c L{7.5cm} c C{2.0cm} Y}
-\toprule
-\textbf{Sl.} & \textbf{Evaluation Rubric Criteria} & \textbf{Max} & \textbf{Marks Awarded} & \textbf{Faculty Remarks} \\
-\midrule
-1 & Understanding project relevance, rural public health scope \& dimension & 10 & \underline{\hspace{1.3cm}} & \rule{3.2cm}{0.4pt} \\
-2 & Methodology, Architectural Engineering \& Edge Synchronization & 10 & \underline{\hspace{1.3cm}} & \rule{3.2cm}{0.4pt} \\
-3 & Quality of Implementation, Automated Verification \& Real-Time Demo & 10 & \underline{\hspace{1.3cm}} & \rule{3.2cm}{0.4pt} \\
-4 & Interpretations, Clinical Safety Gateways, Non-Diagnostic Boundaries & 10 & \underline{\hspace{1.3cm}} & \rule{3.2cm}{0.4pt} \\
-5 & Technical Documentation, Codebase Cleanliness \& Project Report & 10 & \underline{\hspace{1.3cm}} & \rule{3.2cm}{0.4pt} \\
-\midrule
-& \textbf{TOTAL MARKS} & \textbf{50} & \underline{\hspace{1.3cm}} & \rule{3.2cm}{0.4pt} \\
-\bottomrule
-\end{tabularx}
-\end{center}
-
-\vspace{0.25cm}
-\section*{Course Outcome (CO) Attainment Scale}
-\vspace{-0.1cm}
-Assessment of student learning mastery across software engineering lifecycle rubrics:
 
 \vspace{0.15cm}
 \begin{center}
 \small
-\renewcommand{\arraystretch}{1.1}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\textwidth}{c L{6.8cm} c C{1.8cm} Y}
+\toprule
+\textbf{Sl.} & \textbf{Evaluation Rubric Criteria} & \textbf{Max} & \textbf{Marks Awarded} & \textbf{Faculty Remarks} \\
+\midrule
+1 & Understanding project relevance, rural public health scope \& dimension & 10 & \underline{\hspace{1.3cm}} & \rule{2.8cm}{0.4pt} \\
+2 & Methodology, Architectural Engineering \& Edge Synchronization & 10 & \underline{\hspace{1.3cm}} & \rule{2.8cm}{0.4pt} \\
+3 & Quality of Implementation, Automated Verification \& Real-Time Demo & 10 & \underline{\hspace{1.3cm}} & \rule{2.8cm}{0.4pt} \\
+4 & Interpretations, Clinical Safety Gateways, Non-Diagnostic Boundaries & 10 & \underline{\hspace{1.3cm}} & \rule{2.8cm}{0.4pt} \\
+5 & Technical Documentation, Codebase Cleanliness \& Project Report & 10 & \underline{\hspace{1.3cm}} & \rule{2.8cm}{0.4pt} \\
+\midrule
+& \textbf{TOTAL MARKS} & \textbf{50} & \underline{\hspace{1.3cm}} & \rule{2.8cm}{0.4pt} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\vspace{0.15cm}
+\section*{Course Outcome (CO) Attainment Scale}
+\vspace{-0.15cm}
+Assessment of student learning mastery across software engineering lifecycle rubrics:
+
+\vspace{0.1cm}
+\begin{center}
+\small
+\renewcommand{\arraystretch}{1.05}
 \begin{tabularx}{\textwidth}{*{10}{>{\centering\arraybackslash}X}}
 \toprule
 \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} & \textbf{7} & \textbf{8} & \textbf{9} & \textbf{10} \\
@@ -1169,11 +1104,11 @@ Assessment of student learning mastery across software engineering lifecycle rub
 \end{tabularx}
 \end{center}
 
-\vspace{0.6cm}
+\vspace{0.4cm}
 \noindent
 \begin{tabularx}{\textwidth}{@{} Z @{\hspace{0.8cm}} Z @{\hspace{0.8cm}} Z @{}}
-    \textbf{INTERNAL EXAMINER} & \textbf{EXTERNAL EXAMINER} & \textbf{HEAD OF DEPARTMENT} \\[1.0cm]
-    \rule{4.0cm}{0.4pt} & \rule{4.0cm}{0.4pt} & \rule{4.0cm}{0.4pt} \\[0.15cm]
+    \textbf{INTERNAL EXAMINER} & \textbf{EXTERNAL EXAMINER} & \textbf{HEAD OF DEPARTMENT} \\[0.9cm]
+    \rule{3.8cm}{0.4pt} & \rule{3.8cm}{0.4pt} & \rule{3.8cm}{0.4pt} \\[0.12cm]
     \textbf{Date:} & \textbf{Date:} & \textbf{Date:}
 \end{tabularx}
 \end{document}
